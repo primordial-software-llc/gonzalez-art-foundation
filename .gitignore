@@ -4,3 +4,8 @@
 **/bin/Release
 **/obj/Release
 packages/
+
+personal.txt
+Progress.txt
+HtmlArchive
+ImageArchive

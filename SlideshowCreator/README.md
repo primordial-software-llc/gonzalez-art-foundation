@@ -1,5 +1,7 @@
 # Slide Show Creator
 
+Now we wait patiently. It's so hard. I want to take the throttle off and just rip the site to shreds as though I were 100 simulataneous users, but I'm going to wait patiently for the next three days *if all goes well*. I should have enough images to keep me busy for a while in only a few hours.
+
 ## Background
 I received a 40" HD TV for my birthday and I'm not a huge fan of television. My apartment is bare. The art that I want to purchase is far too costly even with reproductions. I only have two true pictures of art. I want more! I want imagery of meaningful ideas that inspire me as I read and write; not *decorations* which merely fill up space.
 
@@ -61,3 +63,8 @@ For example:
         - the-embarkation-of-ulysses.jpg
 
 The image archive is organized physically due to the current limitation of needing to do a slideshown on usb stick to easily work on a simple HD TV. More thought should be put into this for long-term storage. No matter what I require a backup of the entire data set. References will not suffice. In our day and age web sites are so cheap they often dissapear and this collection is too precious to allow such a tragedy. I actually intend to backup the data up offline on physical media. For now the plan is a CD. The backup procedure is to load the CD onto a disk drive incapable of writing making the backup safe from the malicious software running rampant even during a crisis backup scenario. Was it thought that the Library of Alexandria would purposefully go up in flames before it had?
+
+## Helpful Projects
+
+### Normal Random Numbers for Throttling
+http://www.csharpcity.com/2010/normal-distribution-random-generator-available/
