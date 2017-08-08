@@ -17,7 +17,12 @@ Here are a few notes from the websites mission statement to ensure I'm not doing
  - You can reuse the artwork (but not our logos or original text) in any way, as long as you credit us.
  - All people should have maximum access to art, and the good things that flow from creative works.
 
-So far I have tested downloading an image off this site and displaying it on my TV with a USB stick. Furthermore the works I'm for this artist I'm targetting are in the public domain and there are no visible terms of service on the website. In truth this is impossible to know or even know what I'm downloading so all the data will have to be held privately for personal usage. I don't need to duplicate the site. I should be fine with the image rights as long as I don't try to actually open up a gallery. With this knowledge and testing I just need to grab all of the images and categorize them.
+So far I have tested downloading an image off this site and displaying it on my TV with a USB stick. Furthermore the works I'm targeting are in the public domain and there are no visible terms of service on the website. In truth I'm not even going to know what I've downloaded until far later. All the data will have to be held privately for personal usage. I don't need to duplicate the site, only the data. I should be fine with the image rights as long as I don't try to actually open up a gallery. With this knowledge and testing I just need to grab all of the images and categorize them now and dump that to a USB drive.
+
+1. Get all data for the images
+2. Target artists of my choosing to download the full images
+3. Copy to USB
+4. Plug into TV
 
 ### Categorization
 
