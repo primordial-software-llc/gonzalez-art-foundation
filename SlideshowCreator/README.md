@@ -21,27 +21,38 @@ So far I have tested downloading an image off this site and displaying it on my 
 
 ### Categorization
 
-	1. Description
-		[
-			{
-				artist: { name: 'Jean-Léon Gérôme' }
-				date: '1890' /* lexographical date in full year, month and day of the month with any level of precision e.g. 1890, or 1890-01 or 1890-01-01 */
-				name: 'Pygmalion and Galatea (study)'
-				location: 'http://www.the-athenaeum.org/art/display_image.php?id=32778'
-			},
-			{
-				artist: { name: 'Claude Lorrain' }
-				date: '1646',
-				name: 'The Embarkation of Ulysses',
-				location: 'http://www.the-athenaeum.org/art/display_image.php?id=303119'
-			}
-		]
+#### Data Structure
 
-	2. Image Archive
-		Artist
-			- Jean-Leon Gerome
-				- pygmalion-and-galatea-study.jpg
-			- Claude Lorrain
-				- the-embarkation-of-ulysses.jpg
+##### Dates
+Dates shall be in lexographical format at any level of precision: [FULL_YEAR]-[LEADING-ZERO-MONTH]-[LEADING-ZERO-DAY-OF-MONTH]
+
+For example:
+- 1890
+- 1890-01
+- 1890-01-01
+
+```javascript
+[
+    {
+        artist: { name: 'Jean-Leon Gerome' },
+        date: '1890',
+        name: 'Pygmalion and Galatea (study)',
+        location: 'http://www.the-athenaeum.org/art/display_image.php?id=32778'
+    },
+    {
+        artist: { name: 'Claude Lorrain' },
+        date: '1646',
+        name: 'The Embarkation of Ulysses',
+        location: 'http://www.the-athenaeum.org/art/display_image.php?id=303119'
+    }
+]
+```
+
+#### Image Archive
+- Artist
+    - Jean-Leon Gerome
+        - pygmalion-and-galatea-study.jpg
+    - Claude Lorrain
+        - the-embarkation-of-ulysses.jpg
 
 The image archive is organized physically due to the current limitation of needing to do a slideshown on usb stick to easily work on a simple HD TV. More thought should be put into this for long-term storage. No matter what I require a backup of the entire data set. References will not suffice. In our day and age web sites are so cheap they often dissapear and this collection is too precious to allow such a tragedy. I actually intend to backup the data up offline on physical media. For now the plan is a CD. The backup procedure is to load the CD onto a disk drive incapable of writing making the backup safe from the malicious software running rampant even during a crisis backup scenario. Was it thought that the Library of Alexandria would purposefully go up in flames before it had?
