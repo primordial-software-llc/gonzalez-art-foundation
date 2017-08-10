@@ -2,6 +2,16 @@
 
 Now we wait patiently. It's so hard. I want to take the throttle off and just rip the site to shreds as though I were 100 simulataneous users, but I'm going to wait patiently for the next three days *if all goes well*. I should have enough images to keep me busy for a while in only a few hours.
 
+## Potential Issues
+
+### Screen Burn In
+
+I need to investigate the issue with modern LCD displays. Initial research is inconclusive.
+
+### Copyrighted
+
+I'm not going to know which images are under copyright until at least when I have everything downloaded and I can categorize locally without creating website traffic. I do know for certain there are some copywritten images so I just need to ensure I know which ones those are (even though this is entirely for personal use).
+
 ## Background
 I received a 40" HD TV for my birthday and I'm not a huge fan of television. My apartment is bare. The art that I want to purchase is far too costly even with reproductions. I only have two true pictures of art. I want more! I want imagery of meaningful ideas that inspire me as I read and write; not *decorations* which merely fill up space.
 

@@ -24,9 +24,11 @@ namespace SlideshowCreator
         public void Dump(int pageId)
         {
             string url = string.Format(urlTemplate, pageId);
-
-            var wc = new WebClient();
-            var html = wc.DownloadString(url);
+            string html;
+            using (var wc = new WebClient())
+            {
+                html = wc.DownloadString(url);
+            }
             
             if (!html.ToLower().Contains(pageNotFoundIndicatorText.ToLower()))
             {
@@ -36,15 +38,19 @@ namespace SlideshowCreator
 
         private void Persist(string html, int pageId)
         {
-            var expectedImageUrl = @"<img id=""fullimg"" src=""display_image.php?id=736170"" border=""0"" style=""display:none;"">";
-            StringAssert.Contains(expectedImageUrl, html);
+            int samplePageId = 33;
+            if (pageId == samplePageId)
+            {
+                var expectedImageUrl = @"<img id=""fullimg"" src=""display_image.php?id=736170"" border=""0"" style=""display:none;"">";
+                StringAssert.Contains(expectedImageUrl, html);
+            }
 
             var identity = "page-id-" + pageId;
             var destinationHtml = HTML_ARCHIVE + "/" + identity + ".html";
             File.WriteAllText(destinationHtml, html);
             var refreshedHtml = File.ReadAllText(destinationHtml);
 
-            if (pageId == 33)
+            if (pageId == samplePageId)
             {
                 var title = "The Mandolin Player";
                 var artistsName = "Dante Gabriel Rossetti";
@@ -60,15 +66,18 @@ namespace SlideshowCreator
             var relativeImageUrl = refreshedHtml.Substring(imageUrlIndex, imageUrlEndIndex - imageUrlIndex);
             var fullImageUrl = targetUrl + relativeImageUrl;
 
-            if (pageId == 33)
+            if (pageId == samplePageId)
             {
                 Assert.AreEqual(targetUrl + "display_image.php?id=736170", fullImageUrl);
             }
 
-            var wc = new WebClient();
-            var imageJpeg = wc.DownloadData(fullImageUrl);
+            byte[] image;
+            using (var wc = new WebClient())
+            {
+                image = wc.DownloadData(fullImageUrl);
+            }
             var destinationJpeg = IMAGE_ARCHIVE + "/" + identity + ".jpg";
-            File.WriteAllBytes(destinationJpeg, imageJpeg);
+            File.WriteAllBytes(destinationJpeg, image);
         }
 
     }
