@@ -79,7 +79,7 @@ namespace SlideshowCreator
         {
             var dataDump = new DataDump(targetUrl, pageNotFoundIndicatorText);
 
-            for (var pageId = 81390; pageId < 288400; pageId += 1)
+            for (var pageId = 33; pageId < 288400; pageId += 1)
             {
                 dataDump.Dump(pageId);
                 throttle.HoldBack();
