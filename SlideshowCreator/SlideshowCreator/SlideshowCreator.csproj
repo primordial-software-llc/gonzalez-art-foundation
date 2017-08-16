@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="nunit.framework, Version=3.7.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -44,7 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Classification.cs" />
+    <Compile Include="DataClassificationExecutor.cs" />
+    <Compile Include="DataClassifier.cs" />
+    <Compile Include="DataDumpExecutor.cs" />
     <Compile Include="DataDump.cs" />
     <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
     <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
