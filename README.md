@@ -75,6 +75,26 @@ Use Cases
 2. 1080p projector with 100 inch screen
 3. Laptop dedicated for viewing
 
+## Future Data Targets
+
+I did see a browser check that said DDos protection and had AWS imagery. I'm not sure how that would affect a crawler. Perhaps it requires JavaScript execution. This would be a good challenge.
+
+http://images.nga.gov
+https://www.nga.gov/content/ngaweb/notices/terms-of-use.html
+
+> Unless otherwise expressly provided elsewhere on the National Gallery of Art’s website (“Site”), and in such instance only as specifically provided, the contents of this Site, including all images and text, are for personal, educational, non-commercial use only, and may not be reproduced in any form without the permission of the National Gallery of Art.
+
+http://images.nga.gov/en/page/openaccess.html
+
+*the Gallery believes these images to be in the public domain*
+
+>While the Gallery believes these images to be in the public domain, the Gallery can only give permissions with respect to rights it has and makes no representations or warranties that use of these images will not violate rights that persons or entities other than the Gallery may have under the laws of various countries.
+
+>No copyright or other proprietary right in the image itself or in the underlying work of art is conveyed by making the image accessible. Furthermore, in making the image accessible, the Gallery does not grant the user an exclusive right to use or reproduce such image or work of art.
+
+>As a courtesy to the Gallery and to enable others to identify and locate information about its collections, the Gallery encourages users to include the following credit with any use of one of its open access images: Courtesy National Gallery of Art, Washington
+
+
 ## Helpful Projects
 
 ### Normal Random Numbers for Throttling
