@@ -1,11 +1,16 @@
 .vs/
-**/bin/Debug
-**/obj/Debug
-**/bin/Release
-**/obj/Release
+
+**/bin/
+**/obj/
+**/bin/
+**/obj/
 packages/
+
 
 personal.txt
 
+
 Progress.txt
+
 ClassificationProgress.txt
+Gallery.zip
