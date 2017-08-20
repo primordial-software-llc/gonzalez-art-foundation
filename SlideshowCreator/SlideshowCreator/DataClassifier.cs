@@ -1,4 +1,6 @@
 ﻿
+using SlideshowCreator.Models;
+
 namespace SlideshowCreator
 {
     class DataClassifier

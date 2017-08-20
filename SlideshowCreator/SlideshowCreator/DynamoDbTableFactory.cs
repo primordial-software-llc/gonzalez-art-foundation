@@ -21,7 +21,7 @@ namespace SlideshowCreator
                     {
                         AttributeName = "artist",
                         KeyType = "RANGE"
-                    },
+                    }
                 },
                 AttributeDefinitions = new List<AttributeDefinition>
                 {

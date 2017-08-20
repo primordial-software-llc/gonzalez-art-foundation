@@ -7,6 +7,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using SlideshowCreator.Models;
 
 namespace SlideshowCreator
 {
@@ -22,7 +23,7 @@ namespace SlideshowCreator
                 client.DescribeTable(tableName);
                 tableExists = true;
             }
-            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            catch (ResourceNotFoundException)
             {
                 tableExists = false;
             }

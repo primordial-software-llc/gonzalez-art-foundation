@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using SlideshowCreator.Models;
 
 namespace SlideshowCreator
 {
