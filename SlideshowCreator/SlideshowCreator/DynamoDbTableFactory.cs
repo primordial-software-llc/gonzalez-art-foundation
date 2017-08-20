@@ -5,12 +5,6 @@ namespace SlideshowCreator
 {
     class DynamoDbTableFactory
     {
-        /// <summary>
-        /// Group by artist.
-        /// Sort by date.
-        /// Use strings for artist and date fields.
-        /// </summary>
-        /// <returns></returns>
         public CreateTableRequest GetTableDefinition()
         {
             var request = new CreateTableRequest
@@ -20,12 +14,12 @@ namespace SlideshowCreator
                 {
                     new KeySchemaElement
                     {
-                        AttributeName = "artist",
+                        AttributeName = "pageId",
                         KeyType = "HASH"
                     },
                     new KeySchemaElement
                     {
-                        AttributeName = "name",
+                        AttributeName = "artist",
                         KeyType = "RANGE"
                     },
                 },
@@ -33,12 +27,12 @@ namespace SlideshowCreator
                 {
                     new AttributeDefinition
                     {
-                        AttributeName = "artist",
-                        AttributeType = "S"
+                        AttributeName = "pageId",
+                        AttributeType = "N"
                     },
                     new AttributeDefinition
                     {
-                        AttributeName = "name",
+                        AttributeName = "artist",
                         AttributeType = "S"
                     }
                 },

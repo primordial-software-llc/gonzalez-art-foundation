@@ -83,7 +83,7 @@ namespace SlideshowCreator
         {
             string[] files = Directory.GetFiles(DataDump.CLASSIFICATION_ARCHIVE);
 
-            foreach (var fileName in files)
+            foreach (var fileName in files.Take(1000))
             {
                 string rawPageId = fileName
                     .Replace(DataDump.CLASSIFICATION_ARCHIVE + "\\", String.Empty)
