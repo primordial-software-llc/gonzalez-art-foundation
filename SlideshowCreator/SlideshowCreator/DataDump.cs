@@ -9,7 +9,7 @@ namespace SlideshowCreator
     {
         public const string HTML_ARCHIVE = "C:\\Data\\HtmlArchive";
         public const string IMAGE_ARCHIVE = "C:\\Data\\ImageArchive";
-        public const string INDEX_ARCHIVE = "C:\\Data\\Classification";
+        public const string CLASSIFICATION_ARCHIVE = "C:\\Data\\Classification";
         public const string FILE_IDENTITY_TEMPLATE = "page-id-";
         public const string IMAGE_RELATIVE_URL_TEMPLATE = "display_image.php?id=";
 
@@ -18,7 +18,6 @@ namespace SlideshowCreator
         private readonly string targetUrl;
         private readonly string urlTemplate;
         private readonly string pageNotFoundIndicatorText;
-
 
         public DataDump()
         {
@@ -57,7 +56,7 @@ namespace SlideshowCreator
         public string GetPageFileNameJson(int pageId)
         {
             var identity = FILE_IDENTITY_TEMPLATE + pageId;
-            var destinationHtml = INDEX_ARCHIVE + "/" + identity + ".json";
+            var destinationHtml = CLASSIFICATION_ARCHIVE + "/" + identity + ".json";
             return destinationHtml;
         }
 

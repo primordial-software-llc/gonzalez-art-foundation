@@ -11,6 +11,8 @@ namespace SlideshowCreator
         public string Artist { get; set; }
         [JsonProperty("date")]
         public string Date { get; set; }
+        [JsonProperty("pageId")]
+        public int PageId { get; set; }
         [JsonProperty("imageId")]
         public int ImageId { get; set; }
     }
