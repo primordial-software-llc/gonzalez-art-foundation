@@ -13,6 +13,7 @@ namespace SlideshowCreator
 {
     class DataClassificationPersistenceExecutor
     {
+        private int batchSize = 25;
 
         private bool TableExists(string tableName)
         {
@@ -40,6 +41,76 @@ namespace SlideshowCreator
                 tableDescription = client.DescribeTable(tableName).Table;
                 Console.WriteLine("Waiting for table status: " + status.Value);
             } while (tableDescription.TableStatus != status);
+        }
+
+        private Dictionary<string, AttributeValue> ConvertToNameValuePair(Classification classification)
+        {
+            var kvp = new Dictionary<string, AttributeValue>();
+            kvp.Add("pageId", new AttributeValue { N = classification.PageId.ToString() });
+
+            kvp.Add("artist", new AttributeValue { S = string.IsNullOrWhiteSpace(classification.Artist)
+                ? DataClassifier.UNKNOWN_ARTIST
+                : classification.Artist });
+
+            if (classification.ImageId > 0)
+            {
+                kvp.Add("imageId", new AttributeValue { N = classification.ImageId.ToString() });
+            }
+
+            if (!string.IsNullOrWhiteSpace(classification.Name))
+            {
+                kvp.Add("name", new AttributeValue { S = classification.Name });
+            }
+
+            if (!string.IsNullOrWhiteSpace(classification.Date))
+            {
+                kvp.Add("date", new AttributeValue { S = classification.Date });
+            }
+
+            return kvp;
+        }
+
+
+        public Dictionary<string, List<WriteRequest>> GetBatchWriteRequest(List<Classification> classifications)
+        {
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+            
+            var batchWrite = new Dictionary<string, List<WriteRequest>> { [request.TableName] = new List<WriteRequest>() };
+
+            foreach (var classification in classifications)
+            {
+                var putRequest = new PutRequest(ConvertToNameValuePair(classification));
+                var writeRequest = new WriteRequest(putRequest);
+                batchWrite[request.TableName].Add(writeRequest);
+            }
+
+            return batchWrite;
+        }
+
+        /// <summary>
+        /// Something is wrong with the de-serialization of the values into the write requests.
+        /// </summary>
+        /// <returns></returns>
+        private Classification GetClassificationFromWriteRequest(WriteRequest writeRequest)
+        {
+            var classification = new Classification();
+            classification.Artist = writeRequest.PutRequest.Item["artist"].S;
+            classification.PageId = int.Parse(writeRequest.PutRequest.Item["pageId"].N);
+
+            if (writeRequest.PutRequest.Item.ContainsKey("date"))
+            {
+                classification.Date = writeRequest.PutRequest.Item["date"].S;
+            }
+            if (writeRequest.PutRequest.Item.ContainsKey("name"))
+            {
+                classification.Name = writeRequest.PutRequest.Item["name"].S;
+            }
+            if (writeRequest.PutRequest.Item.ContainsKey("imageId"))
+            {
+                classification.ImageId = int.Parse(writeRequest.PutRequest.Item["imageId"].N);
+            }
+
+            return classification;
         }
 
         [TestCase]
@@ -77,14 +148,14 @@ namespace SlideshowCreator
             WaitForTableStatus(request.TableName, TableStatus.ACTIVE);
         }
 
-        List<Dictionary<string, AttributeValue>> classifications = new List<Dictionary<string, AttributeValue>>();
+        List<Classification> classifications = new List<Classification>();
 
         [Test]
         public void B_Pull_Records_With_ID()
         {
             string[] files = Directory.GetFiles(DataDump.CLASSIFICATION_ARCHIVE);
 
-            foreach (var fileName in files.Take(1000))
+            foreach (var fileName in files)
             {
                 string rawPageId = fileName
                     .Replace(DataDump.CLASSIFICATION_ARCHIVE + "\\", String.Empty)
@@ -95,22 +166,11 @@ namespace SlideshowCreator
                 var jsonClassifiction = File.ReadAllText(fileName);
                 var classifiation = JsonConvert.DeserializeObject<Classification>(jsonClassifiction);
                 classifiation.PageId = pageId;
-
-                var kvp = new Dictionary<string, AttributeValue>
-                {
-                    {"artist", new AttributeValue {S = classifiation.Artist}},
-                    {"name", new AttributeValue {S = classifiation.Name}},
-                    {"date", new AttributeValue {S = classifiation.Date}},
-                    {"imageId", new AttributeValue {N = classifiation.ImageId.ToString()}},
-                    {"pageId", new AttributeValue {N = classifiation.PageId.ToString()}}
-                };
-
-                classifications.Add(kvp);
+                classifications.Add(classifiation);
             }
         }
 
-        List<List<Dictionary<string, AttributeValue>>> classificationBatches = new List<List<Dictionary<string, AttributeValue>>>();
-        int batchSize = 25;
+        readonly List<List<Classification>> classificationBatches = new List<List<Classification>>();
 
         [Test]
         public void C_Group_Into_Batches()
@@ -120,50 +180,34 @@ namespace SlideshowCreator
                 classificationBatches.Add(classifications.Take(batchSize).ToList());
                 classifications = classifications.Skip(batchSize).ToList();
             }
+
         }
-        
-        private List<Dictionary<string, List<WriteRequest>>> AllUnprocessedItems = new List<Dictionary<string, List<WriteRequest>>>();
+
         [Test]
-        public void D_Insert_Sample()
+        public void D_Insert_In_Bulk()
         { 
             var client = new DynamoDbClientFactory().Create();
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
-            foreach (var batch in classificationBatches)
+            for (var index = 0; index < classificationBatches.Count; index += 1)
             {
-                var batchWriteRequest =
-                    new BatchWriteItemRequest(
-                        new Dictionary<string, List<WriteRequest>> {[request.TableName] = new List<WriteRequest>()});
+                var batchOfClassifications = classificationBatches[index];
+                File.WriteAllText("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\DynamoDbProgress.txt", JsonConvert.SerializeObject(batchOfClassifications));
+                BatchWriteItemResponse batchWriteResponse = client.BatchWriteItem(GetBatchWriteRequest(batchOfClassifications));
 
-                foreach (var classification in batch)
+                if (batchWriteResponse.UnprocessedItems.Count > 0)
                 {
-                    var putRequest = new PutRequest(classification);
-                    var writeRequest = new WriteRequest(putRequest);
-                    batchWriteRequest.RequestItems[request.TableName].Add(writeRequest);
+                    List<Classification> failedClassifications = new List<Classification>();
+                    foreach (var failedWriteRequest in batchWriteResponse.UnprocessedItems[request.TableName])
+                    {
+                        failedClassifications.Add(GetClassificationFromWriteRequest(failedWriteRequest));
+                    }
+
+                    classificationBatches.Add(failedClassifications);
+
+                    File.WriteAllText("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\DynamoDbProgressOfFailures.txt",
+                        $"Encountered {failedClassifications.Count} failures on. On batch number {index} of {classificationBatches.Count} batches");
                 }
-
-                File.WriteAllText("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\DynamoDbProgress.txt", JsonConvert.SerializeObject(batch));
-                BatchWriteItemResponse batchWriteResponse = client.BatchWriteItem(batchWriteRequest);
-
-                Dictionary<string, List<WriteRequest>> unprocessed = batchWriteResponse.UnprocessedItems;
-                AllUnprocessedItems.Add(unprocessed);
-            }
-        }
-
-        //[Test]
-        public void E_Retry_Failed()
-        {
-            if (AllUnprocessedItems.Count == 0)
-            {
-                return;
-            }
-            var client = new DynamoDbClientFactory().Create();
-
-            foreach (var unprocessedItem in AllUnprocessedItems)
-            {
-                File.WriteAllText("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\DynamoDbProgress.txt", JsonConvert.SerializeObject(unprocessedItem));
-                BatchWriteItemResponse batchWriteResponse = client.BatchWriteItem(unprocessedItem);
-                Assert.AreEqual(0, batchWriteResponse.UnprocessedItems.Count);
             }
         }
 

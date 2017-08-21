@@ -39,7 +39,7 @@ namespace SlideshowCreator
                 ProvisionedThroughput = new ProvisionedThroughput
                 {
                     ReadCapacityUnits = 1,
-                    WriteCapacityUnits = 5 // WARNING Lower this once done.
+                    WriteCapacityUnits = 1 // This actually needs to be 400 to do batches of 25 in quick succesion without getting unprocessed items
                 }
             };
 

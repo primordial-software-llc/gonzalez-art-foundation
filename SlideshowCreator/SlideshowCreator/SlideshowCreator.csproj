@@ -54,7 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classification.cs" />
+    <Compile Include="Models\Classification.cs" />
     <Compile Include="DataClassificationExecutor.cs" />
     <Compile Include="DataClassificationPersistenceExecutor.cs" />
     <Compile Include="DataClassifier.cs" />
