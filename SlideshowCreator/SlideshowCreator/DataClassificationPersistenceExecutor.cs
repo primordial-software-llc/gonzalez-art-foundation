@@ -113,7 +113,7 @@ namespace SlideshowCreator
             return classification;
         }
 
-        [TestCase]
+        //[TestCase]
         //[TestCase] Have to run this a few times if changes are made in order to test the test.
         //[TestCase]
         public void A_Drop_Then_Create_Table()
@@ -150,7 +150,7 @@ namespace SlideshowCreator
 
         List<Classification> classifications = new List<Classification>();
 
-        [Test]
+        //[Test]
         public void B_Pull_Records_With_ID()
         {
             string[] files = Directory.GetFiles(DataDump.CLASSIFICATION_ARCHIVE);
@@ -172,7 +172,7 @@ namespace SlideshowCreator
 
         readonly List<List<Classification>> classificationBatches = new List<List<Classification>>();
 
-        [Test]
+        //[Test]
         public void C_Group_Into_Batches()
         {
             while (classifications.Any())
@@ -183,7 +183,7 @@ namespace SlideshowCreator
 
         }
 
-        [Test]
+        //[Test]
         public void D_Insert_In_Bulk()
         { 
             var client = new DynamoDbClientFactory().Create();
@@ -209,6 +209,18 @@ namespace SlideshowCreator
                         $"Encountered {failedClassifications.Count} failures on. On batch number {index} of {classificationBatches.Count} batches");
                 }
             }
+        }
+
+        [Test]
+        public void Check_Count()
+        {
+            var client = new DynamoDbClientFactory().Create();
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var tableDescription = client.DescribeTable(request.TableName);
+            Console.WriteLine(tableDescription.Table.ItemCount);
+
+            Assert.AreEqual(288106, tableDescription.Table.ItemCount); // That feels good. Perfect run with error handling and retrying records.
         }
 
     }
