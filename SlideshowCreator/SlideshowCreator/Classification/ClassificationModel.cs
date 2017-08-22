@@ -1,9 +1,9 @@
 ﻿
 using Newtonsoft.Json;
 
-namespace SlideshowCreator.Models
+namespace SlideshowCreator.Classification
 {
-    class Classification
+    class ClassificationModel
     {
         [JsonProperty("pageId")]
         public int PageId { get; set; }

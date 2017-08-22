@@ -11,10 +11,7 @@ namespace SlideshowCreator
         private readonly Throttle throttle = new Throttle();
 
         // Safety mechanisms.
-        private string expectedIP = "";
-        private string ipCheckerUrl = "";
-        private string targetUrl = "";
-        private string pageNotFoundIndicatorText = "";
+        private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
 
         [Test]
         public void A_Test_VPN()
@@ -23,10 +20,10 @@ namespace SlideshowCreator
             using (var wc = new WebClient())
             {
                 wc.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36");
-                html = wc.DownloadString(ipCheckerUrl);
+                html = wc.DownloadString(privateConfig.IpCheckerUrl);
             }
             Console.WriteLine(html);
-            var expected = $@"{ipCheckerUrl}/ip/{expectedIP}";
+            var expected = $@"{privateConfig.IpCheckerUrl}/ip/{privateConfig.ExpectedIp}";
             StringAssert.Contains(expected, html);
         }
 
@@ -47,37 +44,34 @@ namespace SlideshowCreator
             timer.Stop();
 
             Assert.IsTrue(timer.ElapsedMilliseconds > 1 && timer.ElapsedMilliseconds < expectedMaxWaitInMs);
-            Console.WriteLine(timer.ElapsedMilliseconds);
 
             timer = new Stopwatch();
             timer.Start();
             throttle.HoldBack();
             timer.Stop();
             Assert.IsTrue(timer.ElapsedMilliseconds > 1 && timer.ElapsedMilliseconds < expectedMaxWaitInMs);
-            Console.WriteLine(timer.ElapsedMilliseconds);
 
             timer = new Stopwatch();
             timer.Start();
             throttle.HoldBack();
             timer.Stop();
             Assert.IsTrue(timer.ElapsedMilliseconds > 1 && timer.ElapsedMilliseconds < expectedMaxWaitInMs);
-            Console.WriteLine(timer.ElapsedMilliseconds);
         }
 
         [Test]
         public void C_Check_Sample()
         {
-            var dataDump = new DataDump(targetUrl, pageNotFoundIndicatorText);
+            var dataDump = new DataDump(privateConfig.TargetUrl, privateConfig.PageNotFoundIndicatorText);
             int pageId = 33;
             dataDump.Dump(pageId);
             throttle.HoldBack();
-            File.WriteAllText("C:\\Users\\random\\Desktop\\projects\\SlideshowCreator\\Progress.txt", "lastPageId: " + pageId);
+            File.WriteAllText(PublicConfig.DataDumpProgress, "lastPageId: " + pageId);
         }
 
-        [Test]
+        //[Test]
         public void D_Dump_All()
         {
-            var dataDump = new DataDump(targetUrl, pageNotFoundIndicatorText);
+            var dataDump = new DataDump(privateConfig.TargetUrl, privateConfig.PageNotFoundIndicatorText);
 
             for (var pageId = 33; pageId < 288400; pageId += 1)
             {

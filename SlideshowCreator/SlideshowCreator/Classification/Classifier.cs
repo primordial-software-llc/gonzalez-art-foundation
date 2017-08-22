@@ -1,9 +1,7 @@
 ﻿
-using SlideshowCreator.Models;
-
-namespace SlideshowCreator
+namespace SlideshowCreator.Classification
 {
-    class DataClassifier
+    class Classifier
     {
         /// <summary>
         /// The images have a composite key of pageId and artist.
@@ -12,27 +10,27 @@ namespace SlideshowCreator
         /// Amazon.DynamoDBv2.AmazonDynamoDBException : The provided key element does not match the schema
         /// </summary>
         public const string UNKNOWN_ARTIST = "Unknown";
-        public Classification Classify(string page)
+        public ClassificationModel Classify(string page, int pageId)
         {
-            var dataDump = new DataDump();
-            var name = dataDump.GetBetween(page, "<h1>", "</h1>");
+            var name = Crawler.GetBetween(page, "<h1>", "</h1>");
             if (name.Contains("<div"))
             {
-                name = dataDump.GetBetween(page, "<h1>", "<div");
+                name = Crawler.GetBetween(page, "<h1>", "<div");
             }
-            var artist = dataDump.GetBetween(page, $"The Athenaeum - {name} (", " - )");
-            var date = dataDump.GetBetween(page, $"{artist}</a>", "<br/>").Trim();
+            var artist = Crawler.GetBetween(page, $"The Athenaeum - {name} (", " - )");
+            var date = Crawler.GetBetween(page, $"{artist}</a>", "<br/>").Trim();
             if (!string.IsNullOrWhiteSpace(date))
             {
                 date = date.Substring(2, date.Length - 2);
             }
-            int imageId = dataDump.GetImageId(page);
+            int imageId = Crawler.GetImageId(page);
 
-            var classification = new Classification();
+            var classification = new ClassificationModel();
+            classification.ImageId = imageId;
+            classification.PageId = pageId;
             classification.Name = name;
             classification.Artist = artist;
             classification.Date = date;
-            classification.ImageId = imageId;
 
             return classification;
         }
