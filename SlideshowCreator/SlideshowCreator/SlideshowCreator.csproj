@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ImagesDotNgaDotGov.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />
     <Compile Include="Classification\ClassificationExecutor.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="PublicConfig.cs" />
     <Compile Include="Throttle.cs" />
     <Compile Include="NormalDistributionRandom\UniformRandomGenerator.cs" />
+    <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

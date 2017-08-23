@@ -18,7 +18,10 @@ namespace SlideshowCreator
 
         [JsonProperty("pageNotFoundIndicatorText")]
         public string PageNotFoundIndicatorText { get; set; }
-        
+
+        [JsonProperty("target2Url")]
+        public string Target2Url { get; set; }
+
         public static PrivateConfig Create(string fullPath)
         {
             var json = File.ReadAllText(fullPath);

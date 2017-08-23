@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Net;
 using NUnit.Framework;
 
 namespace SlideshowCreator
@@ -9,22 +7,12 @@ namespace SlideshowCreator
     public class DataDumpExecutor
     {
         private readonly Throttle throttle = new Throttle();
-
-        // Safety mechanisms.
         private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
 
         [Test]
         public void A_Test_VPN()
         {
-            string html;
-            using (var wc = new WebClient())
-            {
-                wc.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36");
-                html = wc.DownloadString(privateConfig.IpCheckerUrl);
-            }
-            Console.WriteLine(html);
-            var expected = $@"{privateConfig.IpCheckerUrl}/ip/{privateConfig.ExpectedIp}";
-            StringAssert.Contains(expected, html);
+            new VpnCheck().AssertVpnInUse(privateConfig);
         }
 
         /// <summary>

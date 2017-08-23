@@ -94,6 +94,54 @@ http://images.nga.gov/en/page/openaccess.html
 
 >As a courtesy to the Gallery and to enable others to identify and locate information about its collections, the Gallery encourages users to include the following credit with any use of one of its open access images: Courtesy National Gallery of Art, Washington
 
+http://images.nga.gov/robots.txt
+
+    #
+    # "$Id: robots.txt 3494 2003-03-19 15:37:44Z mike $"
+    #
+    #   This file tells search engines not to index your CUPS server.
+    #
+    #   Copyright 1993-2003 by Easy Software Products.
+    #
+    #   These coded instructions, statements, and computer programs are the
+    #   property of Easy Software Products and are protected by Federal
+    #   copyright law.  Distribution and use rights are outlined in the file
+    #   "LICENSE.txt" which should have been included with this file.  If this
+    #   file is missing or damaged please contact Easy Software Products
+    #   at:
+    #
+    #       Attn: CUPS Licensing Information
+    #       Easy Software Products
+    #       44141 Airport View Drive, Suite 204
+    #       Hollywood, Maryland 20636-3111 USA
+    #
+    #       Voice: (301) 373-9600
+    #       EMail: cups-info@cups.org
+    #         WWW: http://www.cups.org
+    #
+
+    #User-agent: *
+    #Disallow: /
+
+    User-agent: *
+    Crawl-delay: 40
+    #
+    # End of "$Id: robots.txt 3494 2003-03-19 15:37:44Z mike $".
+    #
+
+At a mere 40 seconds each with result sets of 75 that means it would take:
+
+    45000 seconds / 75 results per page = 6000 paging requests
+    6000*40seconds = 24,000 seconds / 60 seconds = 400 minutes / 60 minutes = 6.6666 hours
+
+That's how long it would take to build an index of images. I want the super high res images, so I can create a good experience for a gallery. That means I'm looking at
+
+    40 seconds * 45,000 images = 1,800,000 million seconds to download 45,000 images
+
+    That breaks down to 21 days.
+
+This actually isn't that bad. I need to index the site first, that wll take more dev time than computing time. Then I can worry about scraping the high-res images.
+I can also view the images transiently and avoid scraping entirely. I can buffer up some images and perhaps solve the problem entirely. It will be semi-complex, because the images are zipped, but that just means I can't do it in pure html like I'm planning with the-atheneum. Everything would need to be routed through a server which can download, unzip, then server the image file.
 
 ## Helpful Projects
 
