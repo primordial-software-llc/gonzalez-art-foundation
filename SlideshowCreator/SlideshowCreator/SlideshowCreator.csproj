@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Crypto.cs" />
     <Compile Include="ImagesDotNgaDotGov.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />
