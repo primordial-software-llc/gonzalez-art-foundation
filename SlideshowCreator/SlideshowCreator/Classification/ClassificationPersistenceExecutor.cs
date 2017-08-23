@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Newtonsoft.Json;
@@ -220,43 +219,7 @@ namespace SlideshowCreator.Classification
             var tableDescription = client.DescribeTable(request.TableName);
             Console.WriteLine(tableDescription.Table.ItemCount);
 
-            // AHHHH - I lost three records. Assert.AreEqual(288106, tableDescription.Table.ItemCount); // That feels good. Perfect run with error handling and retrying records.
-            // Ok, there not lost, but they are just not in the database. I need to just finish up and I can fix all of these issues later.
-            // I need an add-or-update to reclassify.
-            // Then once I have that, I can get new pages as well.
-            // This is what block-chains are for. I have no way of knowing what page is missing.
-            // Even if I ordered by page id, I could narrow down where to look, but the pages started at 33,
-            // so they may not be perfect. Oh well, I knew this was going to get hit.
-            Assert.AreEqual(288103, tableDescription.Table.ItemCount); // That feels good. Perfect run with error handling and retrying records.
-            // On top of it all, I don't know how I lost 3 records fixing one record at a time. Ugh...
-
-            // Check this out, when I reclassify, I'm going to make a block chain.
-            // The reason why is, without it, I will never have data integrity.
-            // What about reclassifying partially?
-            // That's an awesome problem to solve!
-            // Blockchain amendments.
-            // It can be done.
-            // You need to re-hash everything forward, but you do it as a new line of metadata.
-            // hash1
-            // hash1
-            // hash1
-            // hash1 hash2
-            // hash1 hash2
-            // hash1 hash2
-            // hash1 hash2 hash3
-            // hash1 hash2 hash3
-            // hash1 hash2 hash3
-            // hash1 hash2 hash3
-
-            // Well if all else fails, I still have the originals.
-            // I can dumpa all the dynamodb data, it's only like 20mb,
-            // then search for 3 missing records locally.
-
-            // That or wait three days for another scan.
-
-            // Or pound the crap out of the site.
-
-            // See what I mean you can preserve history and integrity in a blockchain while making amendments.
+            Assert.AreEqual(288105, tableDescription.Table.ItemCount); // Now only off by 1 record. I have no clue what happened! I'll fix the existence of this problem with a backup after re-indexing.
         }
 
         [Test]
@@ -274,17 +237,8 @@ namespace SlideshowCreator.Classification
             Assert.AreEqual("Léon Bakst", classification.Artist);
             Assert.AreEqual("1913-1922", classification.Date);
         }
-
-        [Test]
-        public void This_Problem_Doesnt_Exist_From_A_Reproduction_Perspective_But_I_Dont_Want_To_Recrawl_Just_Yet()
-        {
-            var json = File.ReadAllText("C:\\Data\\Classification\\page-id-165488.json", Encoding.UTF8);
-            var classification = JsonConvert.DeserializeObject<ClassificationModel>(json);
-            Assert.AreEqual("LÃ©on Bakst", classification.Artist);
-
-        }
         
-        [Test]
+        //[Test]
         public void Find_All_E_Acute_Artists()
         {
             var client = new DynamoDbClientFactory().Create(); // Lookup the old artists name.
@@ -355,6 +309,68 @@ namespace SlideshowCreator.Classification
 
             Console.WriteLine(pageId);
             Check_Count();
+        }
+
+        // These can move to the web app tomorrow.
+        // The web app is going to need a "Global Secondary Index" on artist for this to work for a user.
+
+        [Test]
+        public void Find_All_For_Artist()
+        {
+            var client = new DynamoDbClientFactory().Create(); // Lookup the old artists name.
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            //var artistNameIs = "eon Gérô";
+            var artistNameIs = "Jean-Leon Gerome"; // I've got to make this work. Pretty much no search is accent insensitive. Even elastic search reccomends to index twice with and without diatrics.
+
+            // https://stackoverflow.com/questions/5459641/replacing-characters-in-c-sharp-ascii/13154805#13154805
+            // I'll have to rip through everything again.
+            // I may as well re-classify transiently, add a new field called originalArtistName which is just a plain field for display.
+            // For search I will use the simple ascii.
+            // 
+            // pageId (partitionKey)
+            // artist (sortKey - stripped of diatrics)
+            // imageId
+            // name
+            // date
+            // originalArtist
+
+            // The gallery must show the original artist name, out of respect for the artist.
+
+            // Then just add a global seconary index on artist.
+
+            // Ugh, that's a few days work. To speed it up I will just grab all, then update all, risking data loss within dynamodb is fine.
+            // Just fixing the data in dynamodb should cut the work down to a day.
+            // Then I can work on the queries for the interface...and finally the interface this weekend.
+            // Should be really quick, I just need something slightly better than Microsofts and My TV's ridiculous image viewer's.
+            
+            // I kind of want to move quick now to start on nga.gov and set up my "requester".
+
+            var scanRequest = new ScanRequest(request.TableName);
+            scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":artist", new AttributeValue { S = artistNameIs } }
+            };
+            scanRequest.FilterExpression = "contains(artist, :artist)";
+
+            ScanResponse scanResponse = null;
+
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+            do
+            {
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanResponse = client.Scan(scanRequest);
+
+                if (scanResponse.Items.Any())
+                {
+                    allMatches.AddRange(scanResponse.Items);
+                }
+            } while (scanResponse.LastEvaluatedKey.Any());
+
+            Console.WriteLine("Matches: " + allMatches.Count); // No results right now without accents.
         }
 
     }

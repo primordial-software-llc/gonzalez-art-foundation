@@ -2,6 +2,14 @@
 
 This repository is dedicated to documenting my journey to systematically discover and acquire fine art paintings.
 
+## DynamoDB Settings
+
+Read Capacity: 25
+Write Capacity: 25
+Estimated Monthly Cost: $14.51
+
+This should be adequate for transient classification and application usage.
+
 ## Acquisitions
 
 [Expectations (1885) by Sir Lawrence Alma-Tadema]( http://www.the-athenaeum.org/art/detail.php?ID=329)
