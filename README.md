@@ -141,7 +141,7 @@ That's how long it would take to build an index of images. I want the super high
     That breaks down to 21 days.
 
 This actually isn't that bad. I need to index the site first, that wll take more dev time than computing time. Then I can worry about scraping the high-res images.
-I can also view the images transiently and avoid scraping entirely. I can buffer up some images and perhaps solve the problem entirely. It will be semi-complex, because the images are zipped, but that just means I can't do it in pure html like I'm planning with the-atheneum. Everything would need to be routed through a server which can download, unzip, then server the image file.
+I can also view the images transiently and avoid scraping entirely. I can buffer up some images and perhaps solve the problem entirely. It will be semi-complex, because the images are zipped, but that just means I can't do it in pure html like I'm planning with the-atheneum. Everything would need to be routed through a server which can download, unzip, then serve the image file.
 
 ## Helpful Projects
 
