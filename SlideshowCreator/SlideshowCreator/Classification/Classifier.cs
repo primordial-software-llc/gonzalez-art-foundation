@@ -1,4 +1,6 @@
 ﻿
+using Diacritics.Extensions;
+
 namespace SlideshowCreator.Classification
 {
     class Classifier
@@ -29,7 +31,8 @@ namespace SlideshowCreator.Classification
             classification.ImageId = imageId;
             classification.PageId = pageId;
             classification.Name = name;
-            classification.Artist = artist;
+            classification.OriginalArtist = artist;
+            classification.Artist = artist.RemoveDiacritics();
             classification.Date = date;
 
             return classification;

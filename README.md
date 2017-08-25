@@ -39,6 +39,9 @@ The process yields the following folder structure:
 
 ## Gallery
 
+### Authentication
+At the very minimum, the gallery will store a salted hash of a password. The password will be sent in plain-text over SSL. This is entirely adequate for read-only access for a resource which simply needs to remain `persoal` until I can figure out what I have and at least identify what is and is not in the public domain. Potentially I could re-write non-commercial pieces of software in use and do whatever I'd like with a portion of the site with public domain imagery.
+
 ### Image Hosting
 Don't self-host the images while the-athenaeum is hosting the images. Simply point your application to the-atheneum. The application should only be an index like is described in [The Library of Babel](https://en.wikipedia.org/wiki/The_Library_of_Babel).
 
@@ -85,7 +88,7 @@ Use Cases
 
 ## Future Data Targets
 
-I did see a browser check that said DDos protection and had AWS imagery. I'm not sure how that would affect a crawler. Perhaps it requires JavaScript execution. This would be a good challenge.
+I did see a browser check that said DDos protection from CloudFlare (CEO the Matthew prince). I'm not sure how that would affect a crawler. Perhaps it requires JavaScript execution. This would be a good challenge.
 
 http://images.nga.gov
 https://www.nga.gov/content/ngaweb/notices/terms-of-use.html
@@ -155,3 +158,6 @@ I can also view the images transiently and avoid scraping entirely. I can buffer
 
 ### Normal Random Numbers for Throttling
 http://www.csharpcity.com/2010/normal-distribution-random-generator-available/
+
+### Diacritic Squashing
+https://github.com/thomasgalliker/Diacritics.NET

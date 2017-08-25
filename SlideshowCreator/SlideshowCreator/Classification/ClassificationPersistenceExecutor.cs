@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Diacritics.Extensions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -42,33 +44,6 @@ namespace SlideshowCreator.Classification
             } while (tableDescription.TableStatus != status);
         }
 
-        private Dictionary<string, AttributeValue> ConvertToNameValuePair(ClassificationModel classification)
-        {
-            var kvp = new Dictionary<string, AttributeValue>();
-            kvp.Add("pageId", new AttributeValue { N = classification.PageId.ToString() });
-
-            kvp.Add("artist", new AttributeValue { S = string.IsNullOrWhiteSpace(classification.Artist)
-                ? Classifier.UNKNOWN_ARTIST
-                : classification.Artist });
-
-            if (classification.ImageId > 0)
-            {
-                kvp.Add("imageId", new AttributeValue { N = classification.ImageId.ToString() });
-            }
-
-            if (!string.IsNullOrWhiteSpace(classification.Name))
-            {
-                kvp.Add("name", new AttributeValue { S = classification.Name });
-            }
-
-            if (!string.IsNullOrWhiteSpace(classification.Date))
-            {
-                kvp.Add("date", new AttributeValue { S = classification.Date });
-            }
-
-            return kvp;
-        }
-
 
         public Dictionary<string, List<WriteRequest>> GetBatchWriteRequest(List<ClassificationModel> classifications)
         {
@@ -78,7 +53,8 @@ namespace SlideshowCreator.Classification
 
             foreach (var classification in classifications)
             {
-                var putRequest = new PutRequest(ConvertToNameValuePair(classification));
+                var dyamoDbModel = new ClassificationConversion().ConvertToDynamoDb(classification);
+                var putRequest = new PutRequest(dyamoDbModel);
                 var writeRequest = new WriteRequest(putRequest);
                 batchWrite[request.TableName].Add(writeRequest);
             }
@@ -92,24 +68,8 @@ namespace SlideshowCreator.Classification
         /// <returns></returns>
         private ClassificationModel GetClassificationFromWriteRequest(WriteRequest writeRequest)
         {
-            var classification = new ClassificationModel();
-            classification.Artist = writeRequest.PutRequest.Item["artist"].S;
-            classification.PageId = int.Parse(writeRequest.PutRequest.Item["pageId"].N);
-
-            if (writeRequest.PutRequest.Item.ContainsKey("date"))
-            {
-                classification.Date = writeRequest.PutRequest.Item["date"].S;
-            }
-            if (writeRequest.PutRequest.Item.ContainsKey("name"))
-            {
-                classification.Name = writeRequest.PutRequest.Item["name"].S;
-            }
-            if (writeRequest.PutRequest.Item.ContainsKey("imageId"))
-            {
-                classification.ImageId = int.Parse(writeRequest.PutRequest.Item["imageId"].N);
-            }
-
-            return classification;
+            return new ClassificationConversion()
+                .ConvertToPoco(writeRequest.PutRequest.Item);
         }
 
         //[TestCase]
@@ -210,6 +170,9 @@ namespace SlideshowCreator.Classification
             }
         }
 
+        /// <summary>
+        /// I have some work to do re-indexing.
+        /// </summary>
         [Test]
         public void Check_Count()
         {
@@ -219,10 +182,10 @@ namespace SlideshowCreator.Classification
             var tableDescription = client.DescribeTable(request.TableName);
             Console.WriteLine(tableDescription.Table.ItemCount);
 
-            Assert.AreEqual(288105, tableDescription.Table.ItemCount); // Now only off by 1 record. I have no clue what happened! I'll fix the existence of this problem with a backup after re-indexing.
+            Assert.AreEqual(288100, tableDescription.Table.ItemCount);
         }
 
-        [Test]
+        //[Test]
         public void Classify_Page_With_E_Acute_Transiently()
         {
             var privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
@@ -276,6 +239,8 @@ namespace SlideshowCreator.Classification
             }
         }
 
+        // Once I'm done with fixing the existing, I want to re-classify the sample and test that new classifications squash the diacritic and use the original artist name field.
+        // Very important otherwise I can't get new pages or receive updates.
         public void Reclassify_Transiently(int pageId)
         {
             var privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
@@ -304,7 +269,8 @@ namespace SlideshowCreator.Classification
                 client.DeleteItem(request.TableName, existingRecord);
             }
 
-            var refreshedNvp = ConvertToNameValuePair(classification);
+            var refreshedNvp = new ClassificationConversion()
+                .ConvertToDynamoDb(classification);
             client.PutItem(request.TableName, refreshedNvp);
 
             Console.WriteLine(pageId);
@@ -314,37 +280,13 @@ namespace SlideshowCreator.Classification
         // These can move to the web app tomorrow.
         // The web app is going to need a "Global Secondary Index" on artist for this to work for a user.
 
-        [Test]
+        //[Test]
         public void Find_All_For_Artist()
         {
             var client = new DynamoDbClientFactory().Create(); // Lookup the old artists name.
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
-            //var artistNameIs = "eon Gérô";
-            var artistNameIs = "Jean-Leon Gerome"; // I've got to make this work. Pretty much no search is accent insensitive. Even elastic search reccomends to index twice with and without diatrics.
-
-            // https://stackoverflow.com/questions/5459641/replacing-characters-in-c-sharp-ascii/13154805#13154805
-            // I'll have to rip through everything again.
-            // I may as well re-classify transiently, add a new field called originalArtistName which is just a plain field for display.
-            // For search I will use the simple ascii.
-            // 
-            // pageId (partitionKey)
-            // artist (sortKey - stripped of diatrics)
-            // imageId
-            // name
-            // date
-            // originalArtist
-
-            // The gallery must show the original artist name, out of respect for the artist.
-
-            // Then just add a global seconary index on artist.
-
-            // Ugh, that's a few days work. To speed it up I will just grab all, then update all, risking data loss within dynamodb is fine.
-            // Just fixing the data in dynamodb should cut the work down to a day.
-            // Then I can work on the queries for the interface...and finally the interface this weekend.
-            // Should be really quick, I just need something slightly better than Microsofts and My TV's ridiculous image viewer's.
-            
-            // I kind of want to move quick now to start on nga.gov and set up my "requester".
+            var artistNameIs = "eon Gérô";
 
             var scanRequest = new ScanRequest(request.TableName);
             scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
@@ -371,6 +313,121 @@ namespace SlideshowCreator.Classification
             } while (scanResponse.LastEvaluatedKey.Any());
 
             Console.WriteLine("Matches: " + allMatches.Count); // No results right now without accents.
+        }
+        
+        //[Test]
+        public void Activate_Overdrive()
+        {
+            var client = new DynamoDbClientFactory().Create();
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+            
+            var provisionedThroughputRequest = new ProvisionedThroughput(400, 5); // Estimated at $50 per month (I'm assuming this is high, because I'm setting it for a very short period of time)
+            var response = client.UpdateTable(request.TableName, provisionedThroughputRequest);
+            Assert.AreEqual(HttpStatusCode.OK, response.HttpStatusCode);
+        }
+
+        //[Test]
+        public void Deactivate_Overdrive()
+        {
+            var client = new DynamoDbClientFactory().Create();
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var provisionedThroughputRequest = new ProvisionedThroughput(25, 25); // Estimated at $15 per month (I'm assuming this is high, because I'm setting it for a very short period of time)
+            var response = client.UpdateTable(request.TableName, provisionedThroughputRequest);
+            Assert.AreEqual(HttpStatusCode.OK, response.HttpStatusCode);
+        }
+        
+        //[Test]
+        public void Test_Squashing_Diacritic()
+        {
+            var client = new DynamoDbClientFactory().Create(); // Lookup the old artists name.
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var artistNameIs = "Jean-Léon Gérôme";
+
+            var scanRequest = new ScanRequest(request.TableName);
+            scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":artist", new AttributeValue { S = artistNameIs } }
+            };
+            scanRequest.FilterExpression = "artist = :artist";
+
+            ScanResponse scanResponse = null;
+
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+            do
+            {
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanResponse = client.Scan(scanRequest);
+
+                if (scanResponse.Items.Any())
+                {
+                    allMatches.AddRange(scanResponse.Items);
+                }
+            } while (scanResponse.LastEvaluatedKey.Any());
+
+            Console.WriteLine("Matches: " + allMatches.Count); // No results right now without accents.
+            foreach (var match in allMatches.Select(x => new ClassificationConversion().ConvertToPoco(x)))
+            {
+                match.OriginalArtist = match.Artist;
+                match.Artist = match.Artist.RemoveDiacritics();
+
+                var todb = new ClassificationConversion().ConvertToDynamoDb(match);
+                var backToPoco = new ClassificationConversion().ConvertToPoco(todb);
+
+                Console.WriteLine(JsonConvert.SerializeObject(backToPoco));
+            }
+        }
+
+        [Test]
+        public void Rebuild_Table_Cant_Use_Local_Files_They_Have_Incorrect_Encoding_Remove_Diacritics_From_Artist_And_Store_Original_Artist_In_New_Field()
+        {
+            var client = new DynamoDbClientFactory().Create(); // Lookup the old artists name.
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+
+            ScanResponse scanResponse = null;
+            var scanRequest = new ScanRequest(request.TableName);
+            scanRequest.FilterExpression = $"attribute_not_exists({ClassificationModel.ORIGINAL_ARTIST})";
+            do
+            {
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanResponse = client.Scan(scanRequest);
+
+                if (scanResponse.Items.Any())
+                {
+                    allMatches.AddRange(scanResponse.Items);
+                }
+            } while (scanResponse.LastEvaluatedKey.Any());
+
+            Parallel.ForEach(allMatches, match =>
+            {
+                var matchAsPoco = new ClassificationConversion().ConvertToPoco(match);
+                matchAsPoco.OriginalArtist = matchAsPoco.Artist;
+                matchAsPoco.Artist = matchAsPoco.Artist.RemoveDiacritics();
+
+                Console.WriteLine("Correcting: " + JsonConvert.SerializeObject(matchAsPoco));
+
+                var recordIdentity = new Dictionary<string, AttributeValue>
+                {
+                    {"pageId", new AttributeValue {N = match["pageId"].N}},
+                    {"artist", new AttributeValue {S = match["artist"].S}}
+                };
+                client.DeleteItem(request.TableName, recordIdentity);
+
+                var diacriticFixedDynamoDbRecord = new ClassificationConversion()
+                    .ConvertToDynamoDb(matchAsPoco);
+                client.PutItem(request.TableName, diacriticFixedDynamoDbRecord);
+            });
+
+            Console.WriteLine("Records updated: " + allMatches.Count);
         }
 
     }
