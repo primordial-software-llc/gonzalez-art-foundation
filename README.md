@@ -4,9 +4,19 @@ This repository is dedicated to documenting my journey to systematically discove
 
 ## DynamoDB Settings
 
-Read Capacity: 25
+### Table
+Read Capacity: 5
 Write Capacity: 25
-Estimated Monthly Cost: $14.51
+Estimated Monthly Cost: $12.58
+
+### Global Secondary Index
+Read Capacity: 25
+Write Capacity: 5
+Estimated Monthly Cost: $4.84
+
+25 write should be just more than what I need for transient classification. Then 25 read is an absolute guess at what is fast on lookup up by artist name.
+
+`I'll probably need another Global Secondary Index for Name once I support that use case`
 
 This should be adequate for transient classification and application usage.
 
