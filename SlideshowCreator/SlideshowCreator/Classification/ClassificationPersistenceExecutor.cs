@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Diacritics.Extensions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -195,7 +194,7 @@ namespace SlideshowCreator.Classification
             var client = new DynamoDbClientFactory().Create();
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
-            var letterToSquash = "A";
+            var letterToSquash = "Z";
 
             var scanRequest = new ScanRequest(request.TableName);
             scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>

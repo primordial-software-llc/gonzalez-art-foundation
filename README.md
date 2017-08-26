@@ -18,6 +18,8 @@ Estimated Monthly Cost: $4.84
 
 `I'll probably need another Global Secondary Index for Name once I support that use case`
 
+- Do I need to search by name alone? How likely is it that you know the artist, but not the name? With the Artist global secondary index, name is the sort key, so the work under an artist is already index and will be fast. The problem here is having to duplicate the fields for searchability. If I need to add another index on a name field, that means storing the original name, then squashing diacritics and case. More importantly it means two duplicate fields. It begs the question of at which point do I use something like ElasticSearch?
+
 This should be adequate for transient classification and application usage.
 
 ## Acquisitions
@@ -47,26 +49,18 @@ The process yields the following folder structure:
 
 *Caution: Downloading over 100Gb into a single folder can cause undesired affects to a computer. The recommended course of action is to use an SSD and research windows folder optimizations. Don't attempt to version the content with Git.*
 
+`Need to think about downloading images when classifying transiently. This is all I want to store besides the index.`
+
 ## Gallery
 
 ### Authentication
 At the very minimum, the gallery will store a salted hash of a password. The password will be sent in plain-text over SSL. This is entirely adequate for read-only access for a resource which simply needs to remain `persoal` until I can figure out what I have and at least identify what is and is not in the public domain. Potentially I could re-write non-commercial pieces of software in use and do whatever I'd like with a portion of the site with public domain imagery.
 
 ### Image Hosting
-Don't self-host the images while the-athenaeum is hosting the images. Simply point your application to the-atheneum. The application should only be an index like is described in [The Library of Babel](https://en.wikipedia.org/wiki/The_Library_of_Babel).
-
-Not hosting the images is actually the safest, because some images are under copyright. I don't know what I have at the moment. By hosting only an index I will only be in possession of the images transiently while they are loaded in memory so this is extremely safe. The full image data will be held locally for personal use which isn't a copyright issue. For example I wouldn't want to host any images of Jean-Michel Basquiat who is a very recent artist.
-
->https://blog.kenkaminesky.com/photography-copyright-and-the-law/
-
->Q: If you take a photo of a work of art that you did not create, who owns the copyright?
-
->As the creator of art, the copyright owner has the exclusive rights in the art such as for reproduction. Courts have disagreed as to whether taking photos of copyrighted works is a violation. Regardless, the law prevents you from having copyright ownership of anything that is an infringement.
-
-Since it was my original my explicit intent to create a gallery, nothing falls under fair use if not used personally. I'm just going to be a carrier. Basquait filed for copyright over a mere book, the gallery showings had no evidence in court. [Basquait copyright claim](https://books.google.com/books?id=M-_fDgAAQBAJ&pg=PT426&lpg=PT426&dq=is+it+legal+to+own+a+reproduction+of+jean-michel+basquiat&source=bl&ots=ZYjmIQ0-aF&sig=KUFEa04epRQ4AAjynNsEO8GNopQ&hl=en&sa=X&ved=0ahUKEwi10o-mtuTVAhXHKCYKHRTSDNoQ6AEIWzAI#v=onepage&q=is%20it%20legal%20to%20own%20a%20reproduction%20of%20jean-michel%20basquiat&f=false)
+As long as I access the images transiently the problem of image copyright ceases to exist. Simply keep a personal backup for disaster scenarios. The index is king, like one of the most valuable books in [The Library of Babel](https://en.wikipedia.org/wiki/The_Library_of_Babel).
 
 ### Viewing
-The defualt image application in Windows 10 just can't handle this kind of load, so I must build my own image viewer. Furthermore not all devices will have a 100Gb hard drive. It's completely impractical to enumerate these images on my phone for example.
+Images will be viewed from the source using the index I've built to navigate until there are either access, quality or performance issues, which have yet to be the case.
 
 Use Cases
 
@@ -165,10 +159,6 @@ This actually isn't that bad. I need to index the site first, that will take mor
 I can also view the images transiently and avoid scraping entirely. I can buffer up some images and perhaps solve the problem entirely. It will be semi-complex, because the images are zipped, but that just means I can't do it in pure html like I'm planning with the-atheneum. Everything would need to be routed through a server which can download, unzip, then serve the image file.
 
 ## Helpful Projects
-
-`Review: I'm kind of just showing off with the normal random throttling. Do I really need this considering sites like images.nga.gov request a 40 second delay and some crawlers are probably operating mult-threaded with no-delay especially if there is no request for throttling. YES, absolutely. I don't give a fuck what anyone else is doing. I'm going to be better. That's the point of this project, because eventually I may need to compete for resources and do all kinds of crazy things that I may not even be able to do in public. Like what? Well go after sites that don't want to be crawled. That's something that I know I don't know. I can find out though. What I don't know that I don't know is what images those sites have, but I will crawl into the cave if I have to. We must every so often. But this time, I will do it with the right intent. I want to be more like Matthew Prince though. He is so powerful that he can take down websites through withdrawl. That's fucking power. To be able to impose your will by standing down. Perhaps I will not, I will stay in the public. I will not go through the garbage. There is nothing there. I will raise the images that want to be shown and let all the images that don't want to be exist in the fog. With that, the normal random distribution is to have the utmost respect for all infrastructure. To respect the priveleges given that some people actually fear they posess - connectivity. I want to get deeper into the transient data collection. How far can I push this where only a very small subset of data is in my posession at anytime. Where I only hold the key. The Crimson Hexagon. Is it google? Is it pinterest. Where is the ultimate image index? Rather what form does it take?`
-
-Why? Why do I spend all of my time now on this quest. Searching. Refusing to read the books I said I want. Refusing to allow myself to be distracted for more than a few moments. Even forcing myself to eat when not hungry so that I can be strong and work. What am I even searching for? Is it anything digital? Is it instead spiritual? Then why do I feel more dead inside everyday with only more physical assets? Oh, what am I dong? Just tiering myself without the use of chemicals.
 
 ### Normal Random Numbers for Throttling
 http://www.csharpcity.com/2010/normal-distribution-random-generator-available/
