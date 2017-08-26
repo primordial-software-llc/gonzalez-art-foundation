@@ -49,20 +49,20 @@ namespace CryptographyClient
         private static string Decrypt(string path, string password)
         {
             var originalPath = path.Substring(0, path.Length - ENCRYPTED_EXT.Length);
-            var encryptedData = File.ReadAllText(path);
-            var encrypted = new SymmetricKeyCryptography().Decrypt(encryptedData, password, originalPath);
+            var encryptedData = File.ReadAllBytes(path);
+            var encrypted = new SymmetricKeyCryptography().Decrypt(Convert.ToBase64String(encryptedData), password, originalPath);
             var today = DateTime.Now.ToString("yyyy-MM-dd");
             var safeWritePath = originalPath + $".decrypted-{today}";
-            File.WriteAllText(safeWritePath, encrypted);
+            File.WriteAllBytes(safeWritePath, Convert.FromBase64String(encrypted));
             return safeWritePath;
         }
 
         private static string Encrypt(string path, string password)
         {
-            var data = File.ReadAllText(path);
-            var encrypted = new SymmetricKeyCryptography().Encrypt(data, password, path);
+            var data = File.ReadAllBytes(path);
+            var encrypted = new SymmetricKeyCryptography().Encrypt(Convert.ToBase64String(data), password, path);
             var encryptedPath = path + ".encrypted";
-            File.WriteAllText(encryptedPath, encrypted);
+            File.WriteAllBytes(encryptedPath, Convert.FromBase64String(encrypted));
             return encryptedPath;
         }
     }
