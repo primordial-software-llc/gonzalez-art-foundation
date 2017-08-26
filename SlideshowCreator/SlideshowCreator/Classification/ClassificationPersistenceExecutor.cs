@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Classification
@@ -49,9 +46,6 @@ namespace SlideshowCreator.Classification
             client.UpdateTable(updateTableRequest);
         }
 
-        // All of this became obsolete with transient classification.
-        // The table creation itslef is obsolete, except for "Phoenix" scenarios.
-
         /// <summary>
         /// I have some work to do re-indexing.
         /// </summary>
@@ -84,166 +78,6 @@ namespace SlideshowCreator.Classification
             Assert.AreEqual("jean-leon gerome", classification.Artist);
             Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
             Assert.AreEqual("1866", classification.Date);
-        }
-
-        [TestCase("jean-Leon Gerome", 244)]
-        public void Find_All_For_Case_Mismatch_Artist(string artist, int expectedWorks)
-        {
-            var client = new DynamoDbClientFactory().Create();
-            var request = new DynamoDbTableFactory().GetTableDefinition();
-
-            var queryRequest = new QueryRequest(request.TableName);
-            queryRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":artist", new AttributeValue { S = artist } }
-            };
-            queryRequest.KeyConditionExpression = "artist = :artist";
-            queryRequest.IndexName = ARTIST_NAME_INDEX;
-
-            QueryResponse queryResponse = null;
-
-            var allMatches = new List<Dictionary<string, AttributeValue>>();
-            do
-            {
-                if (queryResponse != null)
-                {
-                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
-                }
-                queryResponse = client.Query(queryRequest);
-
-                if (queryResponse.Items.Any())
-                {
-                    allMatches.AddRange(queryResponse.Items);
-                }
-            } while (queryResponse.LastEvaluatedKey.Any());
-
-            Assert.AreEqual(expectedWorks, allMatches.Count);
-        }
-
-        [TestCase("Jean-Leon Gerome", 244)]
-        public void Find_All_For_Exact_Artist(string artist, int expectedWorks)
-        {
-            var client = new DynamoDbClientFactory().Create();
-            var request = new DynamoDbTableFactory().GetTableDefinition();
-
-            var queryRequest = new QueryRequest(request.TableName);
-            queryRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":artist", new AttributeValue { S = artist } }
-            };
-            queryRequest.KeyConditionExpression = "artist = :artist";
-            queryRequest.IndexName = ARTIST_NAME_INDEX;
-
-            QueryResponse queryResponse = null;
-
-            var allMatches = new List<Dictionary<string, AttributeValue>>();
-            do
-            {
-                if (queryResponse != null)
-                {
-                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
-                }
-                queryResponse = client.Query(queryRequest);
-
-                if (queryResponse.Items.Any())
-                {
-                    allMatches.AddRange(queryResponse.Items);
-                }
-            } while (queryResponse.LastEvaluatedKey.Any());
-
-            Assert.AreEqual(expectedWorks, allMatches.Count);
-        }
-
-        [TestCase("Jean-Leon Gerome", 249)]
-        public void Find_All_For_Like_Artist(string artist, int expectedWorks)
-        {
-            var client = new DynamoDbClientFactory().Create();
-            var request = new DynamoDbTableFactory().GetTableDefinition();
-
-            var scanRequest = new ScanRequest(request.TableName);
-            scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":artist", new AttributeValue { S = artist } }
-            };
-            scanRequest.FilterExpression = "contains(artist, :artist)";
-            scanRequest.IndexName = ARTIST_NAME_INDEX;
-
-            ScanResponse scanResponse = null;
-
-            var allMatches = new List<Dictionary<string, AttributeValue>>();
-            do
-            {
-                if (scanResponse != null)
-                {
-                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
-                }
-                scanResponse = client.Scan(scanRequest);
-
-                if (scanResponse.Items.Any())
-                {
-                    allMatches.AddRange(scanResponse.Items);
-                }
-            } while (scanResponse.LastEvaluatedKey.Any());
-
-            Assert.AreEqual(expectedWorks, allMatches.Count);
-        }
-
-        [Test]
-        public void Convert_Artist_To_Lowe_Case()
-        {
-            var client = new DynamoDbClientFactory().Create();
-            var request = new DynamoDbTableFactory().GetTableDefinition();
-
-            var letterToSquash = "Z";
-
-            var scanRequest = new ScanRequest(request.TableName);
-            scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":artist", new AttributeValue { S = letterToSquash } }
-            };
-            scanRequest.FilterExpression = "contains(artist, :artist)";
-            scanRequest.IndexName = ARTIST_NAME_INDEX;
-
-            ScanResponse scanResponse = null;
-
-            var allMatches = new List<Dictionary<string, AttributeValue>>();
-            do
-            {
-                if (scanResponse != null)
-                {
-                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
-                }
-                scanResponse = client.Scan(scanRequest);
-
-                if (scanResponse.Items.Any())
-                {
-                    allMatches.AddRange(scanResponse.Items);
-                }
-            } while (scanResponse.LastEvaluatedKey.Any());
-
-            Console.WriteLine($"Records with {letterToSquash}: " + allMatches.Count);
-            
-            Parallel.ForEach(allMatches, match =>
-            {
-                var matchAsPoco = new ClassificationConversion().ConvertToPoco(match);
-                matchAsPoco.OriginalArtist = matchAsPoco.Artist;
-                matchAsPoco.Artist = Classifier.NormalizeArtist(matchAsPoco.Artist);
-
-                Console.WriteLine("Correcting: " + JsonConvert.SerializeObject(matchAsPoco));
-
-                var recordIdentity = new Dictionary<string, AttributeValue>
-                {
-                    {"pageId", new AttributeValue {N = match["pageId"].N}},
-                    {"artist", new AttributeValue {S = match["artist"].S}}
-                };
-                client.DeleteItem(request.TableName, recordIdentity);
-
-                var diacriticFixedDynamoDbRecord = new ClassificationConversion()
-                    .ConvertToDynamoDb(matchAsPoco);
-                client.PutItem(request.TableName, diacriticFixedDynamoDbRecord);
-            });
-
-            Console.WriteLine("Records updated: " + allMatches.Count);
         }
 
     }
