@@ -12,6 +12,12 @@ namespace SlideshowCreator.Classification
         /// Amazon.DynamoDBv2.AmazonDynamoDBException : The provided key element does not match the schema
         /// </summary>
         public const string UNKNOWN_ARTIST = "Unknown";
+
+        public static string NormalizeArtist(string artist)
+        {
+            return artist.RemoveDiacritics().ToLower();
+        }
+
         public ClassificationModel Classify(string page, int pageId)
         {
             var name = Crawler.GetBetween(page, "<h1>", "</h1>");
@@ -32,7 +38,7 @@ namespace SlideshowCreator.Classification
             classification.PageId = pageId;
             classification.Name = name;
             classification.OriginalArtist = artist;
-            classification.Artist = artist.RemoveDiacritics();
+            classification.Artist = NormalizeArtist(artist);
             classification.Date = date;
 
             return classification;

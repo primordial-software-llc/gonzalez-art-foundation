@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Diacritics.Extensions;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Classification
@@ -69,7 +72,7 @@ namespace SlideshowCreator.Classification
         /// I will need to deal with name diacritics when searching by name is a supported use case.
         /// Diacritics become very imporant considering the breadth of this work.
         /// </summary>
-        //[Test]
+        [Test]
         public void Reclassify_Jean_Leon_Gerome_Sample()
         {
             var privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
@@ -79,7 +82,7 @@ namespace SlideshowCreator.Classification
             Assert.AreEqual(15886, classification.PageId);
             Assert.AreEqual(153045, classification.ImageId);
             Assert.AreEqual("The Slave Market", classification.Name); 
-            Assert.AreEqual("Jean-Leon Gerome", classification.Artist);
+            Assert.AreEqual("jean-leon gerome", classification.Artist);
             Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
             Assert.AreEqual("1866", classification.Date);
         }
@@ -185,6 +188,64 @@ namespace SlideshowCreator.Classification
 
             Assert.AreEqual(expectedWorks, allMatches.Count);
         }
-        
+
+        [Test]
+        public void Convert_Artist_To_Lowe_Case()
+        {
+            var client = new DynamoDbClientFactory().Create();
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var letterToSquash = "A";
+
+            var scanRequest = new ScanRequest(request.TableName);
+            scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":artist", new AttributeValue { S = letterToSquash } }
+            };
+            scanRequest.FilterExpression = "contains(artist, :artist)";
+            scanRequest.IndexName = ARTIST_NAME_INDEX;
+
+            ScanResponse scanResponse = null;
+
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+            do
+            {
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanResponse = client.Scan(scanRequest);
+
+                if (scanResponse.Items.Any())
+                {
+                    allMatches.AddRange(scanResponse.Items);
+                }
+            } while (scanResponse.LastEvaluatedKey.Any());
+
+            Console.WriteLine($"Records with {letterToSquash}: " + allMatches.Count);
+            
+            Parallel.ForEach(allMatches, match =>
+            {
+                var matchAsPoco = new ClassificationConversion().ConvertToPoco(match);
+                matchAsPoco.OriginalArtist = matchAsPoco.Artist;
+                matchAsPoco.Artist = Classifier.NormalizeArtist(matchAsPoco.Artist);
+
+                Console.WriteLine("Correcting: " + JsonConvert.SerializeObject(matchAsPoco));
+
+                var recordIdentity = new Dictionary<string, AttributeValue>
+                {
+                    {"pageId", new AttributeValue {N = match["pageId"].N}},
+                    {"artist", new AttributeValue {S = match["artist"].S}}
+                };
+                client.DeleteItem(request.TableName, recordIdentity);
+
+                var diacriticFixedDynamoDbRecord = new ClassificationConversion()
+                    .ConvertToDynamoDb(matchAsPoco);
+                client.PutItem(request.TableName, diacriticFixedDynamoDbRecord);
+            });
+
+            Console.WriteLine("Records updated: " + allMatches.Count);
+        }
+
     }
 }
