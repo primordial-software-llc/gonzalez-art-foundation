@@ -9,8 +9,9 @@ namespace SlideshowCreator.Classification
 {
     class ClassificationPersistenceExecutor
     {
+        private const string ARTIST_NAME_INDEX = "ArtistNameIndex";
 
-        [Test]
+        //[Test]
         public void Add_GSI()
         {
             var client = new DynamoDbClientFactory().Create();
@@ -18,7 +19,7 @@ namespace SlideshowCreator.Classification
 
             var artistNameIndexRequest = new GlobalSecondaryIndexUpdate();
             artistNameIndexRequest.Create = new CreateGlobalSecondaryIndexAction();
-            artistNameIndexRequest.Create.IndexName = "ArtistNameIndex";
+            artistNameIndexRequest.Create.IndexName = ARTIST_NAME_INDEX;
             artistNameIndexRequest.Create.ProvisionedThroughput = new ProvisionedThroughput(25, 5);
             artistNameIndexRequest.Create.Projection = new Projection { ProjectionType = ProjectionType.ALL };
             artistNameIndexRequest.Create.KeySchema = new List<KeySchemaElement> {
@@ -52,7 +53,7 @@ namespace SlideshowCreator.Classification
         /// <summary>
         /// I have some work to do re-indexing.
         /// </summary>
-        [Test]
+        //[Test]
         public void Check_Count()
         {
             var client = new DynamoDbClientFactory().Create();
@@ -68,7 +69,7 @@ namespace SlideshowCreator.Classification
         /// I will need to deal with name diacritics when searching by name is a supported use case.
         /// Diacritics become very imporant considering the breadth of this work.
         /// </summary>
-        [Test]
+        //[Test]
         public void Reclassify_Jean_Leon_Gerome_Sample()
         {
             var privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
@@ -82,13 +83,79 @@ namespace SlideshowCreator.Classification
             Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
             Assert.AreEqual("1866", classification.Date);
         }
-        
 
-        // Not bad 5.486 seconds to search 250,000+ records with a contains.
-        [TestCase("Jean-Leon Gerome", 244)]
-        public void Find_All_For_Artist(string artist, int expectedWorks)
+        [TestCase("jean-Leon Gerome", 244)]
+        public void Find_All_For_Case_Mismatch_Artist(string artist, int expectedWorks)
         {
-            var client = new DynamoDbClientFactory().Create(); // Lookup the old artists name.
+            var client = new DynamoDbClientFactory().Create();
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var queryRequest = new QueryRequest(request.TableName);
+            queryRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":artist", new AttributeValue { S = artist } }
+            };
+            queryRequest.KeyConditionExpression = "artist = :artist";
+            queryRequest.IndexName = ARTIST_NAME_INDEX;
+
+            QueryResponse queryResponse = null;
+
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+            do
+            {
+                if (queryResponse != null)
+                {
+                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
+                }
+                queryResponse = client.Query(queryRequest);
+
+                if (queryResponse.Items.Any())
+                {
+                    allMatches.AddRange(queryResponse.Items);
+                }
+            } while (queryResponse.LastEvaluatedKey.Any());
+
+            Assert.AreEqual(expectedWorks, allMatches.Count);
+        }
+
+        [TestCase("Jean-Leon Gerome", 244)]
+        public void Find_All_For_Exact_Artist(string artist, int expectedWorks)
+        {
+            var client = new DynamoDbClientFactory().Create();
+            var request = new DynamoDbTableFactory().GetTableDefinition();
+
+            var queryRequest = new QueryRequest(request.TableName);
+            queryRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":artist", new AttributeValue { S = artist } }
+            };
+            queryRequest.KeyConditionExpression = "artist = :artist";
+            queryRequest.IndexName = ARTIST_NAME_INDEX;
+
+            QueryResponse queryResponse = null;
+
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+            do
+            {
+                if (queryResponse != null)
+                {
+                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
+                }
+                queryResponse = client.Query(queryRequest);
+
+                if (queryResponse.Items.Any())
+                {
+                    allMatches.AddRange(queryResponse.Items);
+                }
+            } while (queryResponse.LastEvaluatedKey.Any());
+
+            Assert.AreEqual(expectedWorks, allMatches.Count);
+        }
+
+        [TestCase("Jean-Leon Gerome", 249)]
+        public void Find_All_For_Like_Artist(string artist, int expectedWorks)
+        {
+            var client = new DynamoDbClientFactory().Create();
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
             var scanRequest = new ScanRequest(request.TableName);
@@ -97,7 +164,7 @@ namespace SlideshowCreator.Classification
                 { ":artist", new AttributeValue { S = artist } }
             };
             scanRequest.FilterExpression = "contains(artist, :artist)";
-            //scanRequest.FilterExpression = "artist = :artist";
+            scanRequest.IndexName = ARTIST_NAME_INDEX;
 
             ScanResponse scanResponse = null;
 
