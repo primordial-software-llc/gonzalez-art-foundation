@@ -1,4 +1,4 @@
-﻿using Cryptograpy;
+﻿using Cryptography;
 using NUnit.Framework;
 
 namespace CryptographyTests

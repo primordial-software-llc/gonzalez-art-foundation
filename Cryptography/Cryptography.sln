@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cryptograpy", "Cryptograpy\Cryptograpy.csproj", "{F72C0292-940B-4C45-8040-31CE8801846E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cryptography", "Cryptography\Cryptography.csproj", "{F72C0292-940B-4C45-8040-31CE8801846E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptographyClient", "CryptographyClient\CryptographyClient.csproj", "{E537F54D-4AD8-49EE-9D91-3C889A181B01}"
 EndProject

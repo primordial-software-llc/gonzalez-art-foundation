@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Cryptograpy
+namespace Cryptography
 {
     /// <summary>
     /// https://msdn.microsoft.com/en-us/library/system.security.cryptography.aes(v=vs.110).aspx
