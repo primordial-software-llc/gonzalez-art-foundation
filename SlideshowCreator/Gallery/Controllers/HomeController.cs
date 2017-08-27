@@ -9,16 +9,9 @@ namespace MVC5App.Controllers
             return View();
         }
 
-        public ActionResult About()
+        public ActionResult Slideshow()
         {
-            ViewBag.Message = "Your application description page.";
-
-            return View();
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
+            ViewBag.Message = "Gallery slideshow.";
 
             return View();
         }

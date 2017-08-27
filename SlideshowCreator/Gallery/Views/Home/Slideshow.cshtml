@@ -1,0 +1,12 @@
+﻿@{
+    ViewBag.Title = "Slideshow";
+}
+<div class="jumbotron">
+    <h1>Digital Art Gallery - Slideshow</h1>
+</div>
+
+@{ var likeJeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByLikeArtist("jEaN-LeoN GeROme"); }
+@{ var jeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByExactArtist("jEaN-LeoN GeROme"); }
+
+<p>Number of works by artists with a name like Jean-Leon Gerome: @likeJeanLeonGeromeWorks</p>
+<p>Number of works by artist named Jean-Leon Gerome: @jeanLeonGeromeWorks</p>
