@@ -13,16 +13,29 @@ namespace MVC5App
         private const string TABLE_NAME = "ImageClassification";
         private const string ARTIST_NAME_INDEX = "ArtistNameIndex";
 
-        public string Create()
+        public string SearchByExactArtist(string artistName)
         {
             AWSCredentials instanceCredentials = new InstanceProfileAWSCredentials();
             var client = new AmazonDynamoDBClient(instanceCredentials, RegionEndpoint.USEast1);
 
             try
             {
-                string result = "Exact matches (expect 244): " + FindAllForExactArtist(client, "jean-leon gerome") +
-                                " Like matches (expect 249): " + FindAllForLikeArtist(client, "jean-leon gerome");
-                return result;
+                return FindAllForLikeArtist(client, artistName.ToLower()).ToString();
+            }
+            catch (Exception e)
+            {
+                return e.ToString();
+            }
+        }
+
+        public string SearchByLikeArtist(string artistName)
+        {
+            AWSCredentials instanceCredentials = new InstanceProfileAWSCredentials();
+            var client = new AmazonDynamoDBClient(instanceCredentials, RegionEndpoint.USEast1);
+
+            try
+            {
+                return FindAllForExactArtist(client, artistName.ToLower()).ToString();
             }
             catch (Exception e)
             {
