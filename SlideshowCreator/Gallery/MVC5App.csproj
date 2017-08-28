@@ -131,8 +131,6 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\connection.png" />
     <Content Include="Content\newproject.png" />
-    <Content Include="Content\slate.bootstrap.css" />
-    <Content Include="Content\slate.bootstrap.min.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
