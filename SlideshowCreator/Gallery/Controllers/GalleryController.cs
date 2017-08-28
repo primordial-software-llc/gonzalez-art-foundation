@@ -38,7 +38,7 @@ namespace MVC5App.Controllers
         }
 
         [Route("searchExactArtist")]
-        public string Get(string token, string artist)
+        public string GetExact(string token, string artist)
         {
             Authenticate(token);
 

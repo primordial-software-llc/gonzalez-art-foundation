@@ -117,6 +117,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\GalleryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="DataAccess\ImageClassificationAccess.cs" />
     <Compile Include="DynamoDbClientFactory.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
