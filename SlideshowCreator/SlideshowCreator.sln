@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlideshowCreator", "Slidesh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MVC5App", "Gallery\MVC5App.csproj", "{B9A5209D-5A8A-455A-B9BD-37C8F8F98A93}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GalleryBackend", "GalleryBackend\GalleryBackend.csproj", "{D91AB026-70A1-432F-833E-3F02A17B44CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B9A5209D-5A8A-455A-B9BD-37C8F8F98A93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9A5209D-5A8A-455A-B9BD-37C8F8F98A93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9A5209D-5A8A-455A-B9BD-37C8F8F98A93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

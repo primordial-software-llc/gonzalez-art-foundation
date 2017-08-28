@@ -1,4 +1,4 @@
-﻿namespace SlideshowCreator.NormalDistributionRandom
+﻿namespace GalleryBackend.NormalDistributionRandom
 {
     public interface IRandomGenerator
     {

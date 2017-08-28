@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Web.Http;
+using GalleryBackend;
 
 namespace MVC5App.Controllers
 {
@@ -9,19 +10,40 @@ namespace MVC5App.Controllers
     [RoutePrefix("api/Gallery")]
     public class GalleryController : ApiController
     {
-        [Route("")]
-        public IEnumerable<string> Get()
+        const string DISCLOSED_IDENTITY_HASH = "3vwD/tk27FM5baxW1aEh+C6DGjS7Jr5FH9/RtsuH4Lk=";
+        private static readonly Authentication Authentication = new Authentication(DISCLOSED_IDENTITY_HASH);
+
+        [Route("token")]
+        public string GetAuthenticationToken(string username, string password)
         {
-            return new string[] { "value1", "value2" };
+            var identityHash = Authentication.GetIdentityHash(username, password);
+            return Authentication.GetToken(identityHash);
         }
 
-        [Route("{id:int}")]
-        public string Get(int id)
+        private void Authenticate(string token)
         {
-            return "value";
+            if (!Authentication.IsTokenValid(token))
+            {
+                throw new Exception("Not authenticated");
+            }
         }
 
-        // Read-only. I want a highly hardened website. Data operations will be done from a non globally accessible resource.
-        // Likely this will be done in the SlideShowCreator project, which has been doing the heavy lifting for the data classification.
+        [Route("searchLikeArtist")]
+        public string GetLike(string token, string artist)
+        {
+            Authenticate(token);
+
+            var likeJeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByLikeArtist(artist);
+            return likeJeanLeonGeromeWorks;
+        }
+
+        [Route("searchExactArtist")]
+        public string Get(string token, string artist)
+        {
+            Authenticate(token);
+
+            var jeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByExactArtist(artist);
+            return jeanLeonGeromeWorks;
+        }
     }
 }

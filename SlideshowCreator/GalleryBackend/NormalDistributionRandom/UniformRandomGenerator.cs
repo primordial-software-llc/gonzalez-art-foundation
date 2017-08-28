@@ -1,5 +1,5 @@
 ﻿
-namespace SlideshowCreator.NormalDistributionRandom
+namespace GalleryBackend.NormalDistributionRandom
 {
     public class UniformRandomGenerator : IRandomGenerator
     {

@@ -1,6 +1,6 @@
 ﻿
 using System.Threading;
-using SlideshowCreator.NormalDistributionRandom;
+using GalleryBackend.NormalDistributionRandom;
 
 namespace SlideshowCreator
 {

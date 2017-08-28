@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Classification\ClassificationConversion.cs" />
     <Compile Include="Classification\TransientClassification.cs" />
+    <Compile Include="DisclosedAuthentication.cs" />
     <Compile Include="ImagesDotNgaDotGov.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />
@@ -70,14 +71,10 @@
     <Compile Include="DataDump.cs" />
     <Compile Include="DynamoDbClientFactory.cs" />
     <Compile Include="DynamoDbTableFactory.cs" />
-    <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
-    <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
-    <Compile Include="NormalDistributionRandom\NormalRandomGenerator.cs" />
     <Compile Include="PrivateConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicConfig.cs" />
     <Compile Include="Throttle.cs" />
-    <Compile Include="NormalDistributionRandom\UniformRandomGenerator.cs" />
     <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +82,12 @@
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.DynamoDBv2.3.3.4.17\analyzers\dotnet\cs\AWSSDK.DynamoDBv2.CodeAnalysis.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
+      <Project>{d91ab026-70a1-432f-833e-3f02a17b44cf}</Project>
+      <Name>GalleryBackend</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

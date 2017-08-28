@@ -1,5 +1,5 @@
 ﻿
-namespace SlideshowCreator.NormalDistributionRandom
+namespace GalleryBackend.NormalDistributionRandom
 {
     /// <summary>
     /// Mersenne Twister random number generator; from http://takel.jp/mt/MersenneTwister.cs
