@@ -6,25 +6,17 @@ This repository is dedicated to documenting my journey to systematically discove
 
 ### Table
 Read Capacity: 5
+
 Write Capacity: 25
+
 Estimated Monthly Cost: $12.58
 
 ### Global Secondary Index
 Read Capacity: 25
+
 Write Capacity: 5
+
 Estimated Monthly Cost: $4.84
-
-25 write should be just more than what I need for transient classification. Then 25 read is an absolute guess at what is fast on lookup up by artist name.
-
-`I'll probably need another Global Secondary Index for Name once I support that use case`
-
-- Do I need to search by name alone? How likely is it that you know the artist, but not the name? With the Artist global secondary index, name is the sort key, so the work under an artist is already index and will be fast. The problem here is having to duplicate the fields for searchability. If I need to add another index on a name field, that means storing the original name, then squashing diacritics and case. More importantly it means two duplicate fields. It begs the question of at which point do I use something like ElasticSearch?
-
-This should be adequate for transient classification and application usage.
-
-## Acquisitions
-
-[Expectations (1885) by Sir Lawrence Alma-Tadema]( http://www.the-athenaeum.org/art/detail.php?ID=329)
 
 ## SlideShowCreator
 
@@ -53,8 +45,37 @@ The process yields the following folder structure:
 
 ## Gallery
 
-### Authentication
-At the very minimum, the gallery will store a salted hash of a password. The password will be sent in plain-text over SSL. This is entirely adequate for read-only access for a resource which simply needs to remain `persoal` until I can figure out what I have and at least identify what is and is not in the public domain. Potentially I could re-write non-commercial pieces of software in use and do whatever I'd like with a portion of the site with public domain imagery.
+### Token
+
+Call the `token` web service to get an authentication token which is safe to store in a cookie, because it is a cryptographic hash which will not leak identity information even if the cookie were to be exposed. The authentication token is good for one UTC day or upon a website publish. After that time, the source information to create the cookie has new random input, based on the [Mersenne Twister Pseudo Random Number Generator](https://en.wikipedia.org/wiki/Mersenne_Twister), and produces an entirely new hash. `I may have made a mistake here, because the mersenne twister isn't cryptographically secure, but its output is hashed and not exposed so it's tough to say`. If I want to show off a bit, I should use [RNGCryptoServiceProvider Class](https://msdn.microsoft.com/en-us/library/system.security.cryptography.rngcryptoserviceprovider(v=vs.110).aspx). The token/cookie is basically useless with a read-only interface and the mentioned layers of security.
+
+Url
+
+    https://tgonzalez.net/api/Gallery/token?username=[USERNAME]&password=[PASSWORD]
+
+Response
+
+    "Q6AaIcvz25xiF2MgY/QDrBM4lDZ5BV1bKjV9wdbkPUE="
+
+### Search Like Artist
+
+Url
+
+    https://tgonzalez.net/api/Gallery/searchLikeArtist?token=[TOKEN]&artist=jean-leon%20gerome
+
+Response
+
+    "249"
+
+### Search Exact Artist
+
+Url
+
+    https://tgonzalez.net/api/Gallery/searchExactArtist?token=[TOKEN]&artist=jean-leon%20gerome
+
+Response
+
+    "244"
 
 ### Image Hosting
 As long as I access the images transiently the problem of image copyright ceases to exist. Simply keep a personal backup for disaster scenarios. The index is king, like one of the most valuable books in [The Library of Babel](https://en.wikipedia.org/wiki/The_Library_of_Babel).
@@ -157,6 +178,11 @@ That's how long it would take to build an index of images. I want the super high
 
 This actually isn't that bad. I need to index the site first, that will take more dev time than computing time. Then I can worry about scraping the high-res images.
 I can also view the images transiently and avoid scraping entirely. I can buffer up some images and perhaps solve the problem entirely. It will be semi-complex, because the images are zipped, but that just means I can't do it in pure html like I'm planning with the-atheneum. Everything would need to be routed through a server which can download, unzip, then serve the image file.
+
+
+## Acquisitions From This Process
+
+[Expectations (1885) by Sir Lawrence Alma-Tadema]( http://www.the-athenaeum.org/art/detail.php?ID=329)
 
 ## Helpful Projects
 
