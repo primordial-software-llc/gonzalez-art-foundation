@@ -60,7 +60,7 @@
   <ItemGroup>
     <Compile Include="Classification\ClassificationConversion.cs" />
     <Compile Include="Classification\TransientClassification.cs" />
-    <Compile Include="DisclosedAuthentication.cs" />
+    <Compile Include="UnitTests\AuthenticationTests.cs" />
     <Compile Include="ImagesDotNgaDotGov.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />

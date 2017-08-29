@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using GalleryBackend.NormalDistributionRandom;
 
 namespace GalleryBackend
 {
@@ -53,7 +51,12 @@ namespace GalleryBackend
             if (!(dateOfRandomness ?? string.Empty).Equals(GetUtcCalendarDay))
             {
                 dateOfRandomness = GetUtcCalendarDay;
-                randomness = new UniformRandomGenerator().NextDouble().ToString(CultureInfo.InvariantCulture);
+                using (RNGCryptoServiceProvider cryptoSecureRandomNums = new RNGCryptoServiceProvider())
+                {
+                    byte[] randomBytes = new byte[32];
+                    cryptoSecureRandomNums.GetBytes(randomBytes, 0, randomBytes.Length);
+                    randomness = Convert.ToBase64String(randomBytes);
+                }
             }
         }
     }

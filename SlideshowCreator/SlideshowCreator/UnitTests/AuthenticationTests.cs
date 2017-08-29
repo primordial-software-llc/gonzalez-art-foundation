@@ -1,7 +1,7 @@
 ﻿using GalleryBackend;
 using NUnit.Framework;
 
-namespace SlideshowCreator
+namespace SlideshowCreator.UnitTests
 {
     class DisclosedAuthentication
     {
