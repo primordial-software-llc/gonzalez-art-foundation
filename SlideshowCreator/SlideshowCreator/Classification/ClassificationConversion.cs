@@ -1,13 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Amazon.DynamoDBv2.Model;
 namespace SlideshowCreator.Classification
 {
     class ClassificationConversion
     {
+        public const string THE_ATHENAEUM = "http://www.the-athenaeum.org";
+
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {
-            var kvp = new Dictionary<string, AttributeValue>();
-            kvp.Add("pageId", new AttributeValue { N = classification.PageId.ToString() });
+            var kvp = new Dictionary<string, AttributeValue>
+            {
+                {"source", new AttributeValue {S = classification.Source}},
+                {"pageId", new AttributeValue {N = classification.PageId.ToString()}}
+            };
 
             string artist = string.IsNullOrWhiteSpace(classification.Artist)
                 ? Classifier.UNKNOWN_ARTIST
@@ -33,19 +39,24 @@ namespace SlideshowCreator.Classification
 
             return kvp;
         }
+        
+        public List<ClassificationModel> ConvertToPoco(List<Dictionary<string, AttributeValue>> models)
+        {
+            return (from m in models select ConvertToPoco(m)).ToList();
+        }
 
-        /// <summary>
-        /// Something is wrong with the de-serialization of the values into the write requests.
-        /// </summary>
-        /// <remarks>
-        /// Poco is plain old class object.
-        /// </remarks>
         public ClassificationModel ConvertToPoco(Dictionary<string, AttributeValue> dynamoDbModel)
         {
-            var classification = new ClassificationModel();
+            var classification = new ClassificationModel
+            {
+                PageId = int.Parse(dynamoDbModel["pageId"].N),
+                Artist = dynamoDbModel["artist"].S
+            };
 
-            classification.PageId = int.Parse(dynamoDbModel["pageId"].N);
-            classification.Artist = dynamoDbModel["artist"].S;
+            if (dynamoDbModel.ContainsKey("source"))
+            {
+                classification.Source = dynamoDbModel["source"].S;
+            }
 
             if (dynamoDbModel.ContainsKey(ClassificationModel.ORIGINAL_ARTIST))
             {

@@ -4,19 +4,26 @@ This repository is dedicated to documenting my journey to systematically discove
 
 ## DynamoDB Settings
 
+`The write capacity needs to be increased when classifying. 25 should be adequate to transiently classify.`
+
+*Total Estimated Monthly Cost: $7.74*
+
 ### Table
 Read Capacity: 5
 
-Write Capacity: 25
+Write Capacity: 5
 
-Estimated Monthly Cost: $12.58
+### Global Secondary Index's
 
-### Global Secondary Index
+#### Artist Name Index
 Read Capacity: 25
 
 Write Capacity: 5
 
-Estimated Monthly Cost: $4.84
+#### Artist Page Id Index
+Read Capacity: 5
+
+Write Capacity: 5
 
 ## SlideShowCreator
 

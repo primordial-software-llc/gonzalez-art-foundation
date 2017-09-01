@@ -4,27 +4,30 @@ using System.Net;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
-using SlideshowCreator.Classification;
 
 namespace SlideshowCreator
 {
     class DynamoDbTableFactory
     {
+        public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
+        public const string PAGE_ID_INDEX = "PageIdIndex";
+        public const string IMAGE_CLASSIFICATION_V2 = "ImageClassificationV2";
+
         public CreateTableRequest GetTableDefinition()
         {
             var request = new CreateTableRequest
             {
-                TableName = "ImageClassification",
+                TableName = IMAGE_CLASSIFICATION_V2,
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement
                     {
-                        AttributeName = "pageId",
+                        AttributeName = "source",
                         KeyType = "HASH"
                     },
                     new KeySchemaElement
                     {
-                        AttributeName = "artist",
+                        AttributeName = "pageId",
                         KeyType = "RANGE"
                     }
                 },
@@ -32,13 +35,13 @@ namespace SlideshowCreator
                 {
                     new AttributeDefinition
                     {
-                        AttributeName = "pageId",
-                        AttributeType = "N"
+                        AttributeName = "source",
+                        AttributeType = "S"
                     },
                     new AttributeDefinition
                     {
-                        AttributeName = "artist",
-                        AttributeType = "S"
+                        AttributeName = "pageId",
+                        AttributeType = "N"
                     }
                 },
                 ProvisionedThroughput = new ProvisionedThroughput
@@ -51,7 +54,7 @@ namespace SlideshowCreator
             return request;
         }
 
-        public void AA_Drop_Then_Create_Table(CreateTableRequest request, AmazonDynamoDBClient client)
+        public void CreateTable(CreateTableRequest request, AmazonDynamoDBClient client)
         {
             TableDescription tableDescription;
             var tableExists = TableExists(request.TableName);
@@ -78,6 +81,43 @@ namespace SlideshowCreator
             tableDescription = client.DescribeTable(request.TableName).Table;
             Assert.AreEqual(TableStatus.CREATING, tableDescription.TableStatus);
             WaitForTableStatus(request.TableName, TableStatus.ACTIVE);
+        }
+        
+        public void AddArtistNameGlobalSecondaryIndex(AmazonDynamoDBClient client, string tableName)
+        {
+            var artistNameIndexRequest = new GlobalSecondaryIndexUpdate
+            {
+                Create = new CreateGlobalSecondaryIndexAction
+                {
+                    IndexName = ARTIST_NAME_INDEX,
+                    ProvisionedThroughput = new ProvisionedThroughput(25, 5),
+                    Projection = new Projection {ProjectionType = ProjectionType.ALL},
+                    KeySchema = new List<KeySchemaElement>
+                    {
+                        new KeySchemaElement {AttributeName = "artist", KeyType = "HASH"},
+                        new KeySchemaElement {AttributeName = "name", KeyType = "RANGE"}
+                    }
+                }
+            };
+
+            var updateTableRequest = new UpdateTableRequest();
+            updateTableRequest.TableName = tableName;
+            updateTableRequest.GlobalSecondaryIndexUpdates.Add(artistNameIndexRequest);
+            updateTableRequest.AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition
+                {
+                    AttributeName = "artist",
+                    AttributeType = "S"
+                },
+                new AttributeDefinition
+                {
+                    AttributeName = "name",
+                    AttributeType = "S"
+                }
+            };
+
+            client.UpdateTable(updateTableRequest);
         }
 
         private bool TableExists(string tableName)
@@ -108,21 +148,5 @@ namespace SlideshowCreator
             } while (tableDescription.TableStatus != status);
         }
 
-        public Dictionary<string, List<WriteRequest>> GetBatchWriteRequest(List<ClassificationModel> classifications)
-        {
-            var request = new DynamoDbTableFactory().GetTableDefinition();
-
-            var batchWrite = new Dictionary<string, List<WriteRequest>> { [request.TableName] = new List<WriteRequest>() };
-
-            foreach (var classification in classifications)
-            {
-                var dyamoDbModel = new ClassificationConversion().ConvertToDynamoDb(classification);
-                var putRequest = new PutRequest(dyamoDbModel);
-                var writeRequest = new WriteRequest(putRequest);
-                batchWrite[request.TableName].Add(writeRequest);
-            }
-
-            return batchWrite;
-        }
     }
 }

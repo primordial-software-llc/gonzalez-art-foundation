@@ -3,68 +3,112 @@ using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using SlideshowCreator.DataAccess;
 
 namespace SlideshowCreator.Classification
 {
     class ClassificationPersistenceExecutor
     {
-        private const string ARTIST_NAME_INDEX = "ArtistNameIndex";
 
-        //[Test]
-        public void Add_GSI()
+        public const int CONCURRENCY = 5;
+
+        [OneTimeSetUp]
+        public void Setup_All_Tests_Once_And_Only_Once()
+        {
+            ServicePointManager.DefaultConnectionLimit = CONCURRENCY;
+        }
+
+        [Test]
+        public void New_Table()
         {
             var client = new DynamoDbClientFactory().Create();
-            var request = new DynamoDbTableFactory().GetTableDefinition();
 
-            var artistNameIndexRequest = new GlobalSecondaryIndexUpdate();
-            artistNameIndexRequest.Create = new CreateGlobalSecondaryIndexAction();
-            artistNameIndexRequest.Create.IndexName = ARTIST_NAME_INDEX;
-            artistNameIndexRequest.Create.ProvisionedThroughput = new ProvisionedThroughput(25, 5);
-            artistNameIndexRequest.Create.Projection = new Projection { ProjectionType = ProjectionType.ALL };
-            artistNameIndexRequest.Create.KeySchema = new List<KeySchemaElement> {
-                new KeySchemaElement { AttributeName = "artist", KeyType = "HASH"},
-                new KeySchemaElement {AttributeName = "name", KeyType = "RANGE"}
-            };
+            var tableFactory = new DynamoDbTableFactory();
+            var request = tableFactory.GetTableDefinition();
+            tableFactory.CreateTable(request, client);
+        }
 
-            var updateTableRequest = new UpdateTableRequest();
-            updateTableRequest.TableName = request.TableName;
-            updateTableRequest.GlobalSecondaryIndexUpdates.Add(artistNameIndexRequest);
-            updateTableRequest.AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition
-                {
-                    AttributeName = "artist",
-                    AttributeType = "S"
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "name",
-                    AttributeType = "S"
-                }
-            };
+        [Test]
+        public void Create_Artist_Name_Index_On_New_Table()
+        {
+            var client = new DynamoDbClientFactory().Create();
+            var tableFactory = new DynamoDbTableFactory();
 
-            client.UpdateTable(updateTableRequest);
+            tableFactory.AddArtistNameGlobalSecondaryIndex(client, DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2);
         }
 
         /// <summary>
         /// I have some work to do re-indexing.
         /// </summary>
-        //[Test]
-        public void Check_Count()
+        [Test]
+        public void Check_Counts()
         {
             var client = new DynamoDbClientFactory().Create();
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
             var tableDescription = client.DescribeTable(request.TableName);
-            Console.WriteLine(tableDescription.Table.ItemCount);
-
+            Console.WriteLine($"{request.TableName} item count: {tableDescription.Table.ItemCount}");
             Assert.AreEqual(288100, tableDescription.Table.ItemCount);
+
+            foreach (var gsi in tableDescription.Table.GlobalSecondaryIndexes)
+            {
+                Console.WriteLine($"{gsi.IndexName}: " + gsi.ItemCount);
+            }
+        }
+
+        [Test]
+        public void Move_From_Table_V1_To_Table_V2()
+        {
+            AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
+
+            Console.WriteLine("ImageClassification count initial: " + client.DescribeTable("ImageClassification").Table.ItemCount);
+            Console.WriteLine($"{DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2} count initial: " + client.DescribeTable(DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2).Table.ItemCount);
+
+            var scanRequest = new ScanRequest
+            {
+                TableName = "ImageClassification"
+            };
+
+            ScanResponse scanResponse = client.Scan(scanRequest);
+
+            while (scanResponse.LastEvaluatedKey.Any())
+            {
+                scanResponse = client.Scan(scanRequest);
+                
+                List<ClassificationModel> pocoItems = new ClassificationConversion().ConvertToPoco(scanResponse.Items);
+                Console.WriteLine(pocoItems.First().PageId);
+                foreach (var pocoItem in pocoItems)
+                {
+                    pocoItem.Source = ClassificationConversion.THE_ATHENAEUM;
+                }
+
+                var pocosBatched = DynamoDbInsert.Batch(pocoItems);
+
+                var parallelism = new ParallelOptions {MaxDegreeOfParallelism = CONCURRENCY};
+                Parallel.ForEach(pocosBatched, parallelism, pocoBatch =>
+                {
+                    Dictionary<string, List<WriteRequest>> pocoBatchWrite =
+                        DynamoDbInsert.GetBatchInserts(pocoBatch);
+                    var batchWriteResponse = client.BatchWriteItem(pocoBatchWrite);
+
+                    if (batchWriteResponse.UnprocessedItems.Any())
+                    {
+                        throw new Exception("Abort - Unprocessed Inserts");
+                    }
+                    var batchDeletes = DynamoDbDelete.GetBatchDeletes(pocoBatch, "ImageClassification");
+                    client.BatchWriteItem(batchDeletes);
+                });
+
+                scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+            }
+
+            Console.WriteLine("ImageClassification count final: " + client.DescribeTable("ImageClassification").Table.ItemCount);
+            Console.WriteLine($"{DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2} count final: " + client.DescribeTable(DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2).Table.ItemCount);
         }
         
-        /// <summary>
-        /// I will need to deal with name diacritics when searching by name is a supported use case.
-        /// Diacritics become very imporant considering the breadth of this work.
-        /// </summary>
         [Test]
         public void Reclassify_Jean_Leon_Gerome_Sample()
         {
