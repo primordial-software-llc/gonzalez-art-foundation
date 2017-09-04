@@ -1,20 +1,12 @@
 ﻿
 using Diacritics.Extensions;
 using GalleryBackend.DataAccess;
-using SlideshowCreator.InfrastructureAsCode;
+using GalleryBackend.Classification;
 
 namespace SlideshowCreator.Classification
 {
     class Classifier
     {
-        /// <summary>
-        /// The images have a composite key of pageId and artist.
-        /// This works well, because the pageId is unique and the artist groups related records.
-        /// However, some works don't have an artist and the full composite key is required, so this placeholder must be used to avoid the error below:
-        /// Amazon.DynamoDBv2.AmazonDynamoDBException : The provided key element does not match the schema
-        /// </summary>
-        public const string UNKNOWN_ARTIST = "Unknown";
-
         public static string NormalizeArtist(string artist)
         {
             return artist.RemoveDiacritics().ToLower();

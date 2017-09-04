@@ -1,44 +1,36 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Runtime;
+using GalleryBackend.Classification;
 using GalleryBackend.DataAccess;
 
 namespace MVC5App
 {
     public class DynamoDbClientFactory
     {
+        private readonly AWSCredentials instanceCredentials = new InstanceProfileAWSCredentials();
+        private readonly ImageClassificationAccess access;
 
-        public string SearchByExactArtist(string artistName)
+        public DynamoDbClientFactory()
         {
-            AWSCredentials instanceCredentials = new InstanceProfileAWSCredentials();
             var client = new AmazonDynamoDBClient(instanceCredentials, RegionEndpoint.USEast1);
-            var access = new ImageClassificationAccess(client);
-
-            try
-            {
-                return access.FindAllForExactArtist(artistName).ToString();
-            }
-            catch (Exception e)
-            {
-                return e.ToString();
-            }
+            access = new ImageClassificationAccess(client);
         }
 
-        public string SearchByLikeArtist(string artistName)
+        public List<ClassificationModel> SearchByExactArtist(string artistName)
         {
-            AWSCredentials instanceCredentials = new InstanceProfileAWSCredentials();
-            var client = new AmazonDynamoDBClient(instanceCredentials, RegionEndpoint.USEast1);
-            var access = new ImageClassificationAccess(client);
+            return access.FindAllForExactArtist(artistName);
+        }
 
-            try
-            {
-                return access.FindAllForLikeArtist(artistName).ToString();
-            }
-            catch (Exception e)
-            {
-                return e.ToString();
-            }
+        public List<ClassificationModel> SearchByLikeArtist(string artistName)
+        {
+            return access.FindAllForLikeArtist(artistName);
+        }
+
+        public List<ClassificationModel> ScanByPage(int lastPageId)
+        {
+            return access.Scan(lastPageId);
         }
 
     }

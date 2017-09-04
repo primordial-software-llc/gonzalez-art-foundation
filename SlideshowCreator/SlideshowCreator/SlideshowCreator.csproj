@@ -57,14 +57,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classification\ClassificationConversion.cs" />
     <Compile Include="Classification\TransientClassification.cs" />
+    <Compile Include="DataAccessTests\ImageClassificationAccessTests.cs" />
     <Compile Include="DataAccess\DynamoDbDelete.cs" />
     <Compile Include="DataAccess\DynamoDbInsert.cs" />
     <Compile Include="UnitTests\AuthenticationTests.cs" />
     <Compile Include="ImagesDotNgaDotGov.cs" />
     <Compile Include="Crawler.cs" />
-    <Compile Include="Classification\ClassificationModel.cs" />
     <Compile Include="Classification\ClassificationExecutor.cs" />
     <Compile Include="Scripts\ClassificationScript.cs" />
     <Compile Include="Classification\Classifier.cs" />

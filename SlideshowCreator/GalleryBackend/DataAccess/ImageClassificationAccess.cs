@@ -2,6 +2,7 @@
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using GalleryBackend.Classification;
 
 namespace GalleryBackend.DataAccess
 {
@@ -19,7 +20,32 @@ namespace GalleryBackend.DataAccess
             Client = client;
         }
 
-        public int FindAllForExactArtist( string artist)
+        public List<ClassificationModel> Scan(int lastPageId)
+        {
+            var queryRequest = new QueryRequest(IMAGE_CLASSIFICATION_V2)
+            {
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":sources", new AttributeValue {S = THE_ATHENAEUM}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :sources"
+            };
+            queryRequest.ExclusiveStartKey = new Dictionary<string, AttributeValue>();
+            queryRequest.ExclusiveStartKey.Add("source", new AttributeValue { S = THE_ATHENAEUM});
+            queryRequest.ExclusiveStartKey.Add("pageId", new AttributeValue { N = lastPageId.ToString() });
+
+            var response = Client.Query(queryRequest);
+
+            var typedResponse = new ClassificationConversion().ConvertToPoco(response.Items);
+            return typedResponse;
+        }
+
+        public List<ClassificationModel> FindAllForExactArtist( string artist)
         {
             artist = artist.ToLower();
 
@@ -50,10 +76,11 @@ namespace GalleryBackend.DataAccess
                 }
             } while (queryResponse.LastEvaluatedKey.Any());
 
-            return allMatches.Count;
+            var typedResponse = new ClassificationConversion().ConvertToPoco(allMatches);
+            return typedResponse;
         }
 
-        public int FindAllForLikeArtist(string artist)
+        public List<ClassificationModel> FindAllForLikeArtist(string artist)
         {
             artist = artist.ToLower();
 
@@ -84,7 +111,8 @@ namespace GalleryBackend.DataAccess
                 }
             } while (scanResponse.LastEvaluatedKey.Any());
 
-            return allMatches.Count;
+            var typedResponse = new ClassificationConversion().ConvertToPoco(allMatches);
+            return typedResponse;
         }
     }
 }

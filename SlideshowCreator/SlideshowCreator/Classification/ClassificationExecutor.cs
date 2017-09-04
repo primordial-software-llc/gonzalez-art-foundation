@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using GalleryBackend.Classification;
 using Newtonsoft.Json;
 using NUnit.Framework;
 

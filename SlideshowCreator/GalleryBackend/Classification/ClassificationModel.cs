@@ -1,12 +1,11 @@
 ﻿
 using Newtonsoft.Json;
 
-namespace SlideshowCreator.Classification
+namespace GalleryBackend.Classification
 {
-    class ClassificationModel
+    public class ClassificationModel
     {
         public const string ORIGINAL_ARTIST = "originalArtist";
-        public const string MOVED_TO_V2 = "movedToV2";
 
         [JsonProperty("source")]
         public string Source { get; set; }

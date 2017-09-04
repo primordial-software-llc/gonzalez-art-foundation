@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
+using GalleryBackend.Classification;
 
 namespace SlideshowCreator.Classification
 {

@@ -1,10 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
-namespace SlideshowCreator.Classification
+
+namespace GalleryBackend.Classification
 {
-    class ClassificationConversion
+    public class ClassificationConversion
     {
+        /// <summary>
+        /// This is needed for the ArtistNameIndex, because keys are required.
+        /// Amazon.DynamoDBv2.AmazonDynamoDBException : The provided key element does not match the schema
+        /// </summary>
+        public const string UNKNOWN_ARTIST = "Unknown";
+
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {
             var kvp = new Dictionary<string, AttributeValue>
@@ -14,7 +21,7 @@ namespace SlideshowCreator.Classification
             };
 
             string artist = string.IsNullOrWhiteSpace(classification.Artist)
-                ? Classifier.UNKNOWN_ARTIST
+                ? UNKNOWN_ARTIST
                 : classification.Artist;
 
             kvp.Add("artist", new AttributeValue {S = artist });

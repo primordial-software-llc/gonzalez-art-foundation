@@ -50,3 +50,30 @@ textarea {
     width:70%;
     height:70%;
 }
+
+body > .navbar-inverse .navbar-nav > li > a:hover,
+body > .navbar-inverse .navbar-nav > li > a:focus
+{
+    color: #888;
+}
+
+body > .navbar-inverse .navbar-nav > li > a 
+{
+    color: #000;
+}
+
+body > .navbar-inverse .navbar-brand
+{
+    color: #000;
+}
+
+body > .navbar-inverse
+{
+    background-color: #EEE;
+}
+
+.container > .jumbotron
+{
+    background-color: #FFF;
+    padding-top: 0px;
+}

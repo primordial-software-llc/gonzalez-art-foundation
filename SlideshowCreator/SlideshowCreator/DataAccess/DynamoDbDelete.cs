@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
-using SlideshowCreator.Classification;
+using GalleryBackend.Classification;
 
 namespace SlideshowCreator.DataAccess
 {

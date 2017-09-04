@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Web.Http;
 using GalleryBackend;
+using GalleryBackend.Classification;
 
 namespace MVC5App.Controllers
 {
@@ -29,7 +31,7 @@ namespace MVC5App.Controllers
         }
 
         [Route("searchLikeArtist")]
-        public string GetLike(string token, string artist)
+        public List<ClassificationModel> GetLike(string token, string artist)
         {
             Authenticate(token);
 
@@ -38,12 +40,22 @@ namespace MVC5App.Controllers
         }
 
         [Route("searchExactArtist")]
-        public string GetExact(string token, string artist)
+        public List<ClassificationModel> GetExact(string token, string artist)
         {
             Authenticate(token);
 
             var jeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByExactArtist(artist);
             return jeanLeonGeromeWorks;
         }
+
+        [Route("scan")]
+        public List<ClassificationModel> ScanByPage(string token, int lastPageId)
+        {
+            Authenticate(token);
+
+            var jeanLeonGeromeWorks = new DynamoDbClientFactory().ScanByPage(lastPageId);
+            return jeanLeonGeromeWorks;
+        }
+
     }
 }

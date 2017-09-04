@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using GalleryBackend.Classification;
 using GalleryBackend.DataAccess;
 using NUnit.Framework;
 using SlideshowCreator.Classification;
@@ -28,8 +29,6 @@ namespace SlideshowCreator.Scripts
         //[Test]
         public void New_Table()
         {
-            var client = new DynamoDbClientFactory().Create();
-
             var tableFactory = new DynamoDbTableFactory();
             var request = tableFactory.GetTableDefinition();
             tableFactory.CreateTable(request, client);
@@ -45,7 +44,6 @@ namespace SlideshowCreator.Scripts
         [Test]
         public void Check_Counts()
         {
-            var client = new DynamoDbClientFactory().Create();
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
             var tableDescription = client.DescribeTable(request.TableName);
@@ -61,8 +59,6 @@ namespace SlideshowCreator.Scripts
         //[Test]
         public void Move_From_Table_V1_To_Table_V2()
         {
-            AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
-
             Console.WriteLine("ImageClassification count initial: " + client.DescribeTable("ImageClassification").Table.ItemCount);
             Console.WriteLine($"{ImageClassificationAccess.IMAGE_CLASSIFICATION_V2} count initial: " + client.DescribeTable(ImageClassificationAccess.IMAGE_CLASSIFICATION_V2).Table.ItemCount);
 
@@ -122,34 +118,6 @@ namespace SlideshowCreator.Scripts
             Assert.AreEqual("jean-leon gerome", classification.Artist);
             Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
             Assert.AreEqual("1866", classification.Date);
-        }
-
-        [Test]
-        public void Test_Find_All_For_Exact_Artist()
-        {
-            var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForExactArtist("Jean-Leon Gerome");
-            Console.WriteLine(results);
-
-            Assert.AreEqual(233, results); // Should be 244. According to the site.
-        }
-
-        // Slower than I'd like at 7 seconds, but there are 280,000 records.
-        // This is fine for personal usage.
-        // Elastic search is needed to solve this.
-        // That's designed for full-text search.
-        // The only possible work-around is a new index on source and artist name as the range key.
-        // I still don't know if this will work, there is a begins_with and a between.
-        // I'm not sure if between is valid for character strings, begins with could work, but even that is limited.
-        // For now it's a non-issue. I can wait 7 seconds if I want to do a search by artist name, then drill into the artist and
-        // search by exact artist. Once I know the artist I don't have to do a contains anymore.
-        // If I want to be really good, I can put the LIKE operation behind exact matches when there are no results.
-        [Test]
-        public void Test_Find_All_For_Like_Artist()
-        {
-            var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForLikeArtist("Jean-Leon Gerome");
-            Assert.AreEqual(237, results); // Should be 249. According to the site there are 244 Jean-Leon Gerome and 5 Jean-Leon Gerome Ferris.
         }
 
     }
