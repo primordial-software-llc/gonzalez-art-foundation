@@ -2,6 +2,7 @@
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
 using SlideshowCreator.Classification;
+using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.DataAccess
 {

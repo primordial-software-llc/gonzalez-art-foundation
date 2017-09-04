@@ -1,5 +1,6 @@
 ﻿
 using Diacritics.Extensions;
+using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.Classification
 {
@@ -18,7 +19,7 @@ namespace SlideshowCreator.Classification
             return artist.RemoveDiacritics().ToLower();
         }
 
-        public ClassificationModel Classify(string page, int pageId)
+        public ClassificationModel ClassifyForTheAthenaeum(string page, int pageId)
         {
             var name = Crawler.GetBetween(page, "<h1>", "</h1>");
             if (name.Contains("<div"))
@@ -33,13 +34,16 @@ namespace SlideshowCreator.Classification
             }
             int imageId = Crawler.GetImageId(page);
 
-            var classification = new ClassificationModel();
-            classification.ImageId = imageId;
-            classification.PageId = pageId;
-            classification.Name = name;
-            classification.OriginalArtist = artist;
-            classification.Artist = NormalizeArtist(artist);
-            classification.Date = date;
+            var classification = new ClassificationModel
+            {
+                Source = DynamoDbTableFactory.THE_ATHENAEUM,
+                PageId = pageId,
+                ImageId = imageId,
+                Name = name,
+                OriginalArtist = artist,
+                Artist = NormalizeArtist(artist),
+                Date = date
+            };
 
             return classification;
         }

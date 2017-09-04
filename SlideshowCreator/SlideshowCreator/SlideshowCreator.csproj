@@ -67,12 +67,12 @@
     <Compile Include="Crawler.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />
     <Compile Include="Classification\ClassificationExecutor.cs" />
-    <Compile Include="Classification\ClassificationPersistenceExecutor.cs" />
+    <Compile Include="Scripts\ClassificationScript.cs" />
     <Compile Include="Classification\Classifier.cs" />
     <Compile Include="DataDumpExecutor.cs" />
     <Compile Include="DataDump.cs" />
     <Compile Include="DynamoDbClientFactory.cs" />
-    <Compile Include="DynamoDbTableFactory.cs" />
+    <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="PrivateConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicConfig.cs" />

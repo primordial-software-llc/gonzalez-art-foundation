@@ -15,7 +15,7 @@ namespace SlideshowCreator.Classification
             var dataDump = new DataDump();
             var pageId = 2594;
             var page = File.ReadAllText(dataDump.GetPageFileNameHtml(pageId));
-            var classification = new Classifier().Classify(page, pageId);
+            var classification = new Classifier().ClassifyForTheAthenaeum(page, pageId);
             Assert.AreEqual("The Banks of the River", classification.Name);
             Assert.AreEqual("Charles-FranÃ§ois Daubigny", classification.Artist);
             Assert.AreEqual("Date unknown", classification.Date);
@@ -35,7 +35,7 @@ namespace SlideshowCreator.Classification
             var dataDump = new DataDump();
             var pageId = 33;
             var page = File.ReadAllText(dataDump.GetPageFileNameHtml(pageId));
-            var classification = new Classifier().Classify(page, pageId);
+            var classification = new Classifier().ClassifyForTheAthenaeum(page, pageId);
             Assert.AreEqual("The Mandolin Player", classification.Name);
             Assert.AreEqual("Dante Gabriel Rossetti", classification.Artist);
             Assert.AreEqual("1869", classification.Date);
@@ -48,7 +48,7 @@ namespace SlideshowCreator.Classification
             var dataDump = new DataDump();
             var pageId = 10005;
             var page = File.ReadAllText(dataDump.GetPageFileNameHtml(pageId));
-            var classification = new Classifier().Classify(page, pageId);
+            var classification = new Classifier().ClassifyForTheAthenaeum(page, pageId);
             Assert.AreEqual("Rotterdam", classification.Name);
             Assert.AreEqual("Johan Barthold Jongkind", classification.Artist);
             Assert.AreEqual("circa 1871", classification.Date);
@@ -61,7 +61,7 @@ namespace SlideshowCreator.Classification
             var dataDump = new DataDump();
             var pageId = 10163;
             var page = File.ReadAllText(dataDump.GetPageFileNameHtml(pageId));
-            var classification = new Classifier().Classify(page, pageId);
+            var classification = new Classifier().ClassifyForTheAthenaeum(page, pageId);
             Assert.AreEqual("photo of balla in futurist outfit", classification.Name);
             Assert.AreEqual("Artist not listed", classification.Artist);
             Assert.AreEqual(string.Empty, classification.Date);
@@ -74,7 +74,7 @@ namespace SlideshowCreator.Classification
             var dataDump = new DataDump();
             var pageId = 48407;
             var page = File.ReadAllText(dataDump.GetPageFileNameHtml(pageId));
-            var classification = new Classifier().Classify(page, pageId);
+            var classification = new Classifier().ClassifyForTheAthenaeum(page, pageId);
             Assert.AreEqual("Man", classification.Name);
             Assert.AreEqual("Artist not listed", classification.Artist);
             Assert.AreEqual(string.Empty, classification.Date);
@@ -98,7 +98,7 @@ namespace SlideshowCreator.Classification
                 File.WriteAllText("C:\\Users\\random\\Desktop\\projects\\SlideshowCreator\\ClassificationProgress.txt", "currentPageId: " + pageId);
 
                 var page = File.ReadAllText(dataDump.GetPageFileNameHtml(pageId));
-                var classification = new Classifier().Classify(page, pageId);
+                var classification = new Classifier().ClassifyForTheAthenaeum(page, pageId);
                 var json = JsonConvert.SerializeObject((object) classification);
                 File.WriteAllText(dataDump.GetPageFileNameJson(pageId), json);
             }

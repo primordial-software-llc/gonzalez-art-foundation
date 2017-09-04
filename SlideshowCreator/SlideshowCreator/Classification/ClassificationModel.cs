@@ -1,10 +1,8 @@
 ﻿
-using Amazon.DynamoDBv2.DataModel;
 using Newtonsoft.Json;
 
 namespace SlideshowCreator.Classification
 {
-    [DynamoDBTable("ImageClassification")]
     class ClassificationModel
     {
         public const string ORIGINAL_ARTIST = "originalArtist";

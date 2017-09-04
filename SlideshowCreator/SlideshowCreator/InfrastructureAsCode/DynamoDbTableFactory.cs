@@ -5,13 +5,14 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 
-namespace SlideshowCreator
+namespace SlideshowCreator.InfrastructureAsCode
 {
     class DynamoDbTableFactory
     {
         public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
         public const string PAGE_ID_INDEX = "PageIdIndex";
         public const string IMAGE_CLASSIFICATION_V2 = "ImageClassificationV2";
+        public const string THE_ATHENAEUM = "http://www.the-athenaeum.org";
 
         public CreateTableRequest GetTableDefinition()
         {
@@ -100,8 +101,7 @@ namespace SlideshowCreator
                 }
             };
 
-            var updateTableRequest = new UpdateTableRequest();
-            updateTableRequest.TableName = tableName;
+            var updateTableRequest = new UpdateTableRequest {TableName = tableName};
             updateTableRequest.GlobalSecondaryIndexUpdates.Add(artistNameIndexRequest);
             updateTableRequest.AttributeDefinitions = new List<AttributeDefinition>
             {

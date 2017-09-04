@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
-using NUnit.Framework;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+using NUnit.Framework;
+using SlideshowCreator.Classification;
 using SlideshowCreator.DataAccess;
+using SlideshowCreator.InfrastructureAsCode;
 
-namespace SlideshowCreator.Classification
+namespace SlideshowCreator.Scripts
 {
-    class ClassificationPersistenceExecutor
+    class ClassificationScript
     {
 
         public const int CONCURRENCY = 5;
@@ -21,7 +23,7 @@ namespace SlideshowCreator.Classification
             ServicePointManager.DefaultConnectionLimit = CONCURRENCY;
         }
 
-        [Test]
+        //[Test]
         public void New_Table()
         {
             var client = new DynamoDbClientFactory().Create();
@@ -29,14 +31,9 @@ namespace SlideshowCreator.Classification
             var tableFactory = new DynamoDbTableFactory();
             var request = tableFactory.GetTableDefinition();
             tableFactory.CreateTable(request, client);
-        }
 
-        [Test]
-        public void Create_Artist_Name_Index_On_New_Table()
-        {
-            var client = new DynamoDbClientFactory().Create();
-            var tableFactory = new DynamoDbTableFactory();
-
+            // This should work fine, but I've never run these one-after-the-other.
+            // However, I wait for the table to be active at the end of table creation.
             tableFactory.AddArtistNameGlobalSecondaryIndex(client, DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2);
         }
 
@@ -51,7 +48,7 @@ namespace SlideshowCreator.Classification
 
             var tableDescription = client.DescribeTable(request.TableName);
             Console.WriteLine($"{request.TableName} item count: {tableDescription.Table.ItemCount}");
-            Assert.AreEqual(288100, tableDescription.Table.ItemCount);
+            Assert.AreEqual(270858, tableDescription.Table.ItemCount); // I'll see if tonight or immediately after the web app I reindex. This is a lot now.
 
             foreach (var gsi in tableDescription.Table.GlobalSecondaryIndexes)
             {
@@ -82,7 +79,7 @@ namespace SlideshowCreator.Classification
                 Console.WriteLine(pocoItems.First().PageId);
                 foreach (var pocoItem in pocoItems)
                 {
-                    pocoItem.Source = ClassificationConversion.THE_ATHENAEUM;
+                    pocoItem.Source = DynamoDbTableFactory.THE_ATHENAEUM;
                 }
 
                 var pocosBatched = DynamoDbInsert.Batch(pocoItems);
@@ -113,9 +110,11 @@ namespace SlideshowCreator.Classification
         public void Reclassify_Jean_Leon_Gerome_Sample()
         {
             var privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
-            var transientClassifier = new TransientClassification(privateConfig);
-            var classification = transientClassifier.ReclassifyTransiently(15886);
+            AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
+            var transientClassifier = new TransientClassification(privateConfig, client, DynamoDbTableFactory.IMAGE_CLASSIFICATION_V2);
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(15886);
 
+            Assert.AreEqual("http://www.the-athenaeum.org", classification.Source);
             Assert.AreEqual(15886, classification.PageId);
             Assert.AreEqual(153045, classification.ImageId);
             Assert.AreEqual("The Slave Market", classification.Name); 

@@ -5,8 +5,6 @@ namespace SlideshowCreator.Classification
 {
     class ClassificationConversion
     {
-        public const string THE_ATHENAEUM = "http://www.the-athenaeum.org";
-
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {
             var kvp = new Dictionary<string, AttributeValue>

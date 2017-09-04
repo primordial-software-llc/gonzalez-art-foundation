@@ -16,9 +16,8 @@ namespace SlideshowCreator
         public AmazonDynamoDBClient Create()
         {
             var chain = new CredentialProfileStoreChain();
-            AWSCredentials awsCredentials;
             var profile = "default";
-            if (!chain.TryGetAWSCredentials("default", out awsCredentials))
+            if (!chain.TryGetAWSCredentials("default", out AWSCredentials awsCredentials))
             {
                 throw new Exception($"Credentials not found for \"{profile}\" profile.");
             }
