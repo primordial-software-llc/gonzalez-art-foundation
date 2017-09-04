@@ -1,5 +1,6 @@
 ﻿
 using Diacritics.Extensions;
+using GalleryBackend.DataAccess;
 using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.Classification
@@ -36,7 +37,7 @@ namespace SlideshowCreator.Classification
 
             var classification = new ClassificationModel
             {
-                Source = DynamoDbTableFactory.THE_ATHENAEUM,
+                Source = ImageClassificationAccess.THE_ATHENAEUM,
                 PageId = pageId,
                 ImageId = imageId,
                 Name = name,

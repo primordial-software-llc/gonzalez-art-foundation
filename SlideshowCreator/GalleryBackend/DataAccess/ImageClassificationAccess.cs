@@ -3,12 +3,15 @@ using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
-namespace MVC5App.DataAccess
+namespace GalleryBackend.DataAccess
 {
     public class ImageClassificationAccess
     {
-        private const string TABLE_NAME = "ImageClassification";
-        private const string ARTIST_NAME_INDEX = "ArtistNameIndex";
+        public const string IMAGE_CLASSIFICATION_V2 = "ImageClassificationV2";
+        public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
+        public const string THE_ATHENAEUM = "http://www.the-athenaeum.org";
+
+
         private AmazonDynamoDBClient Client { get; }
 
         public ImageClassificationAccess(AmazonDynamoDBClient client)
@@ -18,13 +21,17 @@ namespace MVC5App.DataAccess
 
         public int FindAllForExactArtist( string artist)
         {
-            var queryRequest = new QueryRequest(TABLE_NAME);
-            queryRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            artist = artist.ToLower();
+
+            var queryRequest = new QueryRequest(IMAGE_CLASSIFICATION_V2)
             {
-                { ":artist", new AttributeValue { S = artist } }
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":artist", new AttributeValue {S = artist}}
+                },
+                KeyConditionExpression = "artist = :artist",
+                IndexName = ARTIST_NAME_INDEX
             };
-            queryRequest.KeyConditionExpression = "artist = :artist";
-            queryRequest.IndexName = ARTIST_NAME_INDEX;
 
             QueryResponse queryResponse = null;
 
@@ -48,13 +55,17 @@ namespace MVC5App.DataAccess
 
         public int FindAllForLikeArtist(string artist)
         {
-            var scanRequest = new ScanRequest(TABLE_NAME);
-            scanRequest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            artist = artist.ToLower();
+
+            var scanRequest = new ScanRequest(IMAGE_CLASSIFICATION_V2)
             {
-                { ":artist", new AttributeValue { S = artist } }
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":artist", new AttributeValue {S = artist}}
+                },
+                FilterExpression = "contains(artist, :artist)",
+                IndexName = ARTIST_NAME_INDEX
             };
-            scanRequest.FilterExpression = "contains(artist, :artist)";
-            scanRequest.IndexName = ARTIST_NAME_INDEX;
 
             ScanResponse scanResponse = null;
 

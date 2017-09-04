@@ -2,7 +2,7 @@
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Runtime;
-using MVC5App.DataAccess;
+using GalleryBackend.DataAccess;
 
 namespace MVC5App
 {
@@ -17,7 +17,7 @@ namespace MVC5App
 
             try
             {
-                return access.FindAllForExactArtist(artistName.ToLower()).ToString();
+                return access.FindAllForExactArtist(artistName).ToString();
             }
             catch (Exception e)
             {
@@ -33,7 +33,7 @@ namespace MVC5App
 
             try
             {
-                return access.FindAllForLikeArtist(artistName.ToLower()).ToString();
+                return access.FindAllForLikeArtist(artistName).ToString();
             }
             catch (Exception e)
             {
