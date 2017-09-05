@@ -15,19 +15,19 @@ namespace MVC5App.Controllers
         const string DISCLOSED_IDENTITY_HASH = "3vwD/tk27FM5baxW1aEh+C6DGjS7Jr5FH9/RtsuH4Lk=";
         private static readonly Authentication Authentication = new Authentication(DISCLOSED_IDENTITY_HASH);
 
-        [Route("token")]
-        public string GetAuthenticationToken(string username, string password)
-        {
-            var identityHash = Authentication.GetIdentityHash(username, password);
-            return Authentication.GetToken(identityHash);
-        }
-
         private void Authenticate(string token)
         {
             if (!Authentication.IsTokenValid(token))
             {
                 throw new Exception("Not authenticated");
             }
+        }
+
+        [Route("token")]
+        public string GetAuthenticationToken(string username, string password)
+        {
+            var identityHash = Authentication.GetIdentityHash(username, password);
+            return Authentication.GetToken(identityHash);
         }
 
         [Route("searchLikeArtist")]
