@@ -77,3 +77,8 @@ body > .navbar-inverse
     background-color: #FFF;
     padding-top: 0px;
 }
+
+.input-form:not(:last-child)
+{
+    margin-bottom: 15px;
+}
