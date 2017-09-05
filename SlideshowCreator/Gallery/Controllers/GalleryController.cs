@@ -24,10 +24,15 @@ namespace MVC5App.Controllers
         }
 
         [Route("token")]
-        public string GetAuthenticationToken(string username, string password)
+        public AuthenticationTokenModel GetAuthenticationToken(string username, string password)
         {
             var identityHash = Authentication.GetIdentityHash(username, password);
-            return Authentication.GetToken(identityHash);
+            var response = new AuthenticationTokenModel
+            {
+                Token = Authentication.GetToken(identityHash),
+                ValidDuring = Authentication.GetUtcCalendarDay
+            };
+            return response;
         }
 
         [Route("searchLikeArtist")]
@@ -49,7 +54,7 @@ namespace MVC5App.Controllers
         }
 
         [Route("scan")]
-        public List<ClassificationModel> ScanByPage(string token, int lastPageId)
+        public List<ClassificationModel> GetScanByPage(string token, int lastPageId)
         {
             Authenticate(token);
 

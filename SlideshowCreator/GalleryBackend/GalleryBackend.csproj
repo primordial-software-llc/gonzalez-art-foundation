@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication.cs" />
+    <Compile Include="AuthenticationTokenModel.cs" />
     <Compile Include="Classification\ClassificationConversion.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />
     <Compile Include="DataAccess\ImageClassificationAccess.cs" />

@@ -49,6 +49,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classification\TransientClassification.cs" />
+    <Compile Include="DataAccessTests\ApiTests.cs" />
     <Compile Include="DataAccessTests\ImageClassificationAccessTests.cs" />
     <Compile Include="DataAccess\DynamoDbDelete.cs" />
     <Compile Include="DataAccess\DynamoDbInsert.cs" />

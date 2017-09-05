@@ -21,6 +21,12 @@ namespace SlideshowCreator
         [JsonProperty("target2Url")]
         public string Target2Url { get; set; }
 
+        [JsonProperty("galleryUsername")]
+        public string GalleryUsername { get; set; }
+
+        [JsonProperty("galleryPassword")]
+        public string GalleryPassword { get; set; }
+
         public static PrivateConfig Create(string fullPath)
         {
             var json = File.ReadAllText(fullPath);

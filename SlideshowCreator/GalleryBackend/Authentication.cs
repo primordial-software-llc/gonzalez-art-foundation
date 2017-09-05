@@ -6,10 +6,10 @@ namespace GalleryBackend
 {
     public class Authentication
     {
+        public string GetUtcCalendarDay => DateTime.UtcNow.ToString("yyyy-MM-dd");
+
         private string dateOfRandomness;
         private string randomness;
-
-        private string GetUtcCalendarDay => DateTime.UtcNow.ToString("yyyy-MM-dd");
         private string RandomnessText => dateOfRandomness + ":" + randomness;
 
         private string IdentityHash { get; }
