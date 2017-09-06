@@ -2,6 +2,7 @@
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using Newtonsoft.Json;
 
 namespace MVC5App
@@ -10,6 +11,9 @@ namespace MVC5App
     {
         public static void Register(HttpConfiguration config)
         {
+            var cors = new EnableCorsAttribute("*", "*", "*");
+            config.EnableCors(cors);
+
             config.Formatters.Add(new BrowserJsonFormatter());
             config.MapHttpAttributeRoutes();
         }
