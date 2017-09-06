@@ -6,7 +6,7 @@ This repository is dedicated to documenting my journey to systematically discove
 
 `The write capacity needs to be increased when classifying. 25 should be adequate to transiently classify.`
 
-*Total Estimated Monthly Cost: $7.74*
+*Total Estimated Monthly Cost: $10.16 (could potentially be within free-tier - August 2017 had $0 DynamoDB charges)*
 
 ### Table
 Read Capacity: 5
@@ -16,12 +16,7 @@ Write Capacity: 5
 ### Global Secondary Index's
 
 #### Artist Name Index
-Read Capacity: 25
-
-Write Capacity: 5
-
-#### Artist Page Id Index
-Read Capacity: 5
+Read Capacity: 50
 
 Write Capacity: 5
 
