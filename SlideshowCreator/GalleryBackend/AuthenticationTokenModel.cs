@@ -7,7 +7,7 @@ namespace GalleryBackend
     {
         [JsonProperty("token")]
         public string Token { get; set; }
-        [JsonProperty("validDuring")]
-        public string ValidDuring { get; set; }
+        [JsonProperty("expirationDate")]
+        public string ExpirationDate { get; set; }
     }
 }

@@ -1,21 +1,97 @@
 ﻿@{
     ViewBag.Title = "Slideshow";
 }
+
+<script>
+
+    function setCookie(authenticationResponse) {
+        var d = new Date(authenticationResponse.expirationDate);
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = 'token=' + encodeURIComponent(authenticationResponse.token) + ';' + expires + ";path=/";
+    }
+
+    function loadSearchResults(results) {
+        var html = '';
+        for (var ct = 0; ct < results.length; ct += 1) {
+            html += '<div><a target="_blank" href="http://www.the-athenaeum.org/art/display_image.php?id=' + results[ct].imageId + '">' + results[ct].name + ' (' + results[ct].date + ') by ' + results[ct].artist + '</a></div>';
+        }
+
+        $('#search-results').html(html);
+    }
+
+    function isAuthenticated() {
+        return document.cookie &&
+            document.cookie.indexOf('token=') > -1;
+    }
+
+    $(document).ready(function () {
+
+        if (isAuthenticated()) {
+            $('#login-form').hide();
+        } else {
+
+            $('#login').click(function () {
+                var url = '/api/Gallery/token?username=' + $('#username').val() + '&password=' + $('#password').val();
+
+                fetch(url, {mode: 'cors'}).then(function(response) {
+                    response
+                        .json()
+                        .then(function (json) {
+                            setCookie(json);
+                        });
+                });
+            });
+
+        }
+
+        $('#likeSearch').click(function () {
+            var url = '/api/Gallery/searchLikeArtist?token=' + encodeURIComponent(window.token) + '&artist=' + $('#likeSearchText').val();
+            fetch(url).then(function(response) {
+                response
+                    .json()
+                    .then(function (json) {
+                        loadSearchResults(json);
+                    });
+            });
+        });
+
+        $('#exactSearch').click(function () {
+            console.log($('#exactSearchText').val());
+        });
+
+        $('#idSearch').click(function () {
+            console.log($('#idSearchText').val());
+        });
+
+    });
+
+</script>
+
+
 <div class="jumbotron">
     <h1>Slideshow</h1>
     
+    <div id="login-form" class="input-form">
+        <input id="username" type="text" placeholder="Username"/>
+        <input id="password" type="text" placeholder="Password"/>
+        <input id="login" type="button" value="Login"/>
+    </div>
+    
     <div class="input-form">
-        <input id="searchByLikeArtistInput" type="text" placeholder="Search by Like Artist"/>
-        <input id="searchByLikeArtistStart" type="button" value="Search by Like Artist"/>
+        <input id="likeSearchText" type="text" placeholder="Search by Like Artist"/>
+        <input id="likeSearch" type="button" value="Search"/>
     </div>
 
     <div class="input-form">
-        <input id="searchByExactArtistInput" type="text" placeholder="Search by Exact Artist" />
-        <input id="searchByExactArtistStart" type="button" value="Search by Exact Artist" />
+        <input id="exactSearchText" type="text" placeholder="Search by Exact Artist" />
+        <input id="exactSearch" type="button" value="Search" />
     </div>
 
     <div class="input-form">
-        <input id="scanWorksStartingAtIdInput" type="text" placeholder="Scan works starting at ID" />
-        <input id="scanWorksStartingAtIdSart" type="button" value="Scan works starting at ID" />
+        <input id="idSearchText" type="text" placeholder="Search by starting ID" />
+        <input id="idSearch" type="button" value="Search" />
+    </div>
+
+    <div id="search-results">
     </div>
 </div>

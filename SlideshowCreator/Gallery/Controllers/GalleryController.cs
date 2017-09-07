@@ -30,7 +30,7 @@ namespace MVC5App.Controllers
             var response = new AuthenticationTokenModel
             {
                 Token = Authentication.GetToken(identityHash),
-                ValidDuring = Authentication.GetUtcCalendarDay
+                ExpirationDate = Authentication.GetUtcCalendarDayExpiration
             };
             return response;
         }
