@@ -42,7 +42,6 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework, Version=3.8.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.3.8.1\lib\net45\nunit.framework.dll</HintPath>
@@ -80,16 +79,13 @@
     <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\AWSSDK.DynamoDBv2.3.3.4.17\analyzers\dotnet\cs\AWSSDK.DynamoDBv2.CodeAnalysis.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
       <Project>{d91ab026-70a1-432f-833e-3f02a17b44cf}</Project>
       <Name>GalleryBackend</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
