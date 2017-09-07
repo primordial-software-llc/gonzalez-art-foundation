@@ -2,6 +2,24 @@
 
 This repository is dedicated to documenting my journey to systematically discover and acquire fine art paintings.
 
+## Content Delivery Network
+
+I signed up for CloudFlare and switched over the nameservers in AWS Route53. I'm waiting for the change to take affect. I follow passion and I don't see half the passion in other companies as I've seen with CloudFront after tracking down the mysterious service I witnessed protecting images.nga.gov and had mistaken it for AWS.
+
+https://www.cloudflare.com/a/overview/tgonzalez.net
+
+New
+
+    brad.ns.cloudflare.com
+    jocelyn.ns.cloudflare.com
+
+Old
+
+    ns-1760.awsdns-28.co.uk
+    ns-1460.awsdns-54.org
+    ns-892.awsdns-47.net
+    ns-503.awsdns-62.com
+
 ## DynamoDB Settings
 
 `The write capacity needs to be increased when classifying. 25 should be adequate to transiently classify.`
