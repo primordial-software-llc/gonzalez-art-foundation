@@ -23,6 +23,11 @@ namespace MVC5App.Controllers
             }
         }
 
+        /// <remarks>
+        /// Success is determined on token usage in order to make brute force more difficult.
+        /// At a minimum brute force attacks require 2x the number of requests when checking success on another service;
+        /// however no additional latency is incurred for legitimate users!
+        /// </remarks>
         [Route("token")]
         public AuthenticationTokenModel GetAuthenticationToken(string username, string password)
         {

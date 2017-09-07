@@ -1,70 +1,22 @@
-﻿body {
-    padding-top: 50px;
-    padding-bottom: 20px;
+﻿
+#main-nav {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
-/* Set padding to keep content from hitting the edges */
-.body-content {
-    padding-left: 15px;
-    padding-right: 15px;
+body .form-control {
+    width: 300px;
+    display: inline-block;
+    padding-top: 8px;
 }
 
-/* Override the default bootstrap behavior where horizontal description lists 
-   will truncate terms that are too long to fit in the left column 
-*/
-.dl-horizontal dt {
-    white-space: normal;
+body .btn {
+    vertical-align: baseline;
+    margin-left: 5px;
 }
 
-/* Set width on the form input elements since they're 100% wide by default */
-input,
-select,
-textarea {
-    max-width: 280px;
-}
-
-.video-responsive {
-    float: none;
-    clear: both;
-    width: 100%;
-    position: relative;
-    padding-bottom: 56.25%;
-    padding-top: 25px;
-    height: 0;
-}
-.video-responsive iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.blocktext {
-    margin-left: auto;
-    margin-right: auto;
-    width: 80%;
-}
-
-.blocktext img{
-    width:70%;
-    height:70%;
-}
-
-body > .navbar-inverse .navbar-nav > li > a:hover,
-body > .navbar-inverse .navbar-nav > li > a:focus
-{
-    color: #888;
-}
-
-body > .navbar-inverse .navbar-nav > li > a 
-{
-    color: #000;
-}
-
-body > .navbar-inverse .navbar-brand
-{
-    color: #000;
+#login-form .form-control {
+    width: 200px;
 }
 
 body > .navbar-inverse
@@ -72,13 +24,31 @@ body > .navbar-inverse
     background-color: #EEE;
 }
 
-.container > .jumbotron
-{
-    background-color: #FFF;
-    padding-top: 0px;
-}
-
 .input-form:not(:last-child)
 {
     margin-bottom: 15px;
+}
+
+#authenticated-user-form
+{
+    float: right;
+    display: none;
+}
+
+a.navbar-brand,
+a.navbar-brand:hover {
+    color: #666;
+}
+
+a.nav-link {
+    color: #000;
+}
+
+a.nav-link:hover {
+    color: #666;
+    text-decoration: underline;
+}
+
+.btn:hover {
+    cursor: pointer;
 }

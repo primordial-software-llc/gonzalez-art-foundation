@@ -7,26 +7,32 @@
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
 
 </head>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div id="main-nav" class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
+            <nav class="navbar navbar-light">
                 @Html.ActionLink("Digital Art Gallery", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
-                    <li>@Html.ActionLink("Slideshow", "Slideshow", "Home")</li>
+                <ul class="nav">
+                    <li class="nav-item">
+                        @Html.ActionLink("Home", "Index", "Home", new { area = "" }, new { @class = "nav-link"})
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Slideshow", "Slideshow", "Home", new { area = "" }, new { @class = "nav-link" })
+                    </li>
                 </ul>
+            </nav>
+            
+            <div id="login-form" class="input-form">
+                <input id="username" type="text" placeholder="Username" class="form-control"/>
+                <input id="password" type="text" placeholder="Password" class="form-control"/>
+                <input id="login" type="button" value="Login" class="btn btn-secondary"/>
+            </div>
+
+            <div id="authenticated-user-form" class="input-form">
+                <input id="signout" type="button" value="Signout" class="btn btn-secondary" />
             </div>
         </div>
     </div>
