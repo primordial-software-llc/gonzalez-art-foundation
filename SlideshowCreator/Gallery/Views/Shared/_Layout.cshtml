@@ -8,7 +8,69 @@
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
     @RenderSection("scripts", required: false)
+    
+    <script>
+        function setCookie(authenticationResponse) {
+            var d = new Date(authenticationResponse.expirationDate);
+            var expires = "expires=" + d.toUTCString();
+            document.cookie = 'token=' + encodeURIComponent(authenticationResponse.token) + ';' + expires + ";path=/";
+        }
 
+        function isAuthenticated() {
+            return document.cookie &&
+                document.cookie.indexOf('token=') > -1;
+        }
+
+        function updateAuthenticationForm() {
+            if (isAuthenticated()) {
+                $('#login-form').hide();
+                $('#authenticated-user-form').show();
+            } else {
+                $('#login-form').show();
+                $('#authenticated-user-form').hide();
+            }
+        }
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for(var i = 0; i <ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        $(document).ready(function () {
+
+            updateAuthenticationForm();
+
+            $('#login').click(function() {
+                var url = '/api/Gallery/token?username=' + $('#username').val() + '&password=' + $('#password').val();
+
+                fetch(url, { mode: 'cors' }).then(function(response) {
+                    response
+                        .json()
+                        .then(function(json) {
+                            setCookie(json);
+                            updateAuthenticationForm();
+                        });
+                });
+            });
+            
+            $('#signout').click(function() {
+                document.cookie = "token=;expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                updateAuthenticationForm();
+            });
+
+        });
+    </script>
 </head>
 <body>
     <div id="main-nav" class="navbar navbar-inverse navbar-fixed-top">
@@ -27,7 +89,7 @@
             
             <div id="login-form" class="input-form">
                 <input id="username" type="text" placeholder="Username" class="form-control"/>
-                <input id="password" type="text" placeholder="Password" class="form-control"/>
+                <input id="password" type="password" placeholder="Password" class="form-control"/>
                 <input id="login" type="button" value="Login" class="btn btn-secondary"/>
             </div>
 
@@ -41,6 +103,7 @@
         <hr />
         <footer>
             <p>&copy; @DateTime.Now.Year - Timothy Gonzalez - Digital Art Gallery</p>
+            Icons by <a href="http://glyphicons.com/">Glyphicons</a> - <a href="/Images/Glyphicons/license.txt">License</a>
         </footer>
     </div>
 </body>

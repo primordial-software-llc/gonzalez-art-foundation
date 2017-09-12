@@ -1,100 +1,71 @@
 ﻿@{
     ViewBag.Title = "Slideshow";
 }
-
+<!-- JS and CSS should be moved to their own pages, because a CDN doesn't cache HTML since it's dynamic. JS and HTML are static so they can get cached and be served by the CDN. That's only possible if they are in their own pages. So even if it's one put them into a CDN. Then we can argue about efficiency of requests. Should be about 10 per page for max asynchronicity.-->
 <script>
 
-    function setCookie(authenticationResponse) {
-        var d = new Date(authenticationResponse.expirationDate);
-        var expires = "expires=" + d.toUTCString();
-        document.cookie = 'token=' + encodeURIComponent(authenticationResponse.token) + ';' + expires + ";path=/";
+    function getImageUrl(item) {
+        return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
     }
 
     function loadSearchResults(results) {
         var html = '';
+        html += '<div id="search-results-summary">Works of art found: ' + results.length + '</div>';
+        html += '<div id="slideshow-start"><img src="/Images/Glyphicons/glyphicons-9-film.png"> Start Slideshow </div>';
         for (var ct = 0; ct < results.length; ct += 1) {
-            html += '<div><a target="_blank" href="http://www.the-athenaeum.org/art/display_image.php?id=' + results[ct].imageId + '">' + results[ct].name + ' (' + results[ct].date + ') by ' + results[ct].artist + '</a></div>';
+            var result = results[ct];
+            html += '<div><a target="_blank" href="' + getImageUrl(result) + '" title="' + result.source + ' - ' + result.pageId + '"' + '>' +
+                results[ct].name +
+                ' (' + results[ct].date + ') by ' +
+                results[ct].originalArtist + '</a></div>';
         }
 
         $('#search-results').html(html);
+
+        $('#slideshow-start').click(function() {
+            localStorage.setItem("slideshowData", JSON.stringify(results));
+            localStorage.setItem("slideshowIndex", 0);
+            window.location = "/Home/ImageViewer";
+        });
     }
 
-    function isAuthenticated() {
-        return document.cookie &&
-            document.cookie.indexOf('token=') > -1;
-    }
-
-    function updateAuthenticationForm() {
-        if (isAuthenticated()) {
-            $('#login-form').hide();
-            $('#authenticated-user-form').show();
-        } else {
-            $('#login-form').show();
-            $('#authenticated-user-form').hide();
-        }
-    }
-
-    function getCookie(cname) {
-        var name = cname + "=";
-        var decodedCookie = decodeURIComponent(document.cookie);
-        var ca = decodedCookie.split(';');
-        for(var i = 0; i <ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-            }
-        }
-        return "";
+    function loadSearchResultsFromUrl(url) {
+        fetch(url).then(function(response) {
+            response
+                .json()
+                .then(function (json) {
+                    loadSearchResults(json);
+                });
+        });
     }
 
     $(document).ready(function () {
 
-        updateAuthenticationForm();
-
-        $('#login').click(function () {
-            var url = '/api/Gallery/token?username=' + $('#username').val() + '&password=' + $('#password').val();
-
-            fetch(url, {mode: 'cors'}).then(function(response) {
-                response
-                    .json()
-                    .then(function (json) {
-                        setCookie(json);
-                        updateAuthenticationForm();
-                    });
-            });
-        });
-
-        $('#signout').click(function() {
-            document.cookie = "token=;expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            updateAuthenticationForm();
-        });
-
         $('#likeSearch').click(function () {
             var url = '/api/Gallery/searchLikeArtist?token=' + encodeURIComponent(getCookie('token')) + '&artist=' + $('#likeSearchText').val();
-            fetch(url).then(function(response) {
-                response
-                    .json()
-                    .then(function (json) {
-                        loadSearchResults(json);
-                    });
-            });
+            loadSearchResultsFromUrl(url);
         });
 
         $('#exactSearch').click(function () {
-            console.log($('#exactSearchText').val());
+            var url = '/api/Gallery/searchExactArtist?token=' + encodeURIComponent(getCookie('token')) + '&artist=' + $('#exactSearchText').val();
+            loadSearchResultsFromUrl(url);
         });
 
         $('#idSearch').click(function () {
-            console.log($('#idSearchText').val());
+            var url = '/api/Gallery/scan?token=' + encodeURIComponent(getCookie('token')) + '&lastPageId=' + $('#idSearchText').val();
+            loadSearchResultsFromUrl(url);
         });
 
     });
 
 </script>
 
+<style>
+    #slideshow-start
+    {
+        cursor: pointer;
+    }
+</style>
 
 <h1>Slideshow</h1>
     

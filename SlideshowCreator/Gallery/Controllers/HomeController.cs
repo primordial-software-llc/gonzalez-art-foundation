@@ -15,5 +15,10 @@ namespace MVC5App.Controllers
 
             return View();
         }
+
+        public ActionResult ImageViewer()
+        {
+            return View();
+        }
     }
 }

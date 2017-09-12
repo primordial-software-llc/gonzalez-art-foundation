@@ -2,9 +2,7 @@
 
 This repository is dedicated to documenting my journey to systematically discover and acquire fine art paintings.
 
-## Content Delivery Network
-
-I signed up for CloudFlare and switched over the nameservers in AWS Route53. I'm waiting for the change to take affect. I follow passion and I don't see half the passion in other companies as I've seen with CloudFront after tracking down the mysterious service I witnessed protecting images.nga.gov and had mistaken it for AWS.
+## Content Delivery Network (CDN)
 
 https://www.cloudflare.com/a/overview/tgonzalez.net
 
@@ -13,7 +11,7 @@ New
     brad.ns.cloudflare.com
     jocelyn.ns.cloudflare.com
 
-Old
+Original
 
     ns-1760.awsdns-28.co.uk
     ns-1460.awsdns-54.org

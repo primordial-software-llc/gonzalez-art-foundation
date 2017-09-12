@@ -54,6 +54,7 @@
     <Compile Include="AuthenticationTokenModel.cs" />
     <Compile Include="Classification\ClassificationConversion.cs" />
     <Compile Include="Classification\ClassificationModel.cs" />
+    <Compile Include="DataAccess\GalleryAwsCredentialsFactory.cs" />
     <Compile Include="DataAccess\ImageClassificationAccess.cs" />
     <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
     <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
