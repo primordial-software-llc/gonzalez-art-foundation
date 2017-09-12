@@ -48,14 +48,15 @@
             width: 30px;
         }
 
-        #slideshow-image-container
-        {
+        #slideshow-image-container {
             height: 92%;
             text-align: center;
-            background-repeat: no-repeat;
-            background-size: auto 100%;
-            background-position: center top;
-            background-attachment: fixed;
+        }
+
+        #slideshow-image
+        {
+            height: 100%;
+            max-width: 100%;
         }
     </style>
     <script>
@@ -71,8 +72,7 @@
             var currentImage = slideshowItems[slideshowIndex];
             $('#slideshow-index').html(slideshowIndex + 1);
             $('#slideshow-count').html(slideshowItems.length);
-            $('#slideshow-image-container').css('background-image', 'url(' + getImageUrl(currentImage) + ')');
-
+            $('#slideshow-image').prop('src', getImageUrl(currentImage));
             $('#slideshow-image-info').html(currentImage.name + ' (' + currentImage.date + ') by ' + currentImage.originalArtist + ' ' +
                 ' Source ' + '<a target="_blank" href="http://www.the-athenaeum.org/art/detail.php?ID=' + currentImage.pageId + '">' + currentImage.source + '</a>');
         }
@@ -132,6 +132,7 @@
 </head>
 <body>
     <div id="slideshow-image-container">
+        <img id="slideshow-image" />
     </div>
     <div id="slideshow-player">
         <div id="slideshow-image-info"></div>
