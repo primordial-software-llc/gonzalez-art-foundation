@@ -46,7 +46,7 @@
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="AWSSDK.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Core.3.3.17.6\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Core.3.3.17.9\lib\net45\AWSSDK.Core.dll</HintPath>
     </Reference>
     <Reference Include="AWSSDK.DynamoDBv2, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.DynamoDBv2.3.3.4.17\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
@@ -984,6 +984,10 @@
     <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
       <Project>{d91ab026-70a1-432f-833e-3f02a17b44cf}</Project>
       <Name>GalleryBackend</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IndexBackend\IndexBackend.csproj">
+      <Project>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</Project>
+      <Name>IndexBackend</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

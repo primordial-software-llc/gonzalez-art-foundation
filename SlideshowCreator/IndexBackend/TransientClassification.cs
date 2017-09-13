@@ -1,11 +1,18 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using Amazon.DynamoDBv2;
-using GalleryBackend.Classification;
-using NUnit.Framework;
 
-namespace SlideshowCreator.Classification
+namespace IndexBackend
 {
-    class TransientClassification
+    /// <summary>
+    /// Reclassify transiently.
+    /// </summary>
+    /// <remarks>
+    /// Retries should be performed if the update fails.
+    /// The method is intended to be idempotent and self-repairing.
+    /// It can be run on an existing or non-existing record to produce the same result.
+    /// </remarks>
+    public class TransientClassification
     {
         private PrivateConfig Config { get; }
         private AmazonDynamoDBClient Client { get; }
@@ -18,12 +25,6 @@ namespace SlideshowCreator.Classification
             TableName = tableName;
         }
 
-        /// <summary>
-        /// Reclassify transiently.
-        /// </summary>
-        /// <remarks>
-        /// Retries should be performed if the update fails. The method is intended to be idempotent and self-repairing. It can be run on an existing or non-existing record to produce the same result.
-        /// </remarks>
         public ClassificationModel ReclassifyTheAthenaeumTransiently(int pageId)
         {
             ClassificationModel classification = null;
@@ -32,11 +33,16 @@ namespace SlideshowCreator.Classification
 
             if (!string.IsNullOrWhiteSpace(html))
             {
-                classification = new Classifier().ClassifyForTheAthenaeum(html, pageId);
+                var classifier = new Classifier();
+                classification = classifier.ClassifyForTheAthenaeum(html, pageId);
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
                 var response = Client.PutItem(TableName, dynamoDbClassification);
-                Assert.AreEqual(HttpStatusCode.OK, response.HttpStatusCode);
+
+                if (response.HttpStatusCode != HttpStatusCode.OK)
+                {
+                    throw new Exception("DynamoDB put failed.");
+                }
             }
 
             return classification;

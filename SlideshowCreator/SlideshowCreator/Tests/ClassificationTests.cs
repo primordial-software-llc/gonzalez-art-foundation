@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using Amazon.DynamoDBv2;
-using GalleryBackend.DataAccess;
+using IndexBackend;
 using NUnit.Framework;
-using SlideshowCreator.Classification;
 using SlideshowCreator.InfrastructureAsCode;
 
-namespace SlideshowCreator.Scripts
+namespace SlideshowCreator.Tests
 {
     class ClassificationScript
     {
@@ -145,29 +143,6 @@ namespace SlideshowCreator.Scripts
                 pageIdQueue.Add(pageId.ToString());
             }
             File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt", pageIdQueue);
-        }
-        
-        [Test]
-        public void C_Reclassify_Chunk()
-        {
-            List<string> pageIdQueue = File
-                .ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt")
-                .ToList();
-
-            try
-            {
-                for (int i = pageIdQueue.Count - 1; i >= 0; i--)
-                {
-                    int pageId = int.Parse(pageIdQueue[i]);
-                    transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
-                    pageIdQueue.RemoveAt(i);
-                    throttle.HoldBack();
-                }
-            }
-            finally
-            {
-                File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt", pageIdQueue);
-            }
         }
 
         /// <summary>

@@ -1,10 +1,9 @@
 ﻿using Amazon;
 using Amazon.DynamoDBv2;
-using GalleryBackend.DataAccess;
 
-namespace SlideshowCreator
+namespace IndexBackend
 {
-    class DynamoDbClientFactory
+    public class DynamoDbClientFactory
     {
         public AmazonDynamoDBClient Create()
         {
@@ -12,6 +11,5 @@ namespace SlideshowCreator
                 GalleryAwsCredentialsFactory.CreateCredentialsFromDefaultProfile(),
                 RegionEndpoint.USEast1);
         }
-
     }
 }

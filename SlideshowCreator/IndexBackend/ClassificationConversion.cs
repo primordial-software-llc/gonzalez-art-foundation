@@ -2,7 +2,7 @@
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
 
-namespace GalleryBackend.Classification
+namespace IndexBackend
 {
     public class ClassificationConversion
     {

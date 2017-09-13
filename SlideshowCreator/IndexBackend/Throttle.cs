@@ -1,10 +1,9 @@
-﻿
-using System.Threading;
-using GalleryBackend.NormalDistributionRandom;
+﻿using System.Threading;
+using IndexBackend.NormalDistributionRandom;
 
-namespace SlideshowCreator
+namespace IndexBackend
 {
-    class Throttle
+    public class Throttle
     {
         public void HoldBack()
         {

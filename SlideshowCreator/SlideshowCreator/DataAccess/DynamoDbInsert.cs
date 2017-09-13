@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
-using GalleryBackend.Classification;
+using IndexBackend;
 using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.DataAccess

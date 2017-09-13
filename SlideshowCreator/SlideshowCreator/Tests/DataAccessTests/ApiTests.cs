@@ -2,11 +2,11 @@
 using System.Net;
 using System.Web;
 using GalleryBackend;
-using GalleryBackend.Classification;
+using IndexBackend;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace SlideshowCreator.DataAccessTests
+namespace SlideshowCreator.Tests.DataAccessTests
 {
     class ApiTests
     {

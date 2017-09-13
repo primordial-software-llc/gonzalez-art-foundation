@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
-using GalleryBackend.Classification;
-using GalleryBackend.DataAccess;
+using IndexBackend;
 
 namespace MVC5App
 {

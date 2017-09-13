@@ -2,9 +2,8 @@
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using GalleryBackend.Classification;
 
-namespace GalleryBackend.DataAccess
+namespace IndexBackend
 {
     public class ImageClassificationAccess
     {

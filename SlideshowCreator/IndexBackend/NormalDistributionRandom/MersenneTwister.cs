@@ -1,6 +1,7 @@
 ﻿
-namespace GalleryBackend.NormalDistributionRandom
+namespace IndexBackend.NormalDistributionRandom
 {
+    /// <inheritdoc />
     /// <summary>
     /// Mersenne Twister random number generator; from http://takel.jp/mt/MersenneTwister.cs
     /// </summary>

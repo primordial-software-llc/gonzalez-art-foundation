@@ -1,10 +1,9 @@
-﻿
-using System.IO;
+﻿using System.IO;
 using Newtonsoft.Json;
 
-namespace SlideshowCreator
+namespace IndexBackend
 {
-    class PrivateConfig
+    public class PrivateConfig
     {
         [JsonProperty("expectedIp")]
         public string ExpectedIp { get; set; }

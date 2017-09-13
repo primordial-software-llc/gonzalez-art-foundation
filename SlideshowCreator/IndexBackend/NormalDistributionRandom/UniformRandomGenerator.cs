@@ -1,5 +1,5 @@
 ﻿
-namespace GalleryBackend.NormalDistributionRandom
+namespace IndexBackend.NormalDistributionRandom
 {
     public class UniformRandomGenerator : IRandomGenerator
     {

@@ -1,4 +1,4 @@
-﻿namespace GalleryBackend.NormalDistributionRandom
+﻿namespace IndexBackend.NormalDistributionRandom
 {
     public interface IRandomGenerator
     {

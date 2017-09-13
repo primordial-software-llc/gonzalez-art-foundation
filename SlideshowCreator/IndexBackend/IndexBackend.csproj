@@ -1,17 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2A6CFD13-3FE8-4E24-8335-74460093D7CF}</ProjectGuid>
+    <ProjectGuid>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SlideshowCreator</RootNamespace>
-    <AssemblyName>SlideshowCreator</AssemblyName>
+    <RootNamespace>IndexBackend</RootNamespace>
+    <AssemblyName>IndexBackend</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,12 +42,8 @@
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=3.8.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.3.8.1\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,39 +52,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Tests\DataAccessTests\ApiTests.cs" />
-    <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
-    <Compile Include="DataAccess\DynamoDbDelete.cs" />
-    <Compile Include="DataAccess\DynamoDbInsert.cs" />
-    <Compile Include="Tests\UnitTests\AuthenticationTests.cs" />
-    <Compile Include="ImagesDotNgaDotGov.cs" />
-    <Compile Include="Tests\ClassificationTests.cs" />
-    <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
+    <Compile Include="ClassificationConversion.cs" />
+    <Compile Include="ClassificationModel.cs" />
+    <Compile Include="Classifier.cs" />
+    <Compile Include="Crawler.cs" />
+    <Compile Include="DynamoDbClientFactory.cs" />
+    <Compile Include="GalleryAwsCredentialsFactory.cs" />
+    <Compile Include="ImageClassificationAccess.cs" />
+    <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
+    <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
+    <Compile Include="NormalDistributionRandom\NormalRandomGenerator.cs" />
+    <Compile Include="NormalDistributionRandom\UniformRandomGenerator.cs" />
+    <Compile Include="PrivateConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PublicConfig.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
-      <Project>{d91ab026-70a1-432f-833e-3f02a17b44cf}</Project>
-      <Name>GalleryBackend</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IndexBackend\IndexBackend.csproj">
-      <Project>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</Project>
-      <Name>IndexBackend</Name>
-    </ProjectReference>
+    <Compile Include="Throttle.cs" />
+    <Compile Include="TransientClassification.cs" />
+    <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Scripts\" />
+    <Analyzer Include="..\packages\AWSSDK.DynamoDBv2.3.3.4.17\analyzers\dotnet\cs\AWSSDK.DynamoDBv2.CodeAnalysis.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

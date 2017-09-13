@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using Amazon.DynamoDBv2;
-using GalleryBackend.DataAccess;
+using IndexBackend;
 using NUnit.Framework;
 
-namespace SlideshowCreator.DataAccessTests
+namespace SlideshowCreator.Tests.DataAccessTests
 {
     class ImageClassificationAccessTests
     {

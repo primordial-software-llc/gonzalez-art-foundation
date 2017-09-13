@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace GalleryBackend.NormalDistributionRandom
+namespace IndexBackend.NormalDistributionRandom
 {
     public class NormalRandomGenerator : IRandomGenerator
     {

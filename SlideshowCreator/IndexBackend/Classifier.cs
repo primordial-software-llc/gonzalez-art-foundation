@@ -1,11 +1,8 @@
-﻿
-using Diacritics.Extensions;
-using GalleryBackend.DataAccess;
-using GalleryBackend.Classification;
+﻿using Diacritics.Extensions;
 
-namespace SlideshowCreator.Classification
+namespace IndexBackend
 {
-    class Classifier
+    public class Classifier
     {
         /// <summary>
         /// This is needed for the ArtistNameIndex, because keys are required.

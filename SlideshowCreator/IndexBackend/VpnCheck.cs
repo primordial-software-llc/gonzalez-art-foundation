@@ -1,9 +1,9 @@
-﻿using System.Net;
-using NUnit.Framework;
+﻿using System;
+using System.Net;
 
-namespace SlideshowCreator
+namespace IndexBackend
 {
-    class VpnCheck
+    public class VpnCheck
     {
         public void AssertVpnInUse(PrivateConfig privateConfig)
         {
@@ -14,7 +14,11 @@ namespace SlideshowCreator
                 html = wc.DownloadString(privateConfig.IpCheckerUrl);
             }
             var expected = $@"{privateConfig.IpCheckerUrl}/ip/{privateConfig.ExpectedIp}";
-            StringAssert.Contains(expected, html);
+
+            if (!html.ToLower().Contains(expected.ToLower()))
+            {
+                throw new Exception("Expected " + expected + " but was " + html);
+            }
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Web.Http;
 using GalleryBackend;
-using GalleryBackend.Classification;
+using IndexBackend;
 
 namespace MVC5App.Controllers
 {

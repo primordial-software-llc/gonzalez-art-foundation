@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using GalleryBackend.DataAccess;
+using IndexBackend;
 using NUnit.Framework;
 
 namespace SlideshowCreator.InfrastructureAsCode

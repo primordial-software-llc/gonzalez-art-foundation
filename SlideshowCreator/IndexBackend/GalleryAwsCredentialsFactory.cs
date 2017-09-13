@@ -1,9 +1,8 @@
-﻿
-using System;
+﻿using System;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
 
-namespace GalleryBackend.DataAccess
+namespace IndexBackend
 {
     /// <summary>
     /// Credentials (nor any other secrets) must never be placed in source code.
