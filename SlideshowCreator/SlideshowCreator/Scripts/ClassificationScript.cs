@@ -1,36 +1,180 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
-using GalleryBackend.Classification;
 using GalleryBackend.DataAccess;
 using NUnit.Framework;
 using SlideshowCreator.Classification;
-using SlideshowCreator.DataAccess;
 using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.Scripts
 {
     class ClassificationScript
     {
-
-        public const int CONCURRENCY = 5;
+        public const int CONCURRENCY = 100;
+        private readonly Throttle throttle = new Throttle();
         private readonly AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
+        private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        private TransientClassification transientClassifier;
 
         [OneTimeSetUp]
         public void Setup_All_Tests_Once_And_Only_Once()
         {
-            ServicePointManager.DefaultConnectionLimit = CONCURRENCY;
+            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
+            transientClassifier = new TransientClassification(privateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+        }
+
+        [Test]
+        public void A_Test_VPN()
+        {
+            new VpnCheck().AssertVpnInUse(privateConfig);
+        }
+
+        [Test]
+        public void A_Check_Throttle()
+        {
+            var expectedMaxWaitInMs = 1000;
+
+            var timer = new Stopwatch();
+            timer.Start();
+            throttle.HoldBack();
+            timer.Stop();
+
+            Assert.IsTrue(timer.ElapsedMilliseconds > 1 && timer.ElapsedMilliseconds < expectedMaxWaitInMs);
+
+            timer = new Stopwatch();
+            timer.Start();
+            throttle.HoldBack();
+            timer.Stop();
+            Assert.IsTrue(timer.ElapsedMilliseconds > 1 && timer.ElapsedMilliseconds < expectedMaxWaitInMs);
+
+            timer = new Stopwatch();
+            timer.Start();
+            throttle.HoldBack();
+            timer.Stop();
+            Assert.IsTrue(timer.ElapsedMilliseconds > 1 && timer.ElapsedMilliseconds < expectedMaxWaitInMs);
+        }
+
+        [Test]
+        public void B_Reclassify_Jean_Leon_Gerome_Sample()
+        {
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(15886);
+
+            Assert.AreEqual("http://www.the-athenaeum.org", classification.Source);
+            Assert.AreEqual(15886, classification.PageId);
+            Assert.AreEqual(153045, classification.ImageId);
+            Assert.AreEqual("The Slave Market", classification.Name); 
+            Assert.AreEqual("jean-leon gerome", classification.Artist);
+            Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
+            Assert.AreEqual("1866", classification.Date);
+        }
+
+        [Test]
+        public void B_Check_Sample1()
+        {
+            var pageId = 2594;
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+            Assert.AreEqual(pageId, classification.PageId);
+            Assert.AreEqual("The Banks of the River", classification.Name);
+            Assert.AreEqual("charles-francois daubigny", classification.Artist);
+            Assert.AreEqual("Date unknown", classification.Date);
+            Assert.AreEqual(5154, classification.ImageId);
+        }
+
+        [Test]
+        public void B_Check_Sample2()
+        {
+            var pageId = 33;
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+            Assert.AreEqual("The Mandolin Player", classification.Name);
+            Assert.AreEqual("dante gabriel rossetti", classification.Artist);
+            Assert.AreEqual("1869", classification.Date);
+            Assert.AreEqual(736170, classification.ImageId);
+        }
+
+        [Test]
+        public void B_Check_Sample_With_Alternbate_Title()
+        {
+            var pageId = 10005;
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+            Assert.AreEqual("Rotterdam", classification.Name);
+            Assert.AreEqual("johan barthold jongkind", classification.Artist);
+            Assert.AreEqual("circa 1871", classification.Date);
+            Assert.AreEqual(20117, classification.ImageId);
+        }
+
+        [Test]
+        public void B_Check_Sample_With_Alternbate_Title2()
+        {
+            var pageId = 10163;
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+            Assert.AreEqual("photo of balla in futurist outfit", classification.Name);
+            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.Artist);
+            Assert.AreEqual(string.Empty, classification.Date);
+            Assert.AreEqual(20441, classification.ImageId);
+        }
+
+        [Test]
+        public void B_Check_Sample_With_Alternbate_Title3()
+        {
+            var pageId = 48407;
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+            Assert.AreEqual("Man", classification.Name);
+            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.Artist);
+            Assert.AreEqual(string.Empty, classification.Date);
+            Assert.AreEqual(0, classification.ImageId);
+        }
+
+        [Test]
+        public void B_Check_Sample_With_Null_Reference_Exception()
+        {
+            var pageId = 137;
+            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+            Assert.IsNull(classification);
+        }
+
+        //[Test]
+        public void C_Create_Classification_File_Queue()
+        {
+            List<string> pageIdQueue = new List<string>();
+            for (int pageId = 33; pageId < 292400; pageId += 1)
+            {
+                pageIdQueue.Add(pageId.ToString());
+            }
+            File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt", pageIdQueue);
+        }
+        
+        [Test]
+        public void C_Reclassify_Chunk()
+        {
+            List<string> pageIdQueue = File
+                .ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt")
+                .ToList();
+
+            try
+            {
+                for (int i = pageIdQueue.Count - 1; i >= 0; i--)
+                {
+                    int pageId = int.Parse(pageIdQueue[i]);
+                    transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+                    pageIdQueue.RemoveAt(i);
+                    throttle.HoldBack();
+                }
+            }
+            finally
+            {
+                File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt", pageIdQueue);
+            }
         }
 
         /// <summary>
         /// I have some work to do re-indexing.
         /// </summary>
         [Test]
-        public void Check_Counts()
+        public void Z_Check_Counts()
         {
             var request = new DynamoDbTableFactory().GetTableDefinition();
 
@@ -42,23 +186,6 @@ namespace SlideshowCreator.Scripts
             {
                 Console.WriteLine($"{gsi.IndexName}: " + gsi.ItemCount);
             }
-        }
-        
-        
-        [Test]
-        public void Reclassify_Jean_Leon_Gerome_Sample()
-        {
-            var privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
-            var transientClassifier = new TransientClassification(privateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
-            var classification = transientClassifier.ReclassifyTheAthenaeumTransiently(15886);
-
-            Assert.AreEqual("http://www.the-athenaeum.org", classification.Source);
-            Assert.AreEqual(15886, classification.PageId);
-            Assert.AreEqual(153045, classification.ImageId);
-            Assert.AreEqual("The Slave Market", classification.Name); 
-            Assert.AreEqual("jean-leon gerome", classification.Artist);
-            Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
-            Assert.AreEqual("1866", classification.Date);
         }
 
     }

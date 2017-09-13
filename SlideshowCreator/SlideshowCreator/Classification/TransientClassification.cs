@@ -1,5 +1,7 @@
-﻿using Amazon.DynamoDBv2;
+﻿using System.Net;
+using Amazon.DynamoDBv2;
 using GalleryBackend.Classification;
+using NUnit.Framework;
 
 namespace SlideshowCreator.Classification
 {
@@ -24,12 +26,18 @@ namespace SlideshowCreator.Classification
         /// </remarks>
         public ClassificationModel ReclassifyTheAthenaeumTransiently(int pageId)
         {
-            var html = Crawler.GetDetailsPageHtml(Config.TargetUrl, pageId, Config.PageNotFoundIndicatorText);
-            var classification = new Classifier().ClassifyForTheAthenaeum(html, pageId);
+            ClassificationModel classification = null;
 
-            var classificationConversion = new ClassificationConversion();
-            var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
-            Client.PutItem(TableName, dynamoDbClassification);
+            var html = Crawler.GetDetailsPageHtml(Config.TargetUrl, pageId, Config.PageNotFoundIndicatorText);
+
+            if (!string.IsNullOrWhiteSpace(html))
+            {
+                classification = new Classifier().ClassifyForTheAthenaeum(html, pageId);
+                var classificationConversion = new ClassificationConversion();
+                var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
+                var response = Client.PutItem(TableName, dynamoDbClassification);
+                Assert.AreEqual(HttpStatusCode.OK, response.HttpStatusCode);
+            }
 
             return classification;
         }

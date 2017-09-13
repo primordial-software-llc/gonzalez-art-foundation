@@ -6,26 +6,16 @@ namespace GalleryBackend.Classification
 {
     public class ClassificationConversion
     {
-        /// <summary>
-        /// This is needed for the ArtistNameIndex, because keys are required.
-        /// Amazon.DynamoDBv2.AmazonDynamoDBException : The provided key element does not match the schema
-        /// </summary>
-        public const string UNKNOWN_ARTIST = "Unknown";
 
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {
             var kvp = new Dictionary<string, AttributeValue>
             {
                 {"source", new AttributeValue {S = classification.Source}},
-                {"pageId", new AttributeValue {N = classification.PageId.ToString()}}
+                {"pageId", new AttributeValue {N = classification.PageId.ToString()}},
+                {"artist", new AttributeValue {S = classification.Artist}},
+                {ClassificationModel.ORIGINAL_ARTIST, new AttributeValue {S = classification.OriginalArtist}}
             };
-
-            string artist = string.IsNullOrWhiteSpace(classification.Artist)
-                ? UNKNOWN_ARTIST
-                : classification.Artist;
-
-            kvp.Add("artist", new AttributeValue {S = artist });
-            kvp.Add(ClassificationModel.ORIGINAL_ARTIST, new AttributeValue {S = classification.OriginalArtist });
 
             if (classification.ImageId > 0)
             {
