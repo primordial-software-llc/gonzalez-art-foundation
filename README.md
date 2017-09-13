@@ -2,6 +2,12 @@
 
 This repository is dedicated to documenting my journey to systematically discover and acquire fine art paintings.
 
+## Image Recognition
+
+Check this out: https://aws.amazon.com/rekognition/pricing/
+
+^^ This is where I want to take this project, but I need more time. I need more data to fuel the project. ^^
+
 ## Content Delivery Network (CDN)
 
 https://www.cloudflare.com/a/overview/tgonzalez.net
