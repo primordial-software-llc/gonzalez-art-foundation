@@ -6,72 +6,40 @@ This repository is dedicated to documenting my journey to systematically discove
 
 Check this out: https://aws.amazon.com/rekognition/pricing/
 
-^^ This is where I want to take this project, but I need more time. I need more data to fuel the project. ^^
+This is where I want to take this project, but I need more time.
 
 ## Content Delivery Network (CDN)
 
 https://www.cloudflare.com/a/overview/tgonzalez.net
 
-New
-
-    brad.ns.cloudflare.com
-    jocelyn.ns.cloudflare.com
-
-Original
-
-    ns-1760.awsdns-28.co.uk
-    ns-1460.awsdns-54.org
-    ns-892.awsdns-47.net
-    ns-503.awsdns-62.com
-
-## DynamoDB Settings
-
-`The write capacity needs to be increased when classifying. 25 should be adequate to transiently classify.`
-
-*Total Estimated Monthly Cost: $10.16 (could potentially be within free-tier - August 2017 had $0 DynamoDB charges)*
-
-### Table
-Read Capacity: 5
-
-Write Capacity: 5
-
-### Global Secondary Index's
-
-#### Artist Name Index
-Read Capacity: 50
-
-Write Capacity: 5
-
 ## SlideShowCreator
 
-The SlideShowCreator project is used to crawl [the-athenaeum](www.the-athenaeum.org), in a respectable manner over the course of several days, to download their 250,000+ image archive and classify the images. I chose the-athenaeum, because it has a very open mission statement with no Robots.txt and no terms of service. The process has two steps:
+The SlideShowCreator project is used to crawl [the-athenaeum](www.the-athenaeum.org), in a respectable manner over the course of several days, to classify their 280,000+ image archive into dynamodb.
 
-1. Enumerate page id's and download the following for each page to the local hard disk
-    1. Html File
-    2. Full image JPEG referenced on the page
-2. Enumerate local html files and classify the content
-    1. Name
-    2. Artist
-    3. Date
-    4. ImageId
+    {
+      "artist": "dante gabriel rossetti",
+      "date": "1869",
+      "imageId": 736170,
+      "name": "The Mandolin Player",
+      "originalArtist": "Dante Gabriel Rossetti",
+      "pageId": 33,
+      "source": "http://www.the-athenaeum.org"
+    }
 
-*I should have captured the page id, but that's stored in the physical local file. I will have to add the field when I push the data to a more usable repository*
 
-The process yields the following folder structure:
+## Gallery (MVCApp .NET Project)
 
-1. ImageArchive (100Gb)
-2. HtmlArchive (2Gb)
-3. Classification (20Mb)
+The Gallery is the front-end for the images. The images aren't hosted. The gallery is simply an index for the images. All images displayed have references to the-athenaeum. The entire purose of the gallery is to increase the number of images a person can view over the course of a day.
 
-*Caution: Downloading over 100Gb into a single folder can cause undesired affects to a computer. The recommended course of action is to use an SSD and research windows folder optimizations. Don't attempt to version the content with Git.*
-
-`Need to think about downloading images when classifying transiently. This is all I want to store besides the index.`
+The main feature of the gallery is a slide show for an image search.
 
 ## Gallery
 
+Refer to `SlideshowCreator.DataAccessTests.ApiTests` for complete examples.
+
 ### Token
 
-Call the `token` web service to get an authentication token which is safe to store in a cookie, because it is a cryptographic hash which will not leak identity information even if the cookie were to be exposed. The authentication token is good for one UTC day or upon a website publish. After that time, the source information to create the cookie has new random input, based on the [Mersenne Twister Pseudo Random Number Generator](https://en.wikipedia.org/wiki/Mersenne_Twister), and produces an entirely new hash. `I may have made a mistake here, because the mersenne twister isn't cryptographically secure, but its output is hashed and not exposed so it's tough to say`. If I want to show off a bit, I should use [RNGCryptoServiceProvider Class](https://msdn.microsoft.com/en-us/library/system.security.cryptography.rngcryptoserviceprovider(v=vs.110).aspx). The token/cookie is basically useless with a read-only interface and the mentioned layers of security.
+Call the `token` web service to get an authentication token which is safe to store in a cookie, because it is a cryptographic hash which will not leak identity information even if the cookie were to be exposed. The authentication token is good for one UTC day or upon a website publish. After that time, the source information to create the cookie has new random input, from a cryptographically secure random number generator, and produces an entirely new hash.
 
 Url
 
@@ -81,61 +49,49 @@ Response
 
     "Q6AaIcvz25xiF2MgY/QDrBM4lDZ5BV1bKjV9wdbkPUE="
 
-### Search Like Artist
+### Search by Exact Artist
+    var artist = "Jean-Leon Gerome";
+    var url = $"https://tgonzalez.net/api/Gallery/searchExactArtist?token={HttpUtility.UrlEncode(token)}&artist={artist}";
+    var response = new WebClient().DownloadString(url);
+    var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+    Assert.AreEqual(233, results.Count);
 
-Url
+### Search by Like Artist
 
-    https://tgonzalez.net/api/Gallery/searchLikeArtist?token=[TOKEN]&artist=jean-leon%20gerome
+    var artist = "Jean-Leon Gerome";
+    var url = $"https://tgonzalez.net/api/Gallery/searchLikeArtist?token={HttpUtility.UrlEncode(token)}&artist={artist}";
+    var response = new WebClient().DownloadString(url);
+    var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+    Assert.AreEqual(237, results.Count);
 
-Response
+### Page by Id
 
-    "249"
-
-### Search Exact Artist
-
-Url
-
-    https://tgonzalez.net/api/Gallery/searchExactArtist?token=[TOKEN]&artist=jean-leon%20gerome
-
-Response
-
-    "244"
+    var url = $"https://tgonzalez.net/api/Gallery/scan?token={HttpUtility.UrlEncode(token)}&lastPageId=0";
+    var response = new WebClient().DownloadString(url);
+    var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+    Assert.AreEqual(7350, results.Count);
 
 ### Image Hosting
-As long as I access the images transiently the problem of image copyright ceases to exist. Simply keep a personal backup for disaster scenarios. The index is king, like one of the most valuable books in [The Library of Babel](https://en.wikipedia.org/wiki/The_Library_of_Babel).
+Image hosting will be a requirement for AWS rekognition. The images need to be hosted in an S3 bucket for analysis. This could be a long ways away, depending on how long it takes to build a crawler for the National Gallery of Art (NGA). However I can't easily access the images from images.nga.gov, so here are the next steps:
+1. Re-crawl the-athenaeum fully transiently (working on this now)
+2. Make a backup of the data
+3. Create a crawler for images.nga.gov
+4. Crawl images.nga.gov
+    1. Get a temporary access token
+    2. Download the super high resolution image
+    3. Unzip the image
+    4. Upload an s3 bucket
+5. Upload the images for the-athenaeum to s3
+    1. Most of the images exist locally from the first crawl.
+    2. If the image doesn't exist locally on laptop, fetch a new image.
+    3. Make the entire process transient
+        1. clssify in dynamodb
+        2. Upload to s3
+6. Find a new image archive or analyze the images with rekognition
 
-### Viewing
-Images will be viewed from the source using the index I've built to navigate until there are either access, quality or performance issues, which have yet to be the case.
+I really want to get another archive, then I can make the process generic. There will be more complex data, a variety of crawlers and a variety of source data. All of this should be placed into the same dynamodb table though. It can be effeciently partitioned with the "source" field.
 
-Use Cases
-
-1. I load the application and it has saved where I last left off. I override the default rate from 15 seconds to 1 minute.
-
-2. While viewing the automatic slideshow, I press pause and temporarily disable the automatic slideshow. Once I'm done writing notes about the image I press play and continue the slideshow.
-
-3. While viewing the automatic slideshow, I press forward to go to the next image prior to the configured rate.
-
-4. When the automatic slideshow switches to the next image, I hit back then press pause to return to the previous image and stay there.
-
-5. I load the application and enter an artists name. I view all images for the artist with an automatic slideshow. Once I'm done, I go back to enumeration mode and continue where I left off while enumerating.
-
-*To start, there is no need to save the position. I will keep my last position in my physical notebook, but this would be the most desirable non-essential feature. No matter what though I need to be able to set the position in case if I fall asleep while viewing.*
-
-### Application Structure
-
-  Github $7 per month (HTML/CSS/JavasScript hosting)
-
-  Dynamo DB $1 estimated per month (Data mapping)
-
-  AWS EC2 Windows $15 estimated per month(Rest API to dynamo db and to delegate authentication)
-
-## Equipment
-
-1. Desktop with SSD for development
-2. 1080p projector with 100 inch screen
-3. Laptop dedicated for viewing
-
-## Future Data Targets
+## National Gallery of Art
 
 I did see a browser check that said DDos protection from CloudFlare (CEO the Matthew prince). I'm not sure how that would affect a crawler. Perhaps it requires JavaScript execution. This would be a good challenge.
 
@@ -156,38 +112,8 @@ http://images.nga.gov/en/page/openaccess.html
 
 http://images.nga.gov/robots.txt
 
-    #
-    # "$Id: robots.txt 3494 2003-03-19 15:37:44Z mike $"
-    #
-    #   This file tells search engines not to index your CUPS server.
-    #
-    #   Copyright 1993-2003 by Easy Software Products.
-    #
-    #   These coded instructions, statements, and computer programs are the
-    #   property of Easy Software Products and are protected by Federal
-    #   copyright law.  Distribution and use rights are outlined in the file
-    #   "LICENSE.txt" which should have been included with this file.  If this
-    #   file is missing or damaged please contact Easy Software Products
-    #   at:
-    #
-    #       Attn: CUPS Licensing Information
-    #       Easy Software Products
-    #       44141 Airport View Drive, Suite 204
-    #       Hollywood, Maryland 20636-3111 USA
-    #
-    #       Voice: (301) 373-9600
-    #       EMail: cups-info@cups.org
-    #         WWW: http://www.cups.org
-    #
-
-    #User-agent: *
-    #Disallow: /
-
     User-agent: *
     Crawl-delay: 40
-    #
-    # End of "$Id: robots.txt 3494 2003-03-19 15:37:44Z mike $".
-    #
 
 At a mere 40 seconds each with result sets of 75 that means it would take:
 
@@ -202,11 +128,6 @@ That's how long it would take to build an index of images. I want the super high
 
 This actually isn't that bad. I need to index the site first, that will take more dev time than computing time. Then I can worry about scraping the high-res images.
 I can also view the images transiently and avoid scraping entirely. I can buffer up some images and perhaps solve the problem entirely. It will be semi-complex, because the images are zipped, but that just means I can't do it in pure html like I'm planning with the-atheneum. Everything would need to be routed through a server which can download, unzip, then serve the image file.
-
-
-## Acquisitions From This Process
-
-[Expectations (1885) by Sir Lawrence Alma-Tadema]( http://www.the-athenaeum.org/art/detail.php?ID=329)
 
 ## Helpful Projects
 
