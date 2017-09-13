@@ -51,7 +51,16 @@ namespace SlideshowCreator.InfrastructureAsCode
             return request;
         }
 
-        public void CreateTable(CreateTableRequest request, AmazonDynamoDBClient client)
+        public void CreateTableWithIndexes(AmazonDynamoDBClient client)
+        {
+            var tableFactory = new DynamoDbTableFactory();
+            var request = tableFactory.GetTableDefinition();
+            tableFactory.CreateTable(request, client);
+
+            tableFactory.AddArtistNameGlobalSecondaryIndex(client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+        }
+
+        private void CreateTable(CreateTableRequest request, AmazonDynamoDBClient client)
         {
             TableDescription tableDescription;
             var tableExists = TableExists(request.TableName);
@@ -80,7 +89,7 @@ namespace SlideshowCreator.InfrastructureAsCode
             WaitForTableStatus(request.TableName, TableStatus.ACTIVE);
         }
         
-        public void AddArtistNameGlobalSecondaryIndex(AmazonDynamoDBClient client, string tableName)
+        private void AddArtistNameGlobalSecondaryIndex(AmazonDynamoDBClient client, string tableName)
         {
             var artistNameIndexRequest = new GlobalSecondaryIndexUpdate
             {
