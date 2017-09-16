@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace IndexBackend.CloudFlareImUnderAttack
 {
@@ -26,6 +27,32 @@ namespace IndexBackend.CloudFlareImUnderAttack
             Multiply,
             Subtract,
             Add
+        }
+
+        public string GetClearanceUrl(string html)
+        {
+            var challengeQuestionsAnswer = Decode(html, "images.nga.gov");
+
+            // https://stackoverflow.com/questions/56107/what-is-the-best-way-to-parse-html-in-c
+            // I'm highly cautious of what's on the web. Hopefully this should give you an idea of how far I want to take this. Eventually I believe I will face agressive defenders.
+            // I want to take it slow. There's no rush, I'm moving quickly already.
+            XmlDocument xmlDoc = new XmlDocument { XmlResolver = null }; // Prevent XXE attack: https://stackoverflow.com/questions/14230988/how-to-prevent-xxe-attack-xmldocument-in-net
+
+            var cleanHtml = html
+                .Replace("&hellip;", string.Empty)
+                .Replace("<br>", string.Empty);
+            xmlDoc.LoadXml(cleanHtml);
+
+            var challengeFormNode = xmlDoc.SelectSingleNode("//form[@id='challenge-form']");
+            var jschlVcNode = challengeFormNode.SelectSingleNode("//input[@name='jschl_vc']");
+            var passNode = challengeFormNode.SelectSingleNode("//input[@name='pass']");
+
+            var vcVar = jschlVcNode.Attributes["value"].InnerText;
+            var passVar = passNode.Attributes["value"].InnerText;
+
+            var clearanceUrl = $"http://images.nga.gov/cdn-cgi/l/chk_jschl?jschl_vc={vcVar}&pass={passVar}&jschl_answer={challengeQuestionsAnswer}";
+
+            return clearanceUrl;
         }
 
         public int Decode(string obfuscatedAndEncoded, string domain)

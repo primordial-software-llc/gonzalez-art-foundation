@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using IndexBackend;
+using IndexBackend.CloudFlareImUnderAttack;
 using NUnit.Framework;
 
 namespace SlideshowCreator
@@ -19,15 +23,99 @@ namespace SlideshowCreator
         public void Get_Home_Page_Through_500_Response()
         {
             new VpnCheck().AssertVpnInUse(privateConfig);
-
+            var uri = new Uri(privateConfig.Target2Url);
+            
             var client = new HttpClient();
-            Task<HttpResponseMessage> asyncResponse = client.GetAsync(privateConfig.Target2Url);
+            Task<HttpResponseMessage> asyncResponse = client.GetAsync(uri);
             HttpResponseMessage respone = asyncResponse.Result;
 
             Assert.AreEqual(HttpStatusCode.ServiceUnavailable, respone.StatusCode);
 
-            var initialBody = respone.Content.ReadAsStringAsync().Result;
-            Console.WriteLine(initialBody);
+            var html = respone.Content.ReadAsStringAsync().Result;
+
+            // Apparently this cookie isn't required.
+            //IEnumerable<Cookie> responseCookies = cookies.GetCookies(uri).Cast<Cookie>();
+            // Assert.AreEqual("__cfduid", responseCookies.Single().Name);
+
+            System.Threading.Thread.Sleep(4000);
+
+            DecodeChallengeQuestion decodeChallengeQuestion = new DecodeChallengeQuestion();
+            var clearanceUrl = decodeChallengeQuestion.GetClearanceUrl(html);
+
+            Parallel.Invoke(
+                () =>
+                {
+                    CookieContainer cookies = new CookieContainer();
+                    HttpClientHandler handler = new HttpClientHandler { CookieContainer = cookies };
+                    var authorizedClient = new HttpClient(handler);
+                    Task<HttpResponseMessage> asyncClearanceResponse = authorizedClient.GetAsync(clearanceUrl);
+                    HttpResponseMessage clearanceResponse = asyncClearanceResponse.Result;
+
+                    // There's a redirect here from the clearance URL to the home page.
+                    // There's actually a 302 redirect here, but HttpClient follows the redirect.
+                    Assert.AreEqual(HttpStatusCode.OK, clearanceResponse.StatusCode);
+                    string homePageHtml = clearanceResponse.Content.ReadAsStringAsync().Result;
+                    StringAssert.Contains("/en/web_images/boatmen3.jpg", homePageHtml);
+
+                    // This is what grants access. This is what I worked all night to generate.
+                    var clearanceCookie = cookies.GetCookies(uri).Cast<Cookie>().Single(x => x.Name.Equals("cf_clearance"));
+                    Console.WriteLine(clearanceCookie);
+
+                    // This is the proper home page of the website. From here we can download the super high resolution images which are so BIG, they are zipped. I'm drooling at howa an HD Jean-Leon Gerome will look on my HD projector!
+                    Assert.AreEqual("http://images.nga.gov/en/page/show_home_page.html", clearanceResponse.RequestMessage.RequestUri.AbsoluteUri);
+                },
+                () =>
+                {
+                    
+                    System.Threading.Thread.Sleep(100);
+                    CookieContainer cookies = new CookieContainer();
+                    HttpClientHandler handler = new HttpClientHandler { CookieContainer = cookies };
+                    var authorizedClient = new HttpClient(handler);
+                    Task<HttpResponseMessage> asyncClearanceResponse = authorizedClient.GetAsync(clearanceUrl);
+                    HttpResponseMessage clearanceResponse = asyncClearanceResponse.Result;
+
+                    // There's a redirect here from the clearance URL to the home page.
+                    // There's actually a 302 redirect here, but HttpClient follows the redirect.
+                    Assert.AreEqual(HttpStatusCode.OK, clearanceResponse.StatusCode);
+                    string homePageHtml = clearanceResponse.Content.ReadAsStringAsync().Result;
+                    StringAssert.Contains("/en/web_images/boatmen3.jpg", homePageHtml);
+
+                    // This is what grants access. This is what I worked all night to generate.
+                    var clearanceCookie = cookies.GetCookies(uri).Cast<Cookie>().Single(x => x.Name.Equals("cf_clearance"));
+                    Console.WriteLine(clearanceCookie);
+
+                    // This is the proper home page of the website. From here we can download the super high resolution images which are so BIG, they are zipped. I'm drooling at howa an HD Jean-Leon Gerome will look on my HD projector!
+                    Assert.AreEqual("http://images.nga.gov/en/page/show_home_page.html", clearanceResponse.RequestMessage.RequestUri.AbsoluteUri);
+                    
+                },
+                () =>
+                {
+
+                    System.Threading.Thread.Sleep(100);
+                    CookieContainer cookies = new CookieContainer();
+                    HttpClientHandler handler = new HttpClientHandler { CookieContainer = cookies };
+                    var authorizedClient = new HttpClient(handler);
+                    Task<HttpResponseMessage> asyncClearanceResponse = authorizedClient.GetAsync(clearanceUrl);
+                    HttpResponseMessage clearanceResponse = asyncClearanceResponse.Result;
+
+                    // There's a redirect here from the clearance URL to the home page.
+                    // There's actually a 302 redirect here, but HttpClient follows the redirect.
+                    Assert.AreEqual(HttpStatusCode.OK, clearanceResponse.StatusCode);
+                    string homePageHtml = clearanceResponse.Content.ReadAsStringAsync().Result;
+                    StringAssert.Contains("/en/web_images/boatmen3.jpg", homePageHtml);
+
+                    // This is what grants access. This is what I worked all night to generate.
+                    var clearanceCookie = cookies.GetCookies(uri).Cast<Cookie>().Single(x => x.Name.Equals("cf_clearance"));
+                    Console.WriteLine(clearanceCookie);
+
+                    // This is the proper home page of the website. From here we can download the super high resolution images which are so BIG, they are zipped. I'm drooling at howa an HD Jean-Leon Gerome will look on my HD projector!
+                    Assert.AreEqual("http://images.nga.gov/en/page/show_home_page.html", clearanceResponse.RequestMessage.RequestUri.AbsoluteUri);
+
+                });
+
+
+
+
         }
 
         [Test]
@@ -47,8 +135,8 @@ namespace SlideshowCreator
             var responseStream = response.GetResponseStream();
             StreamReader readStream = new StreamReader(responseStream, Encoding.UTF8);
 
-            var text = readStream.ReadToEnd();
-            Console.WriteLine(text);
+            var html = readStream.ReadToEnd();
+            Console.WriteLine(html);
 
             response.Close();
             responseStream.Close();
