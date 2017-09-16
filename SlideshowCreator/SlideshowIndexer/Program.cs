@@ -33,13 +33,26 @@ namespace SlideshowIndexer
             }
         }
 
-        private static PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        private static readonly PrivateConfig PrivateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
         private static List<string> pageIdQueue;
 
         static void Main(string[] args)
         {
-            new VpnCheck().AssertVpnInUse(privateConfig);
+            var vpnInUse = new VpnCheck().IsVpnInUse(PrivateConfig);
 
+            if (!string.IsNullOrWhiteSpace(vpnInUse))
+            {
+                Console.WriteLine(vpnInUse);
+                return;
+            }
+            else
+            {
+                BeginCrawling();
+            }
+        }
+
+        private static void BeginCrawling()
+        {
             pageIdQueue = File
                 .ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt")
                 .ToList();
@@ -49,7 +62,7 @@ namespace SlideshowIndexer
             Console.CancelKeyPress += (sender, eventArgs) => CleanForShutdown();
             
             AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
-            var transientClassifier = new TransientClassification(privateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+            var transientClassifier = new TransientClassification(PrivateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
             var throttle = new Throttle();
 
             try

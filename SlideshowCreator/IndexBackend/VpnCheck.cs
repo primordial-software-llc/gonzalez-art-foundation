@@ -5,7 +5,7 @@ namespace IndexBackend
 {
     public class VpnCheck
     {
-        public void AssertVpnInUse(PrivateConfig privateConfig)
+        public string IsVpnInUse(PrivateConfig privateConfig)
         {
             string html;
             using (var wc = new WebClient())
@@ -17,7 +17,23 @@ namespace IndexBackend
 
             if (!html.ToLower().Contains(expected.ToLower()))
             {
-                throw new Exception("Expected " + expected + " but was " + html);
+                return "Expected " + expected + " but was " + html;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Try and get rid of this and avoid custom exceptions. They are hard to debug in console apps without mature logging.
+        /// </summary>
+        public void AssertVpnInUse(PrivateConfig privateConfig)
+        {
+            var inUse = IsVpnInUse(privateConfig);
+            if (!string.IsNullOrWhiteSpace(inUse))
+            {
+                throw new Exception(inUse);
             }
         }
     }
