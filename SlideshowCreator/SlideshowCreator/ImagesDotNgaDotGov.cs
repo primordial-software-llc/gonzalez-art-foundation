@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using IndexBackend;
 using NUnit.Framework;
 
@@ -12,6 +14,21 @@ namespace SlideshowCreator
         private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
 
         private const string TEMP_CLEARANCE_COOKIE = "b749ef17dd8aabdf564b3c6ad900483b8a4293c4-1503447970-28800";
+
+        [Test]
+        public void Get_Home_Page_Through_500_Response()
+        {
+            new VpnCheck().AssertVpnInUse(privateConfig);
+
+            var client = new HttpClient();
+            Task<HttpResponseMessage> asyncResponse = client.GetAsync(privateConfig.Target2Url);
+            HttpResponseMessage respone = asyncResponse.Result;
+
+            Assert.AreEqual(HttpStatusCode.ServiceUnavailable, respone.StatusCode);
+
+            var initialBody = respone.Content.ReadAsStringAsync().Result;
+            Console.WriteLine(initialBody);
+        }
 
         [Test]
         public void Get_Home_Page()

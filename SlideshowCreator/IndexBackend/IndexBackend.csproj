@@ -55,6 +55,7 @@
     <Compile Include="ClassificationConversion.cs" />
     <Compile Include="ClassificationModel.cs" />
     <Compile Include="Classifier.cs" />
+    <Compile Include="CloudFlareImUnderAttack\DecodeChallengeQuestion.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="DynamoDbClientFactory.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
