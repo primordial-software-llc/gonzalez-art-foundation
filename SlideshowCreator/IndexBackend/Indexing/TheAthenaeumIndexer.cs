@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net;
-using Amazon.DynamoDBv2;
+﻿using Amazon.DynamoDBv2;
 
 namespace IndexBackend.Indexing
 {
@@ -18,26 +16,26 @@ namespace IndexBackend.Indexing
         public string Source => "http://www.the-athenaeum.org";
 
         private string PageNotFoundIndicatorText { get; }
-        private AmazonDynamoDBClient Client { get; }
-        private string TableName { get; }
+        private IAmazonDynamoDB Client { get; }
+        protected virtual string Url { get; }
 
         public TheAthenaeumIndexer()
         {
             
         }
 
-        public TheAthenaeumIndexer(string pageNotFoundIndicatorText, AmazonDynamoDBClient client, string tableName)
+        public TheAthenaeumIndexer(string pageNotFoundIndicatorText, IAmazonDynamoDB client, string url)
         {
             PageNotFoundIndicatorText = pageNotFoundIndicatorText;
             Client = client;
-            TableName = tableName;
+            Url = url;
         }
 
-        public ClassificationModel Index(string url, int id)
+        public ClassificationModel Index(int id)
         {
             ClassificationModel classification = null;
 
-            var html = Crawler.GetDetailsPageHtml(url, id, PageNotFoundIndicatorText);
+            var html = Crawler.GetDetailsPageHtml(Url, id, PageNotFoundIndicatorText);
 
             if (!string.IsNullOrWhiteSpace(html))
             {
@@ -45,7 +43,7 @@ namespace IndexBackend.Indexing
                 classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
-                Client.PutItem(TableName, dynamoDbClassification);
+                Client.PutItem(ImageClassificationAccess.IMAGE_CLASSIFICATION_V2, dynamoDbClassification);
             }
 
             return classification;

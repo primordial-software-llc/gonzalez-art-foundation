@@ -33,5 +33,8 @@ namespace IndexBackend
 
         [JsonProperty("date")]
         public string Date { get; set; }
+
+        [JsonProperty("s3Path")]
+        public string S3Path { get; set; }
     }
 }

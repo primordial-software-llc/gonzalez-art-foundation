@@ -12,24 +12,37 @@ namespace IndexBackend
             var kvp = new Dictionary<string, AttributeValue>
             {
                 {"source", new AttributeValue {S = classification.Source}},
-                {"pageId", new AttributeValue {N = classification.PageId.ToString()}},
-                {"artist", new AttributeValue {S = classification.Artist}},
-                {ClassificationModel.ORIGINAL_ARTIST, new AttributeValue {S = classification.OriginalArtist}}
+                {"pageId", new AttributeValue {N = classification.PageId.ToString()}}
             };
+
+            if (!string.IsNullOrWhiteSpace(classification.Artist))
+            {
+                kvp.Add("artist", new AttributeValue {S = classification.Artist});
+            }
+
+            if (!string.IsNullOrWhiteSpace(classification.OriginalArtist))
+            {
+                kvp.Add(ClassificationModel.ORIGINAL_ARTIST, new AttributeValue {S = classification.OriginalArtist});
+            }
 
             if (classification.ImageId > 0)
             {
-                kvp.Add("imageId", new AttributeValue { N = classification.ImageId.ToString() });
+                kvp.Add("imageId", new AttributeValue {N = classification.ImageId.ToString()});
             }
 
             if (!string.IsNullOrWhiteSpace(classification.Name))
             {
-                kvp.Add("name", new AttributeValue { S = classification.Name });
+                kvp.Add("name", new AttributeValue {S = classification.Name});
             }
 
             if (!string.IsNullOrWhiteSpace(classification.Date))
             {
-                kvp.Add("date", new AttributeValue { S = classification.Date });
+                kvp.Add("date", new AttributeValue {S = classification.Date});
+            }
+
+            if (!string.IsNullOrWhiteSpace(classification.S3Path))
+            {
+                kvp.Add("s3Path", new AttributeValue {S = classification.S3Path});
             }
 
             return kvp;
@@ -62,6 +75,7 @@ namespace IndexBackend
             {
                 classification.Date = dynamoDbModel["date"].S;
             }
+
             if (dynamoDbModel.ContainsKey("name"))
             {
                 classification.Name = dynamoDbModel["name"].S;
@@ -69,6 +83,11 @@ namespace IndexBackend
             if (dynamoDbModel.ContainsKey("imageId"))
             {
                 classification.ImageId = int.Parse(dynamoDbModel["imageId"].N);
+            }
+
+            if (dynamoDbModel.ContainsKey("s3Path"))
+            {
+                classification.S3Path = dynamoDbModel["s3Path"].S;
             }
 
             return classification;

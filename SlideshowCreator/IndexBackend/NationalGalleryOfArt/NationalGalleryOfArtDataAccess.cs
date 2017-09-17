@@ -68,7 +68,6 @@ namespace IndexBackend.NationalGalleryOfArt
             var encodedReference = HighResImageEncoding.CreateReferenceUrlData(assetId);
             var imageDownloadUrl =
                 $"http://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";
-            Console.WriteLine(imageDownloadUrl);
             Task<byte[]> asyncImageResponse = Client.GetByteArrayAsync(imageDownloadUrl);
             byte[] imageZipFile = asyncImageResponse.Result;
             

@@ -66,8 +66,8 @@
     <Compile Include="DataAccess\DynamoDbDelete.cs" />
     <Compile Include="DataAccess\DynamoDbInsert.cs" />
     <Compile Include="Tests\UnitTests\AuthenticationTests.cs" />
-    <Compile Include="ImagesDotNgaDotGov.cs" />
-    <Compile Include="Tests\ClassificationTests.cs" />
+    <Compile Include="Tests\NationalGalleryOfArtIndexingTests.cs" />
+    <Compile Include="Tests\TheAthenaeumIndexingTests.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicConfig.cs" />

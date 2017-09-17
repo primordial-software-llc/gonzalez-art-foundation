@@ -3,9 +3,9 @@ using IndexBackend.Indexing;
 using IndexBackend.NationalGalleryOfArt;
 using NUnit.Framework;
 
-namespace SlideshowCreator
+namespace SlideshowCreator.Tests
 {
-    class ImagesDotNgaDotGov
+    class NationalGalleryOfArtIndexingTests
     {
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         
@@ -20,17 +20,24 @@ namespace SlideshowCreator
             new VpnCheck().AssertVpnInUse(privateConfig);
             
             var s3Client = new AwsClientFactory().CreateS3Client();
-            var indexer = new NationalGalleryOfArtIndexer(s3Client);
+            var dynamoDbClient = new AwsClientFactory().CreateDynamoDbClient();
+            var indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient);
             
             var assetId = 46482;
             var assetId2 = 1;
-            indexer.Index(privateConfig.Target2Url, assetId);
-            System.Threading.Thread.Sleep(40 * 1000);
-            indexer.Index(privateConfig.Target2Url, assetId2);
-
+            indexer.Init(privateConfig.Target2Url);
+            var asset1Index = indexer.Index(assetId);
+            
             s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + assetId + ".jpg");
-            Assert.Throws<Amazon.S3.AmazonS3Exception>(() => s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + assetId2 + ".jpg"));
+            Assert.AreEqual("http://images.nga.gov", asset1Index.Source);
+            Assert.AreEqual(assetId, asset1Index.PageId);
+            Assert.AreEqual(indexer.S3Bucket + "/" + "image-" + assetId + ".jpg", asset1Index.S3Path);
 
+            System.Threading.Thread.Sleep(40 * 1000);
+            var asset2Index = indexer.Index(assetId2);
+            
+            Assert.Throws<Amazon.S3.AmazonS3Exception>(() => s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + assetId2 + ".jpg"));
+            Assert.IsNull(asset2Index);
         }
 
         private const string DECODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE =

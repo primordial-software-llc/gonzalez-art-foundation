@@ -5,6 +5,6 @@ namespace IndexBackend.Indexing
     {
         string S3Bucket { get; }
         string Source { get; }
-        ClassificationModel Index(string url, int id);
+        ClassificationModel Index(int id);
     }
 }
