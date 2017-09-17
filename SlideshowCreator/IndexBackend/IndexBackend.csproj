@@ -60,6 +60,11 @@
     <Compile Include="DynamoDbClientFactory.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="ImageClassificationAccess.cs" />
+    <Compile Include="NationalGalleryOfArt\HighResImageEncoding.cs" />
+    <Compile Include="NationalGalleryOfArt\HighResImageReference.cs" />
+    <Compile Include="NationalGalleryOfArt\HighResImageReferenceAsset.cs" />
+    <Compile Include="NationalGalleryOfArt\HighResImageReferenceAssets.cs" />
+    <Compile Include="NationalGalleryOfArt\HighResImageReferenceMainForm.cs" />
     <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
     <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
     <Compile Include="NormalDistributionRandom\NormalRandomGenerator.cs" />
