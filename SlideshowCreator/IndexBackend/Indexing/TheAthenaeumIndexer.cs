@@ -45,12 +45,7 @@ namespace IndexBackend.Indexing
                 classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
-                var response = Client.PutItem(TableName, dynamoDbClassification);
-
-                if (response.HttpStatusCode != HttpStatusCode.OK)
-                {
-                    throw new Exception("DynamoDB put failed.");
-                }
+                Client.PutItem(TableName, dynamoDbClassification);
             }
 
             return classification;
