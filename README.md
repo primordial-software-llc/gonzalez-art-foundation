@@ -2,6 +2,8 @@
 
 This repository is dedicated to documenting my journey to systematically discover and acquire fine art paintings.
 
+https://tgonzalez.net
+
 ## Image Recognition
 
 Check this out: https://aws.amazon.com/rekognition/pricing/
