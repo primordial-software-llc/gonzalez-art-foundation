@@ -1,4 +1,5 @@
-﻿using Diacritics.Extensions;
+﻿using System;
+using Diacritics.Extensions;
 
 namespace IndexBackend
 {
@@ -32,7 +33,7 @@ namespace IndexBackend
                 PageId = pageId,
                 ImageId = imageId,
                 Name = name,
-                OriginalArtist = artist,
+                OriginalArtist = GetReplacementForEmptyArtist(artist),
                 Artist = NormalizeArtist(artist),
                 Date = date
             };
@@ -40,20 +41,21 @@ namespace IndexBackend
             return classification;
         }
 
+        private string GetReplacementForEmptyArtist(string artist)
+        {
+            if (string.IsNullOrWhiteSpace(artist) ||
+                artist.Equals("artist not listed", StringComparison.OrdinalIgnoreCase))
+            {
+                artist = UNKNOWN_ARTIST;
+            }
+
+            return artist;
+        }
+
         private string NormalizeArtist(string artist)
         {
-            if (string.IsNullOrWhiteSpace(artist))
-            {
-                artist = UNKNOWN_ARTIST;
-            }
-
+            artist = GetReplacementForEmptyArtist(artist);
             artist = artist.RemoveDiacritics().ToLower();
-
-            if (artist.Equals("artist not listed"))
-            {
-                artist = UNKNOWN_ARTIST;
-            }
-
             return artist;
         }
     }

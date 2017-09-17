@@ -135,6 +135,15 @@ namespace SlideshowCreator.Tests
             Assert.IsNull(classification);
         }
 
+        [Test]
+        public void B_Check_Dynamo_Db_Required_Field_Failure()
+        {
+            var pageId = 127930;
+            var classification = transientClassifier.Index(privateConfig.TargetUrl, pageId);
+            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.Artist);
+            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.OriginalArtist);
+        }
+
         //[Test]
         public void C_Create_Classification_File_Queue()
         {
