@@ -14,7 +14,10 @@ namespace IndexBackend.Indexing
     /// </remarks>
     public class TheAthenaeumIndexer : IIndex
     {
-        private PrivateConfig Config { get; }
+        public string S3Bucket => "tgonzalez-image-archive/the-athenaeum";
+        public string Source => "http://www.the-athenaeum.org";
+
+        private string PageNotFoundIndicatorText { get; }
         private AmazonDynamoDBClient Client { get; }
         private string TableName { get; }
 
@@ -23,25 +26,23 @@ namespace IndexBackend.Indexing
             
         }
 
-        public TheAthenaeumIndexer(PrivateConfig config, AmazonDynamoDBClient client, string tableName)
+        public TheAthenaeumIndexer(string pageNotFoundIndicatorText, AmazonDynamoDBClient client, string tableName)
         {
-            Config = config;
+            PageNotFoundIndicatorText = pageNotFoundIndicatorText;
             Client = client;
             TableName = tableName;
         }
 
-        public string Source => "http://www.the-athenaeum.org";
-
-        public ClassificationModel Index(int pageId)
+        public ClassificationModel Index(string url, int id)
         {
             ClassificationModel classification = null;
 
-            var html = Crawler.GetDetailsPageHtml(Config.TargetUrl, pageId, Config.PageNotFoundIndicatorText);
+            var html = Crawler.GetDetailsPageHtml(url, id, PageNotFoundIndicatorText);
 
             if (!string.IsNullOrWhiteSpace(html))
             {
                 var classifier = new Classifier();
-                classification = classifier.ClassifyForTheAthenaeum(html, pageId, Source);
+                classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
                 var response = Client.PutItem(TableName, dynamoDbClassification);

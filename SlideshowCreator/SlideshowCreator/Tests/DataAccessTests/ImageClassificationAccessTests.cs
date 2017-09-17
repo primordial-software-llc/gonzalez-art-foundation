@@ -10,7 +10,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
     class ImageClassificationAccessTests
     {
 
-        private readonly AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
+        private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
 
         [Test]
         public void Test_Find_All_For_Exact_Artist()

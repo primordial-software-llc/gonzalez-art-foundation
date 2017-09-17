@@ -36,6 +36,9 @@
     <Reference Include="AWSSDK.DynamoDBv2, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.DynamoDBv2.3.3.4.17\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
     </Reference>
+    <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.S3.3.3.11\lib\net45\AWSSDK.S3.dll</HintPath>
+    </Reference>
     <Reference Include="Diacritics">
       <HintPath>..\..\Dlls\Diacritics.dll</HintPath>
     </Reference>
@@ -44,6 +47,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,16 +61,17 @@
     <Compile Include="Classifier.cs" />
     <Compile Include="CloudFlareImUnderAttack\DecodeChallengeQuestion.cs" />
     <Compile Include="Crawler.cs" />
-    <Compile Include="DynamoDbClientFactory.cs" />
+    <Compile Include="AwsClientFactory.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="ImageClassificationAccess.cs" />
     <Compile Include="Indexing\IIndex.cs" />
+    <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageEncoding.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReference.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceAsset.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceAssets.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceMainForm.cs" />
-    <Compile Include="NationalGalleryOfArt\NgaDataAccess.cs" />
+    <Compile Include="NationalGalleryOfArt\NationalGalleryOfArtDataAccess.cs" />
     <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
     <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
     <Compile Include="NormalDistributionRandom\NormalRandomGenerator.cs" />
@@ -82,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.DynamoDBv2.3.3.4.17\analyzers\dotnet\cs\AWSSDK.DynamoDBv2.CodeAnalysis.dll" />
+    <Analyzer Include="..\packages\AWSSDK.S3.3.3.11\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

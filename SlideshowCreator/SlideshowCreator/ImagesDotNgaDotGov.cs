@@ -1,6 +1,5 @@
-﻿using System;
-using System.IO;
-using IndexBackend;
+﻿using IndexBackend;
+using IndexBackend.Indexing;
 using IndexBackend.NationalGalleryOfArt;
 using NUnit.Framework;
 
@@ -10,25 +9,28 @@ namespace SlideshowCreator
     {
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         
+        /// <summary>
+        /// This is failing on occasion.
+        /// There is probably an issue with the decoding.
+        /// Once I get everything stabilized I'll figure out the issue.
+        /// </summary>
         [Test]
         public void Get_Home_Page_Through_500_Response()
         {
             new VpnCheck().AssertVpnInUse(privateConfig);
             
-            var uri = new Uri(privateConfig.Target2Url);
-            var ngaDataAccess = new NgaDataAccess();
-            ngaDataAccess.Init(uri);
-
-            var path = "C:\\Data\\NationalGalleryOfArtZippedImages";
+            var s3Client = new AwsClientFactory().CreateS3Client();
+            var indexer = new NationalGalleryOfArtIndexer(s3Client);
+            
             var assetId = 46482;
-            ngaDataAccess.DownloadHighResImageZipFileIfExists(assetId, path);
-            Assert.IsTrue(File.Exists(path + "\\image-bundle-" + assetId + ".zip"));
-
-            System.Threading.Thread.Sleep(40 * 1000);
-
             var assetId2 = 1;
-            ngaDataAccess.DownloadHighResImageZipFileIfExists(assetId2, path);
-            Assert.IsFalse(File.Exists(path + "\\image-bundle-" + assetId2 + ".zip"));
+            indexer.Index(privateConfig.Target2Url, assetId);
+            System.Threading.Thread.Sleep(40 * 1000);
+            indexer.Index(privateConfig.Target2Url, assetId2);
+
+            s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + assetId + ".jpg");
+            Assert.Throws<Amazon.S3.AmazonS3Exception>(() => s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + assetId2 + ".jpg"));
+
         }
 
         private const string DECODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE =

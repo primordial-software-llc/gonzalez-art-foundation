@@ -46,10 +46,8 @@ namespace SlideshowIndexer
                 Console.WriteLine(vpnInUse);
                 return;
             }
-            else
-            {
-                BeginCrawling();
-            }
+
+            BeginCrawling();
         }
 
         private static void BeginCrawling()
@@ -62,8 +60,8 @@ namespace SlideshowIndexer
 
             Console.CancelKeyPress += (sender, eventArgs) => CleanForShutdown();
             
-            AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
-            var transientClassifier = new TheAthenaeumIndexer(PrivateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+            AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
+            var transientClassifier = new TheAthenaeumIndexer(PrivateConfig.PageNotFoundIndicatorText, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
             var throttle = new Throttle();
 
             try
@@ -72,7 +70,7 @@ namespace SlideshowIndexer
                 {
                     int pageId = int.Parse(pageIdQueue[i]);
                     Console.WriteLine("Classifying page " + pageId);
-                    transientClassifier.Index(pageId);
+                    transientClassifier.Index(PrivateConfig.TargetUrl, pageId);
                     pageIdQueue.RemoveAt(i);
                     throttle.HoldBack();
                     File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt",

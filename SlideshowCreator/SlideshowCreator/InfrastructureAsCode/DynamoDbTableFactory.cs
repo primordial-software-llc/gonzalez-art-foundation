@@ -128,7 +128,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         private bool TableExists(string tableName)
         {
             bool tableExists;
-            var client = new DynamoDbClientFactory().Create();
+            var client = new AwsClientFactory().CreateDynamoDbClient();
             try
             {
                 client.DescribeTable(tableName);
@@ -144,7 +144,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         private void WaitForTableStatus(string tableName, TableStatus status)
         {
             TableDescription tableDescription;
-            var client = new DynamoDbClientFactory().Create();
+            var client = new AwsClientFactory().CreateDynamoDbClient();
             do
             {
                 System.Threading.Thread.Sleep(200);

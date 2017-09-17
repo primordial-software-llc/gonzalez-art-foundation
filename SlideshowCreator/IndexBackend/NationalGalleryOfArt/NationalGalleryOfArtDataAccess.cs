@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -8,7 +7,7 @@ using IndexBackend.CloudFlareImUnderAttack;
 
 namespace IndexBackend.NationalGalleryOfArt
 {
-    public class NgaDataAccess
+    public class NationalGalleryOfArtDataAccess
     {
         protected virtual HttpClient Client { get; set; }
 /// <summary>
@@ -62,16 +61,6 @@ namespace IndexBackend.NationalGalleryOfArt
             HttpResponseMessage clearanceResponse = asyncClearanceResponse.Result;
 
             clearanceResponse.EnsureSuccessStatusCode();
-        }
-
-        public void DownloadHighResImageZipFileIfExists(int assetId, string path)
-        {
-            var zipFile = GetHighResImageZipFile(assetId);
-
-            if (zipFile != null)
-            {
-                File.WriteAllBytes(path + "\\image-bundle-" + assetId + ".zip", zipFile);
-            }
         }
 
         public byte[] GetHighResImageZipFile(int assetId)
