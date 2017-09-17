@@ -9,8 +9,6 @@ namespace IndexBackend
     {
         public const string IMAGE_CLASSIFICATION_V2 = "ImageClassificationV2";
         public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
-        public const string THE_ATHENAEUM = "http://www.the-athenaeum.org";
-
 
         private AmazonDynamoDBClient Client { get; }
 
@@ -19,14 +17,14 @@ namespace IndexBackend
             Client = client;
         }
 
-        public List<ClassificationModel> Scan(int lastPageId)
+        public List<ClassificationModel> Scan(int lastPageId, string source)
         {
             var queryRequest = new QueryRequest(IMAGE_CLASSIFICATION_V2)
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":sources", new AttributeValue {S = THE_ATHENAEUM}}
+                    {":sources", new AttributeValue {S = source}}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
@@ -34,9 +32,11 @@ namespace IndexBackend
                 },
                 KeyConditionExpression = "#source = :sources"
             };
-            queryRequest.ExclusiveStartKey = new Dictionary<string, AttributeValue>();
-            queryRequest.ExclusiveStartKey.Add("source", new AttributeValue { S = THE_ATHENAEUM});
-            queryRequest.ExclusiveStartKey.Add("pageId", new AttributeValue { N = lastPageId.ToString() });
+            queryRequest.ExclusiveStartKey = new Dictionary<string, AttributeValue>
+            {
+                {"source", new AttributeValue {S = source}},
+                {"pageId", new AttributeValue {N = lastPageId.ToString()}}
+            };
 
             var response = Client.Query(queryRequest);
 

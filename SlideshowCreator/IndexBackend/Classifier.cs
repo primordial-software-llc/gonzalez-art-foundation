@@ -11,7 +11,7 @@ namespace IndexBackend
         /// </summary>
         public const string UNKNOWN_ARTIST = "unknown";
 
-        public ClassificationModel ClassifyForTheAthenaeum(string page, int pageId)
+        public ClassificationModel ClassifyForTheAthenaeum(string page, int pageId, string source)
         {
             var name = Crawler.GetBetween(page, "<h1>", "</h1>");
             if (name.Contains("<div"))
@@ -25,12 +25,10 @@ namespace IndexBackend
                 date = date.Substring(2, date.Length - 2);
             }
             int imageId = Crawler.GetImageId(page);
-
-
-
+            
             var classification = new ClassificationModel
             {
-                Source = ImageClassificationAccess.THE_ATHENAEUM,
+                Source = source,
                 PageId = pageId,
                 ImageId = imageId,
                 Name = name,

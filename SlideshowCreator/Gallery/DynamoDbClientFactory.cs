@@ -2,6 +2,7 @@
 using Amazon;
 using Amazon.DynamoDBv2;
 using IndexBackend;
+using IndexBackend.Indexing;
 
 namespace MVC5App
 {
@@ -28,7 +29,7 @@ namespace MVC5App
 
         public List<ClassificationModel> ScanByPage(int lastPageId)
         {
-            return access.Scan(lastPageId);
+            return access.Scan(lastPageId, new TheAthenaeumIndexer().Source);
         }
 
     }

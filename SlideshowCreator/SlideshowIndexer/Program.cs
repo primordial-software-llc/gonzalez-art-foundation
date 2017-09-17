@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Amazon.DynamoDBv2;
 using IndexBackend;
+using IndexBackend.Indexing;
 
 namespace SlideshowIndexer
 {
@@ -62,7 +63,7 @@ namespace SlideshowIndexer
             Console.CancelKeyPress += (sender, eventArgs) => CleanForShutdown();
             
             AmazonDynamoDBClient client = new DynamoDbClientFactory().Create();
-            var transientClassifier = new TransientClassification(PrivateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+            var transientClassifier = new TheAthenaeumIndexer(PrivateConfig, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
             var throttle = new Throttle();
 
             try
@@ -71,7 +72,7 @@ namespace SlideshowIndexer
                 {
                     int pageId = int.Parse(pageIdQueue[i]);
                     Console.WriteLine("Classifying page " + pageId);
-                    transientClassifier.ReclassifyTheAthenaeumTransiently(pageId);
+                    transientClassifier.Index(pageId);
                     pageIdQueue.RemoveAt(i);
                     throttle.HoldBack();
                     File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt",

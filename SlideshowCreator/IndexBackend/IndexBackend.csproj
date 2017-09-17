@@ -60,6 +60,7 @@
     <Compile Include="DynamoDbClientFactory.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="ImageClassificationAccess.cs" />
+    <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageEncoding.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReference.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceAsset.cs" />
@@ -73,7 +74,7 @@
     <Compile Include="PrivateConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Throttle.cs" />
-    <Compile Include="TransientClassification.cs" />
+    <Compile Include="Indexing\TheAthenaeumIndexer.cs" />
     <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
