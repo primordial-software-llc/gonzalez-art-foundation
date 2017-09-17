@@ -26,6 +26,11 @@ namespace IndexBackend
         [JsonProperty("galleryPassword")]
         public string GalleryPassword { get; set; }
 
+        public static PrivateConfig CreateFromPersonalJson()
+        {
+            return Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        }
+
         public static PrivateConfig Create(string fullPath)
         {
             var json = File.ReadAllText(fullPath);

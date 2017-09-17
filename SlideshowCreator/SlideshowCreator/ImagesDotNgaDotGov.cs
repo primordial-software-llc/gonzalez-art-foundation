@@ -1,11 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 using IndexBackend;
-using IndexBackend.CloudFlareImUnderAttack;
 using IndexBackend.NationalGalleryOfArt;
 using NUnit.Framework;
 
@@ -13,58 +8,27 @@ namespace SlideshowCreator
 {
     class ImagesDotNgaDotGov
     {
-        private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         
         [Test]
         public void Get_Home_Page_Through_500_Response()
         {
             new VpnCheck().AssertVpnInUse(privateConfig);
-            var uri = new Uri(privateConfig.Target2Url);
             
-            var client = new HttpClient();
-            Task<HttpResponseMessage> asyncResponse = client.GetAsync(uri);
-            HttpResponseMessage respone = asyncResponse.Result;
+            var uri = new Uri(privateConfig.Target2Url);
+            var ngaDataAccess = new NgaDataAccess();
+            ngaDataAccess.Init(uri);
 
-            Assert.AreEqual(HttpStatusCode.ServiceUnavailable, respone.StatusCode);
-
-            var html = respone.Content.ReadAsStringAsync().Result;
-
-            // Apparently this cookie isn't required.
-            //IEnumerable<Cookie> responseCookies = cookies.GetCookies(uri).Cast<Cookie>();
-            // Assert.AreEqual("__cfduid", responseCookies.Single().Name);
-
-            System.Threading.Thread.Sleep(4000);
-
-            DecodeChallengeQuestion decodeChallengeQuestion = new DecodeChallengeQuestion();
-            var clearanceUrl = decodeChallengeQuestion.GetClearanceUrl(html);
-
-            CookieContainer cookies = new CookieContainer();
-            HttpClientHandler handler = new HttpClientHandler { CookieContainer = cookies };
-            var authorizedClient = new HttpClient(handler);
-            Task<HttpResponseMessage> asyncClearanceResponse = authorizedClient.GetAsync(clearanceUrl);
-            HttpResponseMessage clearanceResponse = asyncClearanceResponse.Result;
-
-            // There's a redirect here from the clearance URL to the home page.
-            // There's actually a 302 redirect here, but HttpClient follows the redirect.
-            Assert.AreEqual(HttpStatusCode.OK, clearanceResponse.StatusCode);
-            string homePageHtml = clearanceResponse.Content.ReadAsStringAsync().Result;
-            StringAssert.Contains("/en/web_images/boatmen3.jpg", homePageHtml);
-
-            // This is what grants access. This is what I worked all night to generate.
-            var clearanceCookie = cookies.GetCookies(uri).Cast<Cookie>().Single(x => x.Name.Equals("cf_clearance"));
-            Console.WriteLine(clearanceCookie);
-
-            // This is the proper home page of the website. From here we can download the super high resolution images which are so BIG, they are zipped. I'm drooling at howa an HD Jean-Leon Gerome will look on my HD projector!
-            Assert.AreEqual("http://images.nga.gov/en/page/show_home_page.html", clearanceResponse.RequestMessage.RequestUri.AbsoluteUri);
-
+            var path = "C:\\Data\\NationalGalleryOfArtZippedImages";
             var assetId = 46482;
-            var encodedReference = HighResImageEncoding.CreateReferenceUrlData(assetId);
-            var imageDownloadUrl =
-                $"http://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";
-            Console.WriteLine(imageDownloadUrl);
-            Task<byte[]> asyncImageResponse = authorizedClient.GetByteArrayAsync(imageDownloadUrl);
-            byte[] imageResponse = asyncImageResponse.Result;
-            File.WriteAllBytes("C:\\Data\\NationalGalleryOfArtZippedImages\\image-bundle-" + assetId + ".zip", imageResponse);
+            ngaDataAccess.DownloadHighResImageZipFileIfExists(assetId, path);
+            Assert.IsTrue(File.Exists(path + "\\image-bundle-" + assetId + ".zip"));
+
+            System.Threading.Thread.Sleep(40 * 1000);
+
+            var assetId2 = 1;
+            ngaDataAccess.DownloadHighResImageZipFileIfExists(assetId2, path);
+            Assert.IsFalse(File.Exists(path + "\\image-bundle-" + assetId2 + ".zip"));
         }
 
         private const string DECODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE =
