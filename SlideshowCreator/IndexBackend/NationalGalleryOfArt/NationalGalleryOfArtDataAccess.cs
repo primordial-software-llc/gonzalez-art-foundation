@@ -10,7 +10,8 @@ namespace IndexBackend.NationalGalleryOfArt
     public class NationalGalleryOfArtDataAccess
     {
         protected virtual HttpClient Client { get; set; }
-/// <summary>
+
+        /// <summary>
         /// Process:
         /// 1. Hit images.nga.gov
         /// 2. Receive a 5xxx response, however there is an HTML page with a challene form.
@@ -61,6 +62,17 @@ namespace IndexBackend.NationalGalleryOfArt
             HttpResponseMessage clearanceResponse = asyncClearanceResponse.Result;
 
             clearanceResponse.EnsureSuccessStatusCode();
+        }
+
+        public void SetSearchResultsTo75PerPage()
+        {
+            Client.GetStringAsync("http://images.nga.gov/?service=user&action=do_store_grid_layout&layout=3&grid_thumb=7");
+        }
+
+        public string GetSearchResults(int pageNumber)
+        {
+            string search = $"http://images.nga.gov/en/search/do_advanced_search.html?form_name=default&all_words=&exact_phrase=&exclude_words=&artist_last_name=&keywords_in_title=&accession_number=&school=&Classification=&medium=&year=&year2=&open_access=Open%20Access%20Available&q=&mime_type=&qw=&page={pageNumber}&grid_layout=3";
+            return Client.GetStringAsync(search).Result;
         }
 
         public byte[] GetHighResImageZipFile(int assetId)

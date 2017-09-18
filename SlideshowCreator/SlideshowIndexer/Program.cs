@@ -50,6 +50,11 @@ namespace SlideshowIndexer
             BeginCrawling();
         }
 
+        private static void BeginIndexingNationalGalleryOfArt()
+        {
+            
+        }
+
         private static void BeginCrawling()
         {
             pageIdQueue = File
@@ -61,7 +66,7 @@ namespace SlideshowIndexer
             Console.CancelKeyPress += (sender, eventArgs) => CleanForShutdown();
             
             AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
-            var transientClassifier = new TheAthenaeumIndexer(PrivateConfig.PageNotFoundIndicatorText, client, ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+            var transientClassifier = new TheAthenaeumIndexer(PrivateConfig.PageNotFoundIndicatorText, client, PrivateConfig.TargetUrl);
             var throttle = new Throttle();
 
             try
@@ -70,7 +75,7 @@ namespace SlideshowIndexer
                 {
                     int pageId = int.Parse(pageIdQueue[i]);
                     Console.WriteLine("Classifying page " + pageId);
-                    transientClassifier.Index(PrivateConfig.TargetUrl, pageId);
+                    transientClassifier.Index(pageId);
                     pageIdQueue.RemoveAt(i);
                     throttle.HoldBack();
                     File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt",

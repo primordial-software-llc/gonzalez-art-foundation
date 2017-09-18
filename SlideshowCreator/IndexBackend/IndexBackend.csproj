@@ -81,6 +81,7 @@
     <Compile Include="Throttle.cs" />
     <Compile Include="Indexing\TheAthenaeumIndexer.cs" />
     <Compile Include="VpnCheck.cs" />
+    <Compile Include="XmlDocFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

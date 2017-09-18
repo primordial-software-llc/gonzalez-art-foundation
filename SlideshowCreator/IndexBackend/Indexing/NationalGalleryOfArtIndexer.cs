@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Amazon.DynamoDBv2;
@@ -13,21 +12,15 @@ namespace IndexBackend.Indexing
     {
         public string S3Bucket => "tgonzalez-image-archive/national-gallery-of-art";
         public string Source => "http://images.nga.gov";
-        protected virtual IAmazonS3 S3Client { get; }
-        protected virtual IAmazonDynamoDB DynamoDbClient { get; }
-        protected virtual NationalGalleryOfArtDataAccess NgaDataAccess { get; set; }
+        protected IAmazonS3 S3Client { get; }
+        protected IAmazonDynamoDB DynamoDbClient { get; }
+        protected NationalGalleryOfArtDataAccess NgaDataAccess { get; set; }
 
-        public NationalGalleryOfArtIndexer(IAmazonS3 s3Client, IAmazonDynamoDB dynamoDbClient)
+        public NationalGalleryOfArtIndexer(IAmazonS3 s3Client, IAmazonDynamoDB dynamoDbClient, NationalGalleryOfArtDataAccess ngaDataAccess)
         {
             S3Client = s3Client;
             DynamoDbClient = dynamoDbClient;
-        }
-
-        public void Init(string url)
-        {
-            var uri = new Uri(url);
-            NgaDataAccess = new NationalGalleryOfArtDataAccess();
-            NgaDataAccess.Init(uri);
+            NgaDataAccess = ngaDataAccess;
         }
 
         public ClassificationModel Index(int id)
@@ -53,7 +46,6 @@ namespace IndexBackend.Indexing
 
             return classification;
         }
-
 
         public string SendToS3(byte[] zipFile, int id)
         {
