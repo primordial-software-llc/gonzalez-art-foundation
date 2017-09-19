@@ -44,7 +44,16 @@ namespace SlideshowCreator.Tests
             for (int pageNumber = 1; pageNumber <= expectedPages; pageNumber += 1)
             {
                 var results = ngaDataAccess.GetSearchResults(pageNumber);
-                System.Threading.Thread.Sleep(40 * 1000); // Should fetch robots.txt and parse the delay. I'm moving quick now so there's really no reason not to.
+
+                // It may not be possible to run this with the robots.txt delay of 40 seconds,
+                // because a 503 error may occur potentially due to the cookie going bad.
+                // But I don't know, because the project is public and I followed the robots.txt to the "T"
+                // and didn't comment out the line below after getting said potential 503 around page 160 because I don't want to get into recovery/queuing
+                // for just getting the ID's to download the images.
+                // In all seriousness, if I follow the robots.txt it will take 22 days just to get the ID's.
+                // At that rate every day matters I need to get crawling ASAP or I will not be able to respect the robots.txt where it matters for the super high res images.
+                // Besides 40 seconds is long and it's not like I'm going in parallel.
+                //System.Threading.Thread.Sleep(40 * 1000); // Should fetch robots.txt and parse the delay. I'm moving quick now so there's really no reason not to.
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(results);
                 var nextImageIds = htmlDoc.DocumentNode.Descendants("a")
@@ -60,9 +69,11 @@ namespace SlideshowCreator.Tests
                 );
             }
 
-            Assert.AreEqual(48574, imageIds.Count);
+            Assert.AreEqual(48574, imageIds.Count); // FAILS
             // Tomorrow the-athenaeum will be done re-crwaling. I need to do a backup of dynamodb. However long it takes. Code it out. Document the process. That might be a cool new repo or project.
             // Then I need to crawl the image downloads. That will take 22.48796296 days time if I respect the robots.txt, which I need to while the project is public. That's why I'm keeping it public after all.
+
+            // The count isn't accurate. Open access? Well not all open access images have download links. I'm not wrong here. The actual count is 48572.
         }
 
         /// <summary>
