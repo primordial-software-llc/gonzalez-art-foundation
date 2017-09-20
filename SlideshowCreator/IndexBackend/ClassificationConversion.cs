@@ -58,12 +58,12 @@ namespace IndexBackend
             var classification = new ClassificationModel
             {
                 PageId = int.Parse(dynamoDbModel["pageId"].N),
-                Artist = dynamoDbModel["artist"].S
+                Source = dynamoDbModel["source"].S
             };
 
-            if (dynamoDbModel.ContainsKey("source"))
+            if (dynamoDbModel.ContainsKey("artist")) // Could use key to JsonProperty relialbly here, if the same is done on the opposite conversion. That would clean all this crap up, then make it reusable for other tables. Otherwise this is going to get "heavy" if there were 50 tables. What about datatype? Another property? Does that already exist? A dynamodb mapper? I think so.
             {
-                classification.Source = dynamoDbModel["source"].S;
+                classification.Artist = dynamoDbModel["artist"].S;
             }
 
             if (dynamoDbModel.ContainsKey(ClassificationModel.ORIGINAL_ARTIST))
