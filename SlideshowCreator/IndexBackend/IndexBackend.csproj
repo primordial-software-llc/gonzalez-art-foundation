@@ -62,6 +62,7 @@
     <Compile Include="CloudFlareImUnderAttack\DecodeChallengeQuestion.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="AwsClientFactory.cs" />
+    <Compile Include="DynamoDbToS3Backup.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="ImageClassificationAccess.cs" />
     <Compile Include="Indexing\IIndex.cs" />

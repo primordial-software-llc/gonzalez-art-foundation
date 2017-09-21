@@ -23,6 +23,12 @@ namespace SlideshowIndexer
                 Console.WriteLine(vpnInUse);
                 return;
             }
+            Console.WriteLine("VPN is in use with IP: " + vpnInUse);
+
+            Console.WriteLine("Backing up DynamoDb Data to S3");
+            var backup = new DynamoDbToS3Backup();
+            var backupPath = backup.BackupDynamoDbTableToS3Archive(S3Client, DynamoDbClient);
+            Console.WriteLine("Data backed up to S3: " + backupPath);
 
             IIndex indexer = GetIndexer(IndexType.NationalGalleryOfArt);
             var fileIdQueueIndexer = new FileIdQueueIndexer();

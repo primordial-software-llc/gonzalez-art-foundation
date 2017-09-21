@@ -3,25 +3,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
-using IndexBackend;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
-namespace SlideshowCreator.Scripts
+namespace IndexBackend
 {
-    class DynamoDbToS3BackupScript
+    public class DynamoDbToS3Backup
     {
-        readonly IAmazonS3 s3Client = new AwsClientFactory().CreateS3Client();
-        readonly IAmazonDynamoDB dynamoDbClient = new AwsClientFactory().CreateDynamoDbClient();
-
-        [Test]
-        public void A_Write_Backup_Keys_To_File()
+        public string BackupDynamoDbTableToS3Archive(IAmazonS3 s3Client, IAmazonDynamoDB dynamoDbClient)
         {
+            string bucket = "tgonzalez-dynamodb-imageclassification-backup";
+            string key = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + ".zip";
+
             var scanRequest = new ScanRequest(ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
 
             var allItems = new List<ClassificationModel>();
@@ -39,12 +35,6 @@ namespace SlideshowCreator.Scripts
                 allItems.AddRange(conversion.ConvertToPoco(scanResponse.Items));
             } while (scanResponse.LastEvaluatedKey.Any());
 
-            Assert.IsNotNull(allItems.First().Source);
-            Assert.Greater(allItems.First().PageId, 0);
-
-            var expectedItems = 292105;
-            Assert.AreEqual(expectedItems, allItems.Count);
-
             using (var memoryStream = new MemoryStream())
             {
                 using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -59,16 +49,16 @@ namespace SlideshowCreator.Scripts
                 }
 
                 memoryStream.Position = 0;
-                var bucket = "tgonzalez-dynamodb-imageclassification-backup";
                 PutObjectRequest request = new PutObjectRequest
                 {
                     BucketName = bucket,
-                    Key = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + ".zip",
+                    Key = key,
                     InputStream = memoryStream
                 };
                 s3Client.PutObject(request);
             }
 
+            return bucket + "/" + key;
         }
 
     }
