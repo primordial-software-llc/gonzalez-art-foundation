@@ -12,6 +12,9 @@ namespace IndexBackend.Indexing
     {
         public string S3Bucket => "tgonzalez-image-archive/national-gallery-of-art";
         public string Source => "http://images.nga.gov";
+        public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
+        public int GetNextThrottleInMilliseconds => 40 * 1000;
+
         protected IAmazonS3 S3Client { get; }
         protected IAmazonDynamoDB DynamoDbClient { get; }
         protected NationalGalleryOfArtDataAccess NgaDataAccess { get; set; }

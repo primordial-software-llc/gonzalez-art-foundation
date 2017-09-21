@@ -3,6 +3,8 @@ using IndexBackend.NormalDistributionRandom;
 
 namespace IndexBackend
 {
+
+    // Is this getting used anymore with IIndex?
     public class Throttle
     {
         public void HoldBack()

@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
+using IndexBackend.NormalDistributionRandom;
 
 namespace IndexBackend.Indexing
 {
@@ -14,7 +15,10 @@ namespace IndexBackend.Indexing
     {
         public string S3Bucket => "tgonzalez-image-archive/the-athenaeum";
         public string Source => "http://www.the-athenaeum.org";
+        public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt";
+        public int GetNextThrottleInMilliseconds => normalizedRandom.Next();
 
+        private readonly NormalRandomGenerator normalizedRandom = new NormalRandomGenerator(1, 1000);
         private string PageNotFoundIndicatorText { get; }
         private IAmazonDynamoDB Client { get; }
         protected virtual string Url { get; }
