@@ -26,7 +26,7 @@ namespace IndexBackend
         {
             var url = "https://tgonzalez.net/api/Gallery/wait" +
                 $"?token={HttpUtility.UrlEncode(token)}" +
-                $"$waitInMilliseconds={waitTimeInMilliseconds}";
+                $"&waitInMilliseconds={waitTimeInMilliseconds}";
             var response = new WebClient().DownloadString(url);
             return JsonConvert.DeserializeObject<WaitTime>(response);
         }
