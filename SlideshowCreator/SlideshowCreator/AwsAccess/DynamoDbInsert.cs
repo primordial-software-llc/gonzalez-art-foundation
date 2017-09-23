@@ -4,7 +4,7 @@ using Amazon.DynamoDBv2.Model;
 using IndexBackend;
 using SlideshowCreator.InfrastructureAsCode;
 
-namespace SlideshowCreator.DataAccess
+namespace SlideshowCreator.AwsAccess
 {
     class DynamoDbInsert
     {

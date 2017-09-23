@@ -2,7 +2,7 @@
 using Amazon.DynamoDBv2.Model;
 using IndexBackend;
 
-namespace SlideshowCreator.DataAccess
+namespace SlideshowCreator.AwsAccess
 {
     class DynamoDbDelete
     {

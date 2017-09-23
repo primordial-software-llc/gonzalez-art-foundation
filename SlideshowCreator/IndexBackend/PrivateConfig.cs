@@ -26,6 +26,15 @@ namespace IndexBackend
         [JsonProperty("galleryPassword")]
         public string GalleryPassword { get; set; }
 
+        [JsonProperty("secretPadding")]
+        public string SecretPadding { get; set; }
+
+        [JsonProperty("secretPassword")]
+        public string SecretPassword { get; set; }
+
+        [JsonProperty("secretInitializationVector")]
+        public string SecretInitializationVector { get; set; }
+        
         public static PrivateConfig CreateFromPersonalJson()
         {
             return Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
