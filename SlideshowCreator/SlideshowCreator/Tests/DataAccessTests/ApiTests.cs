@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using GalleryBackend;
 using IndexBackend;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.DataAccessTests
 {
     class ApiTests
     {
-        private readonly PrivateConfig privateConfig =
-            PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private string token;
 
         [OneTimeSetUp]
@@ -93,8 +95,10 @@ namespace SlideshowCreator.Tests.DataAccessTests
             ConcurrentBag<int> connectionCount = new ConcurrentBag<int>();
             ConcurrentBag<int> levelOfParallelism = new ConcurrentBag<int>();
 
-            var parallelOptions = new ParallelOptions();
-            parallelOptions.MaxDegreeOfParallelism = -1; // This is a max. Not even a target level of parallelism.
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = -1
+            };
 
             Parallel.For(1, 10000, parallelOptions, connectionNumber =>
             {
@@ -115,7 +119,8 @@ namespace SlideshowCreator.Tests.DataAccessTests
             Console.WriteLine("Max parallelism achieved: " + levelOfParallelism.Max(x => x));
 
             // We're only getting 12 parallel connections with a count of 1,000
-            // and 239 parallel connections with a count of 10,000
+            // and 239 parallel connections with a count of 10,000.
+            // Memory and CPU aren't evn moving in any noticable amount.
             // That's not good.
             // The parallel for each is underperforming for the hardware.
             // Once we start to max out the hardware we can know we are saturating the connection.
@@ -129,6 +134,47 @@ namespace SlideshowCreator.Tests.DataAccessTests
             // Need http client and finer control of threads.
             // https://stackoverflow.com/questions/24904719/how-to-limit-connections-with-async-httpclient-c-sharp
             // Test is setup well though.
+        }
+
+        [Test]
+        public void Test()
+        {
+            var files = Directory.EnumerateFiles(
+                "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator",
+                "*.*",
+                SearchOption.AllDirectories
+            ).ToList();
+            files.Remove(PrivateConfig.PersonalJson);
+
+            var gitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\.gitignore");
+
+            Assert.IsTrue(gitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
+
+            var secrets = File.ReadAllText(PrivateConfig.PersonalJson);
+            var secretsJson = JObject.Parse(secrets);
+            
+            int filesChecked = 0;
+            foreach (string file in files)
+            {
+                try
+                {
+                    var data = File.ReadAllText(file, Encoding.UTF8);
+                    foreach (var secretJson in secretsJson)
+                    {
+                        var secretValue = secretJson.Value.ToString().ToLower();
+                        if (data.ToLower().Contains(secretValue))
+                        {
+                            throw new Exception($"Secret {secretValue} discovered in source code at: " + file);
+                        }
+                    }
+                    filesChecked += 1;
+                }
+                catch (IOException e)
+                {
+                    Console.WriteLine("Skipped: " + e.Message);
+                }
+            }
+            Console.WriteLine($"checked {filesChecked} of {files.Count} files.");
         }
 
     }

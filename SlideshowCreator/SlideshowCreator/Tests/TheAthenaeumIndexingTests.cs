@@ -25,7 +25,7 @@ namespace SlideshowCreator.Tests
         public void Setup_All_Tests_Once_And_Only_Once()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, client, privateConfig.TargetUrl);
+            transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, client, PublicConfig.TheAthenaeumArt);
 
             var token = new GalleryClient().Authenticate(privateConfig.GalleryUsername, privateConfig.GalleryPassword).Token;
             vpnCheck = new VpnCheck(token);

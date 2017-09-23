@@ -76,7 +76,7 @@ namespace SlideshowIndexer
                 return new TheAthenaeumIndexer(
                     PrivateConfig.PageNotFoundIndicatorText,
                     DynamoDbClient,
-                    PrivateConfig.TargetUrl);
+                    PublicConfig.TheAthenaeumArt);
             }
             else
             {

@@ -12,9 +12,6 @@ namespace IndexBackend
         [JsonProperty("ipCheckerUrl")]
         public string IpCheckerUrl { get; set; }
 
-        [JsonProperty("targetUrl")]
-        public string TargetUrl { get; set; }
-
         [JsonProperty("pageNotFoundIndicatorText")]
         public string PageNotFoundIndicatorText { get; set; }
 
@@ -51,10 +48,12 @@ namespace IndexBackend
                 return decryptedIp.Replace(SecretPadding, string.Empty);
             }
         }
-        
+
+        public static string PersonalJson => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json";
+
         public static PrivateConfig CreateFromPersonalJson()
         {
-            return Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+            return Create(PersonalJson);
         }
 
         public static PrivateConfig Create(string fullPath)

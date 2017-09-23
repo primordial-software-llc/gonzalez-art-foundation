@@ -1,6 +1,6 @@
-﻿namespace SlideshowCreator
+﻿namespace IndexBackend
 {
-    class PublicConfig
+    public class PublicConfig
     {
         public static string DataFolder => "C:\\Data";
 
@@ -11,5 +11,7 @@
         public static string ClassificationArchive => DataFolder + "\\Classification";
 
         public static string DataDumpProgress => DataFolder + "\\Progress.txt";
+
+        public static string TheAthenaeumArt => "http://www.the-athenaeum.org/art/";
     }
 }
