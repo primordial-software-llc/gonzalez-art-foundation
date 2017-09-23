@@ -62,6 +62,14 @@ namespace SlideshowCreator.Tests.DataAccessTests
             Console.WriteLine("IP recevied by web server expected to be original: " + ipAddress.OriginalVisitorIPAddress);
             Assert.AreNotEqual(privateConfig.DecryptedIp, ipAddress.OriginalVisitorIPAddress);
         }
-        
+
+        [Test]
+        public void Forced_Wait_Time()
+        {
+            var client = new GalleryClient();
+            var waitTime = client.GetWaitTime(token, 60 * 1000);
+            Assert.AreEqual(60 * 1000, waitTime.WaitInMilliseconds);
+        }
+
     }
 }

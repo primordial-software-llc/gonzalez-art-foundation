@@ -73,12 +73,29 @@ namespace MVC5App.Controllers
         [Route("ip")]
         public RequestIPAddress GetIPAddress(string token)
         {
+            Authenticate(token);
+
             var ipAddress = new RequestIPAddress
             {
                 IP = HttpContext.Current.Request.UserHostAddress,
                 OriginalVisitorIPAddress = HttpContext.Current.Request.Headers["CF-Connecting-IP"]
             };
             return ipAddress;
+        }
+
+        [Route("wait")]
+        public WaitTime GetWait(string token, int waitInMilliseconds)
+        {
+            Authenticate(token);
+
+            var waitTime = new WaitTime
+            {
+                WaitInMilliseconds = waitInMilliseconds
+            };
+
+            System.Threading.Thread.Sleep(waitTime.WaitInMilliseconds);
+
+            return waitTime;
         }
 
     }

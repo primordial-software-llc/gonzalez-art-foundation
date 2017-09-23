@@ -21,5 +21,15 @@ namespace IndexBackend
             var response = new WebClient().DownloadString(url);
             return JsonConvert.DeserializeObject<RequestIPAddress>(response);
         }
+
+        public WaitTime GetWaitTime(string token, int waitTimeInMilliseconds)
+        {
+            var url = "https://tgonzalez.net/api/Gallery/wait" +
+                $"?token={HttpUtility.UrlEncode(token)}" +
+                $"$waitInMilliseconds={waitTimeInMilliseconds}";
+            var response = new WebClient().DownloadString(url);
+            return JsonConvert.DeserializeObject<WaitTime>(response);
+        }
+
     }
 }
