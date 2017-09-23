@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using System.Web;
+using GalleryBackend;
 using GalleryBackend.Model;
 using Newtonsoft.Json;
 
-namespace GalleryBackend
+namespace IndexBackend
 {
     public class GalleryClient
     {

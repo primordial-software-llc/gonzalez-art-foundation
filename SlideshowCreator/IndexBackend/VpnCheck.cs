@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace GalleryBackend
+namespace IndexBackend
 {
     public class VpnCheck
     {

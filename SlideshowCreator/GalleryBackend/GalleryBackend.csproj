@@ -53,19 +53,11 @@
   <ItemGroup>
     <Compile Include="Authentication.cs" />
     <Compile Include="AuthenticationTokenModel.cs" />
-    <Compile Include="GalleryClient.cs" />
     <Compile Include="Model\RequestIPAddress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IndexBackend\IndexBackend.csproj">
-      <Project>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</Project>
-      <Name>IndexBackend</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataAccess\" />
