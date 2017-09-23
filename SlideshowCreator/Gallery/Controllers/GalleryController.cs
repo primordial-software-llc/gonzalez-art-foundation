@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Web;
 using System.Web.Http;
 using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend;
 
 namespace MVC5App.Controllers
@@ -66,6 +68,17 @@ namespace MVC5App.Controllers
 
             var jeanLeonGeromeWorks = new DynamoDbClientFactory().ScanByPage(lastPageId);
             return jeanLeonGeromeWorks;
+        }
+
+        [Route("ip")]
+        public RequestIPAddress GetIPAddress(string token)
+        {
+            var ipAddress = new RequestIPAddress
+            {
+                IP = HttpContext.Current.Request.UserHostAddress,
+                OriginalVisitorIPAddress = HttpContext.Current.Request.Headers["CF-Connecting-IP"]
+            };
+            return ipAddress;
         }
 
     }

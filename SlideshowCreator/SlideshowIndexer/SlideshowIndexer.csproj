@@ -61,6 +61,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
+      <Project>{d91ab026-70a1-432f-833e-3f02a17b44cf}</Project>
+      <Name>GalleryBackend</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IndexBackend\IndexBackend.csproj">
       <Project>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</Project>
       <Name>IndexBackend</Name>

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
+using GalleryBackend;
 using HtmlAgilityPack;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -20,6 +21,7 @@ namespace SlideshowCreator.Tests
 
         private NationalGalleryOfArtDataAccess ngaDataAccess;
         private NationalGalleryOfArtIndexer indexer;
+        private VpnCheck vpnCheck;
 
         [OneTimeSetUp]
         public void Setup_Tests_Once()
@@ -27,17 +29,19 @@ namespace SlideshowCreator.Tests
             ngaDataAccess = new NationalGalleryOfArtDataAccess();
             ngaDataAccess.Init(new Uri(privateConfig.Target2Url));
             indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
+
+            var token = new GalleryClient().Authenticate(privateConfig.GalleryUsername, privateConfig.GalleryPassword).Token;
+            vpnCheck = new VpnCheck(token);
+            vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
         }
 
         [Test]
         public void Get_Search_Results()
         {
-            new VpnCheck().AssertVpnInUse(privateConfig); // I promise I'll change this once I go through images.nga.gov now that I have a web server with authentication. I'm actually quite proud of the authentication mechanism. It's quite stronger than anything I see in practice except aws which uses signatures and fails miserably with client-side work (elastic search was hell and all due to aws not allowing CORS after I reverse enginered the entire signature process!) Now for really bad ass work, take that signature process since I broke it down the formal documentation and use it here. That would help the process a lot, but I mean I don't have anything that important, it's already well secured. The next best thing is to make the hash private in the web server, since I basically am assuming the site is compromised right now (although extremely unlikely)
-
             int expectedPages = 648;
             ngaDataAccess.SetSearchResultsTo75PerPage();
-
-            System.Threading.Thread.Sleep(40 * 1000); // Ugh, it's hard respecting robots.txt
+            
+            System.Threading.Thread.Sleep(new NationalGalleryOfArtIndexer().GetNextThrottleInMilliseconds);
 
             var imageIds = new List<int>();
 
@@ -84,8 +88,6 @@ namespace SlideshowCreator.Tests
         [Test]
         public void Get_Home_Page_Through_500_Response()
         {
-            new VpnCheck().AssertVpnInUse(privateConfig);
-            
             var assetId2 = 1;
 
             IndexAndAssertInS3(46482);

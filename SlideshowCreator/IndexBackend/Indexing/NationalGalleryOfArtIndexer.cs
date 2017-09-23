@@ -19,6 +19,11 @@ namespace IndexBackend.Indexing
         protected IAmazonDynamoDB DynamoDbClient { get; }
         protected NationalGalleryOfArtDataAccess NgaDataAccess { get; set; }
 
+        public NationalGalleryOfArtIndexer()
+        {
+            
+        }
+
         public NationalGalleryOfArtIndexer(IAmazonS3 s3Client, IAmazonDynamoDB dynamoDbClient, NationalGalleryOfArtDataAccess ngaDataAccess)
         {
             S3Client = s3Client;

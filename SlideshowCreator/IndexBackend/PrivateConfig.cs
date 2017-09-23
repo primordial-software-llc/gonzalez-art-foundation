@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Cryptography;
 using Newtonsoft.Json;
 
 namespace IndexBackend
@@ -37,6 +38,19 @@ namespace IndexBackend
 
         [JsonProperty("secretInitializationVector")]
         public string SecretInitializationVector { get; set; }
+
+        public string DecryptedIp
+        {
+            get
+            {
+                var simpleSymetricCrypto = new SymmetricKeyCryptography();
+                var decryptedIp = simpleSymetricCrypto.Decrypt(
+                    SecretIP,
+                    SecretPassword,
+                    SecretInitializationVector);
+                return decryptedIp.Replace(SecretPadding, string.Empty);
+            }
+        }
         
         public static PrivateConfig CreateFromPersonalJson()
         {
@@ -48,6 +62,5 @@ namespace IndexBackend
             var json = File.ReadAllText(fullPath);
             return JsonConvert.DeserializeObject<PrivateConfig>(json);
         }
-
     }
 }

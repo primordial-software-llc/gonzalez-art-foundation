@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using Amazon.DynamoDBv2;
+using GalleryBackend;
 using IndexBackend;
 using IndexBackend.Indexing;
 using NUnit.Framework;
@@ -18,18 +19,17 @@ namespace SlideshowCreator.Tests
         private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
         private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
         private TheAthenaeumIndexer transientClassifier;
+        private VpnCheck vpnCheck;
 
         [OneTimeSetUp]
         public void Setup_All_Tests_Once_And_Only_Once()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, client, privateConfig.TargetUrl);
-        }
 
-        [Test]
-        public void A_Test_VPN()
-        {
-            new VpnCheck().AssertVpnInUse(privateConfig);
+            var token = new GalleryClient().Authenticate(privateConfig.GalleryUsername, privateConfig.GalleryPassword).Token;
+            vpnCheck = new VpnCheck(token);
+            vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
         }
 
         [Test]

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Web;
-using Cryptography;
 using GalleryBackend;
 using IndexBackend;
 using Newtonsoft.Json;
@@ -16,8 +15,8 @@ namespace SlideshowCreator.Tests.DataAccessTests
             PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
         private string token;
 
-        [Test]
-        public void A_Authenticate()
+        [OneTimeSetUp]
+        public void Authenticate()
         {
             var url = $"https://tgonzalez.net/api/Gallery/token?username={privateConfig.GalleryUsername}&password={privateConfig.GalleryPassword}";
             var response = new WebClient().DownloadString(url);
@@ -32,7 +31,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var url = $"https://tgonzalez.net/api/Gallery/searchExactArtist?token={HttpUtility.UrlEncode(token)}&artist={artist}";
             var response = new WebClient().DownloadString(url);
             var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
-            Assert.AreEqual(233, results.Count);
+            Assert.AreEqual(244, results.Count);
         }
 
         [Test]
@@ -42,7 +41,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var url = $"https://tgonzalez.net/api/Gallery/searchLikeArtist?token={HttpUtility.UrlEncode(token)}&artist={artist}";
             var response = new WebClient().DownloadString(url);
             var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
-            Assert.AreEqual(237, results.Count);
+            Assert.AreEqual(249, results.Count);
         }
         
         [Test]
@@ -51,21 +50,17 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var url = $"https://tgonzalez.net/api/Gallery/scan?token={HttpUtility.UrlEncode(token)}&lastPageId=0";
             var response = new WebClient().DownloadString(url);
             var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
-            Assert.AreEqual(7350, results.Count);
+            Assert.AreEqual(7332, results.Count);
         }
 
         [Test]
         public void D_IP_Address_Test()
         {
-            var simpleSymetricCrypto = new SymmetricKeyCryptography();
-            var decryptedIp = simpleSymetricCrypto.Decrypt(
-                privateConfig.SecretIP,
-                privateConfig.SecretPassword,
-                privateConfig.SecretInitializationVector);
-
-            decryptedIp = decryptedIp.Replace(privateConfig.SecretPadding, string.Empty);
-
-            Console.WriteLine(decryptedIp);
+            var client = new GalleryClient();
+            var ipAddress = client.GetIPAddress(token);
+            Console.WriteLine("IP received by web server expected to be from CDN: " + ipAddress.IP);
+            Console.WriteLine("IP recevied by web server expected to be original: " + ipAddress.OriginalVisitorIPAddress);
+            Assert.AreNotEqual(privateConfig.DecryptedIp, ipAddress.OriginalVisitorIPAddress);
         }
         
     }

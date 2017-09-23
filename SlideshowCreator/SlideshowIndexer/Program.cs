@@ -1,6 +1,7 @@
 ﻿using System;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
+using GalleryBackend;
 using IndexBackend;
 using IndexBackend.Indexing;
 using IndexBackend.NationalGalleryOfArt;
@@ -16,7 +17,13 @@ namespace SlideshowIndexer
 
         static void Main(string[] args)
         {
-            var vpnInUse = new VpnCheck().IsVpnInUse(PrivateConfig);
+            var token = new GalleryClient()
+                .Authenticate(
+                    PrivateConfig.GalleryUsername,
+                    PrivateConfig.GalleryPassword)
+                .Token;
+            var vpnCheck = new VpnCheck(token);
+            var vpnInUse = vpnCheck.IsVpnInUse(PrivateConfig.DecryptedIp);
 
             if (!string.IsNullOrWhiteSpace(vpnInUse))
             {
