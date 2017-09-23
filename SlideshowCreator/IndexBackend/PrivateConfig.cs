@@ -26,6 +26,9 @@ namespace IndexBackend
         [JsonProperty("galleryPassword")]
         public string GalleryPassword { get; set; }
 
+        [JsonProperty("secretIp")]
+        public string SecretIP { get; set; }
+
         [JsonProperty("secretPadding")]
         public string SecretPadding { get; set; }
 

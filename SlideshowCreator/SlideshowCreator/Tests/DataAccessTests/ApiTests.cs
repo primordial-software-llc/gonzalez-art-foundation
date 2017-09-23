@@ -57,25 +57,15 @@ namespace SlideshowCreator.Tests.DataAccessTests
         [Test]
         public void D_IP_Address_Test()
         {
-            Assert.IsFalse(string.IsNullOrWhiteSpace(privateConfig.SecretInitializationVector));
-            Assert.IsFalse(string.IsNullOrWhiteSpace(privateConfig.SecretPassword));
-            Assert.IsFalse(string.IsNullOrWhiteSpace(privateConfig.SecretPadding));
-
-            var rawSecretIp = "";
-
             var simpleSymetricCrypto = new SymmetricKeyCryptography();
-            var ecryptedIp = simpleSymetricCrypto.Encrypt(
-                rawSecretIp + privateConfig.SecretPadding,
+            var decryptedIp = simpleSymetricCrypto.Decrypt(
+                privateConfig.SecretIP,
                 privateConfig.SecretPassword,
                 privateConfig.SecretInitializationVector);
 
-            Console.Write(ecryptedIp);
+            decryptedIp = decryptedIp.Replace(privateConfig.SecretPadding, string.Empty);
 
-            var decryptedIp = simpleSymetricCrypto.Decrypt(ecryptedIp,
-                privateConfig.SecretPassword,
-                privateConfig.SecretInitializationVector);
-
-            StringAssert.StartsWith(rawSecretIp, decryptedIp);
+            Console.WriteLine(decryptedIp);
         }
         
     }
