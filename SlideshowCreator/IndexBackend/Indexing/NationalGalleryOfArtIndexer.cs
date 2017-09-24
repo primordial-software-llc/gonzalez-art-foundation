@@ -4,6 +4,7 @@ using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.S3.Model;
+using GalleryBackend.Model;
 using IndexBackend.NationalGalleryOfArt;
 
 namespace IndexBackend.Indexing
@@ -13,7 +14,7 @@ namespace IndexBackend.Indexing
         public string S3Bucket => "tgonzalez-image-archive/national-gallery-of-art";
         public string Source => "http://images.nga.gov";
         public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
-        public int GetNextThrottleInMilliseconds => 40 * 1000;
+        public int GetNextThrottleInMilliseconds => 0;
 
         protected IAmazonS3 S3Client { get; }
         protected IAmazonDynamoDB DynamoDbClient { get; }

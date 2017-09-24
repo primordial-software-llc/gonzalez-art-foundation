@@ -61,14 +61,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClassificationConversion.cs" />
-    <Compile Include="ClassificationModel.cs" />
     <Compile Include="Classifier.cs" />
     <Compile Include="CloudFlareImUnderAttack\DecodeChallengeQuestion.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="AwsClientFactory.cs" />
     <Compile Include="DynamoDbToS3Backup.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
-    <Compile Include="GalleryClient.cs" />
     <Compile Include="ImageClassificationAccess.cs" />
     <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />

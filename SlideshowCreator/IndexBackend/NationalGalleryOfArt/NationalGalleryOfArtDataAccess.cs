@@ -66,7 +66,10 @@ namespace IndexBackend.NationalGalleryOfArt
 
         public void SetSearchResultsTo75PerPage()
         {
-            Client.GetStringAsync("http://images.nga.gov/?service=user&action=do_store_grid_layout&layout=3&grid_thumb=7");
+            Task<string> response =
+                Client.GetStringAsync(
+                    "http://images.nga.gov/?service=user&action=do_store_grid_layout&layout=3&grid_thumb=7");
+            var finalResponse = response.Result;
         }
 
         public string GetSearchResults(int pageNumber)

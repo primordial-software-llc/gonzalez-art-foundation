@@ -1,21 +1,21 @@
 ﻿using System;
+using GalleryBackend;
 using Newtonsoft.Json;
 
 namespace IndexBackend
 {
     public class VpnCheck
     {
-        private string Token { get; }
+        private GalleryClient GalleryClient { get; }
 
-        public VpnCheck(string token)
+        public VpnCheck(GalleryClient galleryClient)
         {
-            Token = token;
+            GalleryClient = galleryClient;
         }
 
         public string IsVpnInUse(string secretIp)
         {
-            var client = new GalleryClient();
-            var ipAddress = client.GetIPAddress(Token);
+            var ipAddress = GalleryClient.GetIPAddress();
 
             if (JsonConvert.SerializeObject(ipAddress).ToLower().Contains(secretIp))
             {

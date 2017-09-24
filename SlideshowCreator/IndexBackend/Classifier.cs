@@ -1,5 +1,6 @@
 ﻿using System;
 using Diacritics.Extensions;
+using GalleryBackend.Model;
 
 namespace IndexBackend
 {

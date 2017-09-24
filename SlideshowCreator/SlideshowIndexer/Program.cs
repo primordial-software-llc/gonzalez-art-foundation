@@ -17,12 +17,10 @@ namespace SlideshowIndexer
 
         static void Main(string[] args)
         {
-            var token = new GalleryClient()
-                .Authenticate(
-                    PrivateConfig.GalleryUsername,
-                    PrivateConfig.GalleryPassword)
-                .Token;
-            var vpnCheck = new VpnCheck(token);
+            var galleryClient = new GalleryClient(
+                PrivateConfig.GalleryUsername,
+                PrivateConfig.GalleryPassword);
+            var vpnCheck = new VpnCheck(galleryClient);
             var vpnInUse = vpnCheck.IsVpnInUse(PrivateConfig.DecryptedIp);
 
             if (!string.IsNullOrWhiteSpace(vpnInUse))
@@ -40,15 +38,9 @@ namespace SlideshowIndexer
             IIndex indexer = GetIndexer(IndexType.NationalGalleryOfArt);
             var fileIdQueueIndexer = new FileIdQueueIndexer();
 
-            Console.CancelKeyPress += (sender, eventArgs) => CleanForShutdown();
-
             try
             {
-                using (PreventSleep preventSleep = new PreventSleep())
-                {
-                    preventSleep.DontAllowSleep();
-                    fileIdQueueIndexer.Index(indexer);
-                }
+                fileIdQueueIndexer.Index(indexer);
             }
             catch (Exception e)
             {
@@ -82,12 +74,6 @@ namespace SlideshowIndexer
             {
                 return null;
             }
-        }
-
-        private static void CleanForShutdown()
-        {
-            Console.WriteLine("Cleaning up for user requested shutdown.");
-            PreventSleep.AllowSleep();
         }
 
     }

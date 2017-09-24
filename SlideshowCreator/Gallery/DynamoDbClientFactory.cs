@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
+using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;
 

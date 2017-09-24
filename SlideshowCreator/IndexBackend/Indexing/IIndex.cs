@@ -1,4 +1,6 @@
 ﻿
+using GalleryBackend.Model;
+
 namespace IndexBackend.Indexing
 {
     public interface IIndex

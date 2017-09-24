@@ -1,7 +1,7 @@
 ﻿
 using Newtonsoft.Json;
 
-namespace IndexBackend
+namespace GalleryBackend.Model
 {
     public class ClassificationModel
     {

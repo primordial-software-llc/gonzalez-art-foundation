@@ -26,9 +26,8 @@ namespace SlideshowCreator.Tests
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, client, PublicConfig.TheAthenaeumArt);
-
-            var token = new GalleryClient().Authenticate(privateConfig.GalleryUsername, privateConfig.GalleryPassword).Token;
-            vpnCheck = new VpnCheck(token);
+            
+            vpnCheck = new VpnCheck(new GalleryClient(privateConfig.GalleryUsername, privateConfig.GalleryPassword));
             vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
         }
 
@@ -153,24 +152,6 @@ namespace SlideshowCreator.Tests
                 pageIdQueue.Add(pageId.ToString());
             }
             File.WriteAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt", pageIdQueue);
-        }
-
-        /// <summary>
-        /// I have some work to do re-indexing.
-        /// </summary>
-        [Test]
-        public void Z_Check_Counts()
-        {
-            var request = new DynamoDbTableFactory().GetTableDefinition();
-
-            var tableDescription = client.DescribeTable(request.TableName);
-            Console.WriteLine($"{request.TableName} item count: {tableDescription.Table.ItemCount}");
-            Assert.AreEqual(285117, tableDescription.Table.ItemCount); // I'll see if tonight or immediately after the web app I reindex. This is a lot now.
-
-            foreach (var gsi in tableDescription.Table.GlobalSecondaryIndexes)
-            {
-                Console.WriteLine($"{gsi.IndexName}: " + gsi.ItemCount);
-            }
         }
 
     }

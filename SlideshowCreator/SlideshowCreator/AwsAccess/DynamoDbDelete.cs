@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
-using IndexBackend;
+using GalleryBackend.Model;
 
 namespace SlideshowCreator.AwsAccess
 {

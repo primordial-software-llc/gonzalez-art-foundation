@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
+using GalleryBackend.Model;
 using IndexBackend.NormalDistributionRandom;
 
 namespace IndexBackend.Indexing
