@@ -21,6 +21,8 @@ namespace SlideshowCreator.Tests.DataAccessTests
     {
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private string token;
+        private const int requests = 1000;
+        private const int requestDelay = 10 * 1000;
 
         [OneTimeSetUp]
         public void Authenticate()
@@ -103,9 +105,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
                 MaxDegreeOfParallelism = -1
             };
 
-            const int requests = 100;
-            const int requestDelay = 5 * 1000;
-
             var sw = new Stopwatch();
             sw.Start();
             Parallel.For(1, requests, parallelOptions, connectionNumber =>
@@ -132,9 +131,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
                 MaxDegreeOfParallelism = -1
             };
 
-            const int requests = 100;
-            const int requestDelay = 5 * 1000;
-
             var sw = new Stopwatch();
             sw.Start();
             Parallel.For(1, requests, parallelOptions, connectionNumber =>
@@ -144,8 +140,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
                               $"?token={HttpUtility.UrlEncode(token)}" +
                               $"&waitInMilliseconds={requestDelay}";
                 var waitResponseString = httpClient.GetStringAsync(waitUrl).Result;
-                var waitResponse = JsonConvert.DeserializeObject<WaitTime>(waitResponseString);
-
+                JsonConvert.DeserializeObject<WaitTime>(waitResponseString);
             });
             sw.Stop();
 
@@ -164,9 +159,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
                 MaxDegreeOfParallelism = -1
             };
 
-            const int requests = 100;
-            const int requestDelay = 5 * 1000;
-
             HttpClient httpClient = new HttpClient();
 
             var sw = new Stopwatch();
@@ -177,7 +169,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
                               $"?token={HttpUtility.UrlEncode(token)}" +
                               $"&waitInMilliseconds={requestDelay}";
                 var waitResponseString = httpClient.GetStringAsync(waitUrl).Result;
-                var waitResponse = JsonConvert.DeserializeObject<WaitTime>(waitResponseString);
+                JsonConvert.DeserializeObject<WaitTime>(waitResponseString);
 
             });
             sw.Stop();
@@ -188,20 +180,16 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
             Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
         }
-
-        // Async
+        
         [Test]
         public void Concurency_HttpClient_Reused_HttpClient_WaitAll_Synchronous_Request_Firing()
         {
-            const int requests = 100;
-            const int requestDelay = 5 * 1000;
-
             HttpClient httpClient = new HttpClient();
             ConcurrentBag<Task<string>> asyncRequestResponses = new ConcurrentBag<Task<string>>();
 
             var sw = new Stopwatch();
             sw.Start();
-            for (var connectionNumber = 0; connectionNumber < 100; connectionNumber += 1)
+            for (var connectionNumber = 0; connectionNumber < requests; connectionNumber += 1)
             {
                 var waitUrl = "https://tgonzalez.net/api/Gallery/wait" +
                               $"?token={HttpUtility.UrlEncode(token)}" +
@@ -223,14 +211,10 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
             Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
         }
-
-        // Parallel and async. I think I'm happy with this one. Let's see.
+        
         [Test]
         public void Concurency_HttpClient_Reused_HttpClient_WaitAll_Parallel_Request_Firing()
         {
-            const int requests = 100;
-            const int requestDelay = 5 * 1000;
-
             HttpClient httpClient = new HttpClient();
             ConcurrentBag<Task<string>> asyncRequestResponses = new ConcurrentBag<Task<string>>();
 
@@ -241,7 +225,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
 
             var sw = new Stopwatch();
             sw.Start();
-            Parallel.For(0, 100, parallelOptions, requestNumber =>
+            Parallel.For(0, requests, parallelOptions, requestNumber =>
             {
                 var waitUrl = "https://tgonzalez.net/api/Gallery/wait" +
                                 $"?token={HttpUtility.UrlEncode(token)}" +
