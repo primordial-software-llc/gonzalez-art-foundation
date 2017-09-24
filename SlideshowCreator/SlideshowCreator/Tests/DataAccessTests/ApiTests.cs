@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.DataAccessTests
@@ -23,11 +25,22 @@ namespace SlideshowCreator.Tests.DataAccessTests
         [OneTimeSetUp]
         public void Authenticate()
         {
+            // A little service point manager voodoo magic.
+            // Service point manager is a factory of factories!
+            // So the first request spawns the first factory,
+            // locking in all values for subsequent requests.
+            // Hence the term "default" and not current.
+            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
 
+            var url = $"https://tgonzalez.net/api/Gallery/token?username={privateConfig.GalleryUsername}&password={privateConfig.GalleryPassword}";
+            var response = new WebClient().DownloadString(url);
+            var model = JsonConvert.DeserializeObject<AuthenticationTokenModel>(response);
+            token = model.Token;
         }
 
+        /*
         [Test]
-        public void B_Exact_Artist()
+        public void Exact_Artist()
         {
             var artist = "Jean-Leon Gerome";
             var url = $"https://tgonzalez.net/api/Gallery/searchExactArtist?token={HttpUtility.UrlEncode(token)}&artist={artist}";
@@ -37,7 +50,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         }
 
         [Test]
-        public void C_Like_Artist()
+        public void Like_Artist()
         {
             var artist = "Jean-Leon Gerome";
             var url = $"https://tgonzalez.net/api/Gallery/searchLikeArtist?token={HttpUtility.UrlEncode(token)}&artist={artist}";
@@ -47,7 +60,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         }
         
         [Test]
-        public void D_Scan()
+        public void Scan()
         {
             var url = $"https://tgonzalez.net/api/Gallery/scan?token={HttpUtility.UrlEncode(token)}&lastPageId=0";
             var response = new WebClient().DownloadString(url);
@@ -56,7 +69,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         }
 
         [Test]
-        public void D_IP_Address_Test()
+        public void IP_Address()
         {
             var client = new GalleryClient();
             var ipAddress = client.GetIPAddress(token);
@@ -66,78 +79,194 @@ namespace SlideshowCreator.Tests.DataAccessTests
         }
 
         [Test]
-        public void Forced_Wait_Time()
+        public void Wait_Time()
         {
             var client = new GalleryClient();
             var waitTime = client.GetWaitTime(token, 45 * 1000);
             Assert.AreEqual(45 * 1000, waitTime.WaitInMilliseconds);
         }
+        */
 
-        [Test]
-        public void Test_Conn_Limit()
-        {
-            Console.WriteLine(ServicePointManager.DefaultConnectionLimit);
-        }
-
+        /// <summary>
+        /// Something is very wrong. The default connection limit was set to int max value.
+        /// The parallel loop had its throttle lifted completely.
+        /// The average concurrent connections determined by measured time was 11.
+        /// The max concurrent hits in the loop even was only 25 at 100 requests and going up to 250 at 1k or 10k (don't remember, but this is slow).
+        /// </summary>
         [Test]
         public void Concurency()
         {
-            ServicePointManager.DefaultConnectionLimit = int.MaxValue; // First requests locks in the defualt on the service point.
-            // The default is being set on a factories constructor
-            // Not within the constructor contained by the factory.
-            var url = $"https://tgonzalez.net/api/Gallery/token?username={privateConfig.GalleryUsername}&password={privateConfig.GalleryPassword}";
-            var response = new WebClient().DownloadString(url);
-            var model = JsonConvert.DeserializeObject<AuthenticationTokenModel>(response);
-            token = model.Token;
-
             var client = new GalleryClient();
-
-            ConcurrentBag<int> connectionCount = new ConcurrentBag<int>();
-            ConcurrentBag<int> levelOfParallelism = new ConcurrentBag<int>();
 
             var parallelOptions = new ParallelOptions
             {
                 MaxDegreeOfParallelism = -1
             };
 
-            Parallel.For(1, 10000, parallelOptions, connectionNumber =>
+            const int requests = 100;
+            const int requestDelay = 5 * 1000;
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Parallel.For(1, requests, parallelOptions, connectionNumber =>
             {
-                connectionCount.Add(connectionNumber);
-                try
-                {
-                    client.GetWaitTime(token, 5 * 1000);
-                    levelOfParallelism.Add(connectionCount.Count);
-                }
-                finally
-                {
-                    connectionCount.TryTake(out int removedItem);
-                }
+                client.GetWaitTime(token, requestDelay);
             });
-            Assert.AreEqual(0, connectionCount.Count);
-            int min = levelOfParallelism.Min(x => x);
-            Console.WriteLine("Min parallelism: " + min);
-            Console.WriteLine("Max parallelism achieved: " + levelOfParallelism.Max(x => x));
+            sw.Stop();
 
-            // We're only getting 12 parallel connections with a count of 1,000
-            // and 239 parallel connections with a count of 10,000.
-            // Memory and CPU aren't evn moving in any noticable amount.
-            // That's not good.
-            // The parallel for each is underperforming for the hardware.
-            // Once we start to max out the hardware we can know we are saturating the connection.
-            // Once we saturate the connection, we know the saturation point and can tone down
-            // the level of parallelism.
-            // None of that can be determined if the parallel foreach loop isn't going high in concurrency.
-            // Keep in mind that this isn't even actual open connections.
-            // The connection could still be throttled between Add and GetWaitTime.
-            // So being only 12 is too low.
+            Console.WriteLine($"Performed {requests} with a delay of {requestDelay}ms taking {sw.Elapsed.TotalMinutes} minutes.");
+            var projectedTimeSpan = TimeSpan.FromMilliseconds(requests * requestDelay);
 
-            // Need http client and finer control of threads.
-            // https://stackoverflow.com/questions/24904719/how-to-limit-connections-with-async-httpclient-c-sharp
-            // Test is setup well though.
+            // Level of parallelism is 1
+            Console.WriteLine("Estimated total request time if performed one-by-one: " + projectedTimeSpan.TotalMinutes + " minutes");
+
+            var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
+            Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
         }
 
         [Test]
-        public void Test()
+        public void Concurency_HttpClient()
+        {
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = -1
+            };
+
+            const int requests = 100;
+            const int requestDelay = 5 * 1000;
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Parallel.For(1, requests, parallelOptions, connectionNumber =>
+            {
+                HttpClient httpClient = new HttpClient();
+                var waitUrl = "https://tgonzalez.net/api/Gallery/wait" +
+                              $"?token={HttpUtility.UrlEncode(token)}" +
+                              $"&waitInMilliseconds={requestDelay}";
+                var waitResponseString = httpClient.GetStringAsync(waitUrl).Result;
+                var waitResponse = JsonConvert.DeserializeObject<WaitTime>(waitResponseString);
+
+            });
+            sw.Stop();
+
+            Console.WriteLine($"Performed {requests} with a delay of {requestDelay}ms taking {sw.Elapsed.TotalMinutes} minutes.");
+            var projectedTimeSpan = TimeSpan.FromMilliseconds(requests * requestDelay);
+            Console.WriteLine("Estimated total request time if performed one-by-one: " + projectedTimeSpan.TotalMinutes + " minutes");
+            var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
+            Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
+        }
+
+        [Test]
+        public void Concurency_HttpClient_Reused_HttpClient()
+        {
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = -1
+            };
+
+            const int requests = 100;
+            const int requestDelay = 5 * 1000;
+
+            HttpClient httpClient = new HttpClient();
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Parallel.For(1, requests, parallelOptions, connectionNumber =>
+            {
+                var waitUrl = "https://tgonzalez.net/api/Gallery/wait" +
+                              $"?token={HttpUtility.UrlEncode(token)}" +
+                              $"&waitInMilliseconds={requestDelay}";
+                var waitResponseString = httpClient.GetStringAsync(waitUrl).Result;
+                var waitResponse = JsonConvert.DeserializeObject<WaitTime>(waitResponseString);
+
+            });
+            sw.Stop();
+
+            Console.WriteLine($"Performed {requests} with a delay of {requestDelay}ms taking {sw.Elapsed.TotalMinutes} minutes.");
+            var projectedTimeSpan = TimeSpan.FromMilliseconds(requests * requestDelay);
+            Console.WriteLine("Estimated total request time if performed one-by-one: " + projectedTimeSpan.TotalMinutes + " minutes");
+            var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
+            Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
+        }
+
+        // Async
+        [Test]
+        public void Concurency_HttpClient_Reused_HttpClient_WaitAll_Synchronous_Request_Firing()
+        {
+            const int requests = 100;
+            const int requestDelay = 5 * 1000;
+
+            HttpClient httpClient = new HttpClient();
+            ConcurrentBag<Task<string>> asyncRequestResponses = new ConcurrentBag<Task<string>>();
+
+            var sw = new Stopwatch();
+            sw.Start();
+            for (var connectionNumber = 0; connectionNumber < 100; connectionNumber += 1)
+            {
+                var waitUrl = "https://tgonzalez.net/api/Gallery/wait" +
+                              $"?token={HttpUtility.UrlEncode(token)}" +
+                              $"&waitInMilliseconds={requestDelay}";
+                asyncRequestResponses.Add(httpClient.GetStringAsync(waitUrl));
+            }
+
+            Task.WhenAll(asyncRequestResponses);
+
+            foreach (var asyncRequestResponse in asyncRequestResponses)
+            {
+                JsonConvert.DeserializeObject<WaitTime>(asyncRequestResponse.Result);
+            }
+            sw.Stop();
+
+            Console.WriteLine($"Performed {requests} with a delay of {requestDelay}ms taking {sw.Elapsed.TotalMinutes} minutes.");
+            var projectedTimeSpan = TimeSpan.FromMilliseconds(requests * requestDelay);
+            Console.WriteLine("Estimated total request time if performed one-by-one: " + projectedTimeSpan.TotalMinutes + " minutes");
+            var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
+            Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
+        }
+
+        // Parallel and async. I think I'm happy with this one. Let's see.
+        [Test]
+        public void Concurency_HttpClient_Reused_HttpClient_WaitAll_Parallel_Request_Firing()
+        {
+            const int requests = 100;
+            const int requestDelay = 5 * 1000;
+
+            HttpClient httpClient = new HttpClient();
+            ConcurrentBag<Task<string>> asyncRequestResponses = new ConcurrentBag<Task<string>>();
+
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = -1
+            };
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Parallel.For(0, 100, parallelOptions, requestNumber =>
+            {
+                var waitUrl = "https://tgonzalez.net/api/Gallery/wait" +
+                                $"?token={HttpUtility.UrlEncode(token)}" +
+                                $"&waitInMilliseconds={requestDelay}";
+                asyncRequestResponses.Add(httpClient.GetStringAsync(waitUrl));
+            });
+
+            Task.WhenAll(asyncRequestResponses);
+
+            foreach (var asyncRequestResponse in asyncRequestResponses)
+            {
+                JsonConvert.DeserializeObject<WaitTime>(asyncRequestResponse.Result);
+            }
+            sw.Stop();
+
+            Console.WriteLine($"Performed {requests} with a delay of {requestDelay}ms taking {sw.Elapsed.TotalMinutes} minutes.");
+            var projectedTimeSpan = TimeSpan.FromMilliseconds(requests * requestDelay);
+            Console.WriteLine("Estimated total request time if performed one-by-one: " + projectedTimeSpan.TotalMinutes + " minutes");
+            var observedLevelOfParallelism = projectedTimeSpan.TotalMinutes / sw.Elapsed.TotalMinutes;
+            Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
+        }
+        
+        /*
+        [Test]
+        public void Check_For_Secrets_In_Source_Code()
         {
             var files = Directory.EnumerateFiles(
                 "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator",
@@ -176,6 +305,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
             }
             Console.WriteLine($"checked {filesChecked} of {files.Count} files.");
         }
-
+        */
     }
 }
