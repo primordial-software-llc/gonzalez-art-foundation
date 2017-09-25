@@ -21,7 +21,7 @@ namespace SlideshowIndexer
 
             var parallelOptions = new ParallelOptions
             {
-                MaxDegreeOfParallelism = 6
+                MaxDegreeOfParallelism = 5
             };
 
             var idQueue = File.ReadAllLines(indexer.IdFileQueuePath)
