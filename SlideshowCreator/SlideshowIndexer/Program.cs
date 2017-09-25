@@ -10,7 +10,7 @@ namespace SlideshowIndexer
 {
     class Program
     {
-        private static readonly PrivateConfig PrivateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        private static readonly PrivateConfig PrivateConfig = PrivateConfig.CreateFromPersonalJson();
 
         private static readonly IAmazonS3 S3Client = new AwsClientFactory().CreateS3Client();
         private static readonly IAmazonDynamoDB DynamoDbClient = new AwsClientFactory().CreateDynamoDbClient();

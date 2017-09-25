@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\ApiTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
     <Compile Include="AwsAccess\DynamoDbDelete.cs" />

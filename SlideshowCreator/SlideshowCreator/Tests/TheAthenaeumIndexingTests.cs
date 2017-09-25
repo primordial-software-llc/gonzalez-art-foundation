@@ -17,7 +17,7 @@ namespace SlideshowCreator.Tests
         public const int CONCURRENCY = 100;
         private readonly Throttle throttle = new Throttle();
         private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
-        private readonly PrivateConfig privateConfig = PrivateConfig.Create("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json");
+        private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private TheAthenaeumIndexer transientClassifier;
         private VpnCheck vpnCheck;
 

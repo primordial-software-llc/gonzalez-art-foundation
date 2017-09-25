@@ -108,46 +108,5 @@ namespace SlideshowCreator.Tests.DataAccessTests
             Console.WriteLine($"Average level of parallelism determined by actual vs projected one-by-one is {observedLevelOfParallelism}.");
         }
 
-        [Test]
-        public void Check_For_Secrets_In_Source_Code()
-        {
-            var files = Directory.EnumerateFiles(
-                "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator",
-                "*.*",
-                SearchOption.AllDirectories
-            ).ToList();
-            files.Remove(PrivateConfig.PersonalJson);
-
-            var gitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\.gitignore");
-
-            Assert.IsTrue(gitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
-
-            var secrets = File.ReadAllText(PrivateConfig.PersonalJson);
-            var secretsJson = JObject.Parse(secrets);
-            
-            int filesChecked = 0;
-            foreach (string file in files)
-            {
-                try
-                {
-                    var data = File.ReadAllText(file, Encoding.UTF8);
-                    foreach (var secretJson in secretsJson)
-                    {
-                        var secretValue = secretJson.Value.ToString().ToLower();
-                        if (data.ToLower().Contains(secretValue))
-                        {
-                            throw new Exception($"Secret {secretValue} discovered in source code at: " + file);
-                        }
-                    }
-                    filesChecked += 1;
-                }
-                catch (IOException e)
-                {
-                    Console.WriteLine("Skipped: " + e.Message);
-                }
-            }
-            Console.WriteLine($"checked {filesChecked} of {files.Count} files.");
-        }
-
     }
 }

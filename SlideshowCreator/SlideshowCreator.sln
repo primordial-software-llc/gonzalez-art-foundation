@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlideshowIndexer", "Slidesh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndexBackend", "IndexBackend\IndexBackend.csproj", "{A9DC96F0-E723-4852-AAA5-011B7122EAA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nest", "Nest\Nest.csproj", "{6BDFF792-4B87-4000-A2B7-69F1B71E67B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{A9DC96F0-E723-4852-AAA5-011B7122EAA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9DC96F0-E723-4852-AAA5-011B7122EAA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9DC96F0-E723-4852-AAA5-011B7122EAA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BDFF792-4B87-4000-A2B7-69F1B71E67B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BDFF792-4B87-4000-A2B7-69F1B71E67B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BDFF792-4B87-4000-A2B7-69F1B71E67B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BDFF792-4B87-4000-A2B7-69F1B71E67B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

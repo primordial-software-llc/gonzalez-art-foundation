@@ -36,17 +36,38 @@ namespace IndexBackend
         [JsonProperty("secretInitializationVector")]
         public string SecretInitializationVector { get; set; }
 
-        public string DecryptedIp
+        [JsonProperty("nestEncryptedProductId")]
+        public string NestEncryptedProductId { get; set; }
+
+        [JsonProperty("nestEncryptedProductSecret")]
+        public string NestEncryptedProductSecret { get; set; }
+
+        [JsonProperty("nestEncryptedAuthUrl")]
+        public string NestEncryptedAuthUrl { get; set; }
+
+        public string NestDecryptedProductId => Decrypt(NestEncryptedProductId);
+        public string NestDecryptedProductSecret => Decrypt(NestEncryptedProductSecret);
+        public string NestDecryptedAuthUrl => Decrypt(NestEncryptedAuthUrl);
+        public string DecryptedIp => Decrypt(SecretIP);
+
+        public string Decrypt(string encryptedSecret)
         {
-            get
-            {
-                var simpleSymetricCrypto = new SymmetricKeyCryptography();
-                var decryptedIp = simpleSymetricCrypto.Decrypt(
-                    SecretIP,
-                    SecretPassword,
-                    SecretInitializationVector);
-                return decryptedIp.Replace(SecretPadding, string.Empty);
-            }
+            var simpleSymetricCrypto = new SymmetricKeyCryptography();
+            var decryptedIp = simpleSymetricCrypto.Decrypt(
+                encryptedSecret,
+                SecretPassword,
+                SecretInitializationVector);
+            return decryptedIp.Replace(SecretPadding, string.Empty);
+        }
+
+        public string CreateEncryptedValueWithPadding(string unencryptedSecret)
+        {
+            var simpleSymetricCrypto = new SymmetricKeyCryptography();
+            var decryptedIp = simpleSymetricCrypto.Encrypt(
+                unencryptedSecret + SecretPadding,
+                SecretPassword,
+                SecretInitializationVector);
+            return decryptedIp.Replace(SecretPadding, string.Empty);
         }
 
         public static string PersonalJson => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\personal.json";
@@ -56,7 +77,7 @@ namespace IndexBackend
             return Create(PersonalJson);
         }
 
-        public static PrivateConfig Create(string fullPath)
+        private static PrivateConfig Create(string fullPath)
         {
             var json = File.ReadAllText(fullPath);
             return JsonConvert.DeserializeObject<PrivateConfig>(json);
