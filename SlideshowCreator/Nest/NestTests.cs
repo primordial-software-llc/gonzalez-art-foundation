@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using IndexBackend;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -15,9 +18,73 @@ namespace Nest
         {
             var privateConfig = PrivateConfig.CreateFromPersonalJson();
             Console.WriteLine(privateConfig.NestDecryptedAuthUrl);
+            Console.WriteLine(privateConfig.NestDecryptedAccessToken);
+        }
+        
+        [Test]
+        public void Use_Token()
+        {
+            var privateConfig = PrivateConfig.CreateFromPersonalJson();
+            JObject nestSummary = GetNestSummary(privateConfig.NestDecryptedAccessToken);
+
+            JToken devices = nestSummary["devices"];
+            List<JProperty> cameras = devices["cameras"].Values<JProperty>().ToList();
+
+            Console.WriteLine("Cameras: " + cameras.Count);
+            foreach (JProperty cameraProperty in cameras)
+            {
+                Console.WriteLine("Checking camera " + cameraProperty.Name);
+                var camera = cameraProperty.Value;
+
+                var isOnline = camera.Value<bool>("is_online");
+                var isStreaming = camera.Value<bool>("is_streaming");
+                
+                Console.WriteLine("Is online: " + isOnline);
+                Console.WriteLine("Is streaming: " + isStreaming);
+                Console.WriteLine(camera);
+
+                if (!isOnline || !isStreaming)
+                {
+                    throw new Exception("Potential denial of service camera isn't online or isn't streaming.");
+                }
+            }
         }
 
-        [TestCase("")]
+            /*
+            Console.WriteLine(nestSummary.ToString());
+            var cameras = 
+            foreach (var cameraArray in nestSummary.Value<JArray>("cameras"))
+            {
+                Console.WriteLine("Cameras: " + cameraArray.Count());
+            }*/
+
+        /// <remarks>
+        /// HttpClient will not send default headers on a redirect for security reasons.
+        /// </remarks>
+        private JObject GetNestSummary(string accessToken)
+        {
+            var noFollowRedirectHandler = new HttpClientHandler { AllowAutoRedirect = false };
+            JObject nestSummary;
+
+            using (var client = new HttpClient(noFollowRedirectHandler))
+            {
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
+                client.DefaultRequestHeaders
+                    .Accept
+                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = client.GetAsync("https://developer-api.nest.com").Result;
+                Assert.AreEqual(HttpStatusCode.TemporaryRedirect, response.StatusCode);
+                Assert.AreEqual("https://firebase-apiserver08-tah01-iad01.dapi.production.nest.com:9553/", response.Headers.Location.AbsoluteUri);
+
+                var redirectedTextResponse = client.GetStringAsync(response.Headers.Location).Result;
+                nestSummary = JObject.Parse(redirectedTextResponse);
+            }
+
+            return nestSummary;
+        }
+
+        //[TestCase("")]
         public void CreateAuthTokenFromPin(string customerAuthPin)
         {
             // https://codelabs.developers.google.com/codelabs/wwn-api-quickstart/#4
@@ -48,8 +115,10 @@ namespace Nest
             Assert.AreEqual(315360000, nestAuthResponse.Value<int>("expires_in"));
             // Here's what gets returned if the PIN has already been used.
             // {"error":"oauth2_error","error_description":"authorization code not found","instance_id":"8e2d9a01-7e8d-4249-b4ea-108560e65748"}
-        }
 
+            Console.WriteLine("Encrypted token for config file: " +
+               privateConfig.CreateEncryptedValueWithPadding(nestAuthResponse.Value<string>("access_token")));
+        }
 
     }
 }
