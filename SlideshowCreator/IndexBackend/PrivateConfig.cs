@@ -45,9 +45,13 @@ namespace IndexBackend
         [JsonProperty("nestEncryptedAuthUrl")]
         public string NestEncryptedAuthUrl { get; set; }
 
+        [JsonProperty("nestEncryptedAccessToken")]
+        public string NestEncryptedAccessToken { get; set; }
+
         public string NestDecryptedProductId => Decrypt(NestEncryptedProductId);
         public string NestDecryptedProductSecret => Decrypt(NestEncryptedProductSecret);
         public string NestDecryptedAuthUrl => Decrypt(NestEncryptedAuthUrl);
+        public string NestDecryptedAccessToken => Decrypt(NestEncryptedAccessToken);
         public string DecryptedIp => Decrypt(SecretIP);
 
         public string Decrypt(string encryptedSecret)

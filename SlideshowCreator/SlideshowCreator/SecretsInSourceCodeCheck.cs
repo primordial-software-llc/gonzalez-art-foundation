@@ -54,6 +54,7 @@ namespace SlideshowCreator
                     CheckForSecret(sourceCode, file, privateConfig.NestDecryptedProductId);
                     CheckForSecret(sourceCode, file, privateConfig.NestDecryptedProductSecret);
                     CheckForSecret(sourceCode, file, privateConfig.NestDecryptedAuthUrl);
+                    CheckForSecret(sourceCode, file, privateConfig.NestDecryptedAccessToken);
 
                     filesChecked += 1;
                 }
