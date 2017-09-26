@@ -77,9 +77,6 @@
     <Compile Include="Tests\TheAthenaeumIndexingTests.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tests\UnitTests\CloudFlareImUnderAttackModeFullHtmlTests.cs" />
-    <Compile Include="Tests\UnitTests\CloudFlareImUnderAttackModeHtmlToClearanceRequest.cs" />
-    <Compile Include="Tests\UnitTests\CloudFlareImUnderAttackModeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">

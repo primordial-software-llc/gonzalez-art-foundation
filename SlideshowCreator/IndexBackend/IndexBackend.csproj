@@ -39,6 +39,9 @@
     <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.S3.3.3.11\lib\net45\AWSSDK.S3.dll</HintPath>
     </Reference>
+    <Reference Include="CloudFlareImUnderAttackMode">
+      <HintPath>..\..\Dlls\CloudFlareImUnderAttackMode.dll</HintPath>
+    </Reference>
     <Reference Include="Cryptography">
       <HintPath>..\..\Dlls\Cryptography.dll</HintPath>
     </Reference>
@@ -62,7 +65,6 @@
   <ItemGroup>
     <Compile Include="ClassificationConversion.cs" />
     <Compile Include="Classifier.cs" />
-    <Compile Include="CloudFlareImUnderAttack\DecodeChallengeQuestion.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="AwsClientFactory.cs" />
     <Compile Include="DynamoDbToS3Backup.cs" />
@@ -86,7 +88,6 @@
     <Compile Include="Throttle.cs" />
     <Compile Include="Indexing\TheAthenaeumIndexer.cs" />
     <Compile Include="VpnCheck.cs" />
-    <Compile Include="XmlDocFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
