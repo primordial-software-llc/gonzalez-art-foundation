@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -10,6 +11,7 @@ namespace SlideshowIndexer
     class FileIdQueueIndexer
     {
         private readonly Object dataLock = new Object();
+        private readonly int maxLevelOfParallelism = 5;
 
         public void Index(IIndex indexer)
         {
@@ -19,38 +21,59 @@ namespace SlideshowIndexer
                 return;
             }
 
-            var parallelOptions = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = 5
-            };
-
-            var idQueue = File.ReadAllLines(indexer.IdFileQueuePath)
+            List<int> idQueue = File.ReadAllLines(indexer.IdFileQueuePath)
                 .Select(int.Parse)
                 .ToList();
-            var iterableIdQueue = idQueue.ToList();
-
-            Parallel.ForEach(iterableIdQueue, parallelOptions, id =>
+            
+            while (idQueue.Any())
             {
-                Console.WriteLine("Classifying: " + id);
-                indexer.Index(id);
+                List<int> nextBatch = idQueue.Take(maxLevelOfParallelism).ToList();
 
-                Console.WriteLine("Updating queue: " + id);
-                lock (dataLock) // Doesn't really matter with only 5 threads on an SSD. I want to use SQS, but I'm finding ithard to justify when I can't go past 5 threads and the process isn't distributed. SQS was looking nice with 10+ threads, but network bottleneck is hit quick.
-                { 
-                    idQueue.Remove(id);
-                    File.WriteAllLines(indexer.IdFileQueuePath, idQueue.Select(x => x.ToString()));
-                }
-                Console.WriteLine("Done indxig: " + id);
-
-                var throttleMs = indexer.GetNextThrottleInMilliseconds;
-                if (throttleMs > 0)
+                try
                 {
-                    Console.WriteLine("Throttling: " + id + " for " + throttleMs + "ms");
-                    Thread.Sleep(throttleMs);
+                    IndexBatch(indexer, nextBatch, idQueue);
                 }
-            });
-
+                catch (System.Net.Http.HttpRequestException httpEx)
+                {
+                    Console.WriteLine("Http exception encountered - re-initializing the http client and retrying: " + httpEx);
+                    indexer.RefreshConnection();
+                }
+            }
+            
             Console.WriteLine("Indexing complete");
+        }
+        
+        private void IndexBatch(IIndex indexer, List<int> batch, List<int> idQueue)
+        {
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = maxLevelOfParallelism
+            };
+            Parallel.ForEach(batch, parallelOptions, id =>
+            {
+                Index(indexer, id, idQueue);
+            });
+        }
+
+        private void Index(IIndex indexer, int id, List<int> idQueue)
+        {
+            Console.WriteLine("Classifying: " + id);
+            indexer.Index(id);
+
+            Console.WriteLine("Updating queue: " + id);
+            lock (dataLock)
+            {
+                idQueue.Remove(id);
+                File.WriteAllLines(indexer.IdFileQueuePath, idQueue.Select(x => x.ToString()));
+            }
+            Console.WriteLine("Done indexing: " + id);
+
+            var throttleMs = indexer.GetNextThrottleInMilliseconds;
+            if (throttleMs > 0)
+            {
+                Console.WriteLine("Throttling: " + id + " for " + throttleMs + "ms");
+                Thread.Sleep(throttleMs);
+            }
         }
 
     }

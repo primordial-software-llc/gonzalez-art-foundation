@@ -56,6 +56,11 @@ namespace IndexBackend.Indexing
             return classification;
         }
 
+        public void RefreshConnection()
+        {
+            NgaDataAccess.Init();
+        }
+
         public string SendToS3(byte[] zipFile, int id)
         {
             var imgExt = ".jpg";

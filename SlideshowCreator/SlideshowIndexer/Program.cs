@@ -58,8 +58,8 @@ namespace SlideshowIndexer
         {
             if (indexType == IndexType.NationalGalleryOfArt)
             {
-                var ngaDataAccess = new NationalGalleryOfArtDataAccess();
-                ngaDataAccess.Init(new Uri(PrivateConfig.Target2Url));
+                var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
+                ngaDataAccess.Init();
                 var indexer = new NationalGalleryOfArtIndexer(S3Client, DynamoDbClient, ngaDataAccess);
                 return indexer;
             }

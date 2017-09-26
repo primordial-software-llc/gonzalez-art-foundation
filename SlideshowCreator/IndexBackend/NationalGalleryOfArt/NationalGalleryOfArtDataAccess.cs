@@ -9,11 +9,19 @@ namespace IndexBackend.NationalGalleryOfArt
     public class NationalGalleryOfArtDataAccess
     {
         protected virtual HttpClient Client { get; set; }
+        protected Uri Uri { get; }
 
-        public void Init(Uri uri)
+        public NationalGalleryOfArtDataAccess(Uri uri)
         {
+            Uri = uri;
+        }
+
+        public void Init()
+        {
+            Client?.Dispose();
+
             var factory = new CloudFlareImUnderAttackModeHttpClientFactory();
-            Client = factory.Create(uri);
+            Client = factory.Create(Uri);
         }
 
         public void SetSearchResultsTo75PerPage()

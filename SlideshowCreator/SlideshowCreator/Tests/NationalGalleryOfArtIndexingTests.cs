@@ -30,8 +30,8 @@ namespace SlideshowCreator.Tests
         public void Setup_Tests_Once()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            ngaDataAccess = new NationalGalleryOfArtDataAccess();
-            ngaDataAccess.Init(new Uri(privateConfig.Target2Url));
+            ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
+            ngaDataAccess.Init();
             indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
 
             var galleryClient = new GalleryClient(privateConfig.GalleryUsername, privateConfig.GalleryPassword);

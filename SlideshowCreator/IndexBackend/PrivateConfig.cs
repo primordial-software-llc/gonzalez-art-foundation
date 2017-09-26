@@ -15,9 +15,6 @@ namespace IndexBackend
         [JsonProperty("pageNotFoundIndicatorText")]
         public string PageNotFoundIndicatorText { get; set; }
 
-        [JsonProperty("target2Url")]
-        public string Target2Url { get; set; }
-
         [JsonProperty("galleryUsername")]
         public string GalleryUsername { get; set; }
 

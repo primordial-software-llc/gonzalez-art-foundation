@@ -11,5 +11,6 @@ namespace IndexBackend.Indexing
         int GetNextThrottleInMilliseconds { get; }
 
         ClassificationModel Index(int id);
+        void RefreshConnection();
     }
 }

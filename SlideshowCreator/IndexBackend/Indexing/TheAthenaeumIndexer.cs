@@ -53,5 +53,10 @@ namespace IndexBackend.Indexing
 
             return classification;
         }
+
+        public void RefreshConnection()
+        {
+            // Nothing to do. No keep-alives. No cookies required for access. Throttle is in use already.
+        }
     }
 }
