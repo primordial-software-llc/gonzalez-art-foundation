@@ -24,15 +24,19 @@ namespace SlideshowCreator
         public void Check_For_Secrets_In_Source_Code()
         {
             var files = Directory.EnumerateFiles(
-                "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator",
+                "C:\\Users\\peon\\Desktop\\projects",
                 "*.*",
                 SearchOption.AllDirectories
             ).ToList();
             files.Remove(PrivateConfig.PersonalJson);
-
+            files.Remove("C:\\Users\\peon\\Desktop\\projects\\Nest\\Nest\\aws-lambda-tools-defaults.json");
+            
             var gitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\.gitignore");
 
             Assert.IsTrue(gitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
+
+            var nestGitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\Nest\\.gitignore");
+            Assert.IsTrue(nestGitIgnore.Contains("Nest/aws-lambda-tools-defaults.json"));
 
             var secrets = File.ReadAllText(PrivateConfig.PersonalJson);
             var secretsJson = JObject.Parse(secrets);
@@ -60,7 +64,14 @@ namespace SlideshowCreator
                 }
                 catch (IOException e)
                 {
-                    Console.WriteLine("Skipped: " + e.Message);
+                    if (e.Message.Contains("\\.vs\\")) // This whole folder is gitignored.
+                    {
+                        Console.WriteLine("Skipped visual studio file: " + e.Message);
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
             Console.WriteLine($"checked {filesChecked} of {files.Count} files.");
