@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using IndexBackend.Indexing;
@@ -33,10 +34,28 @@ namespace SlideshowIndexer
                 {
                     IndexBatch(indexer, nextBatch, idQueue);
                 }
-                catch (System.Net.Http.HttpRequestException httpEx)
+                catch (AggregateException aggregateException)
                 {
-                    Console.WriteLine("Http exception encountered - re-initializing the http client and retrying: " + httpEx);
-                    indexer.RefreshConnection();
+                    AggregateException flattenedException = aggregateException.Flatten();
+                    if (flattenedException.InnerExceptions.Any(ex => ex is HttpRequestException))
+                    {
+                        var exMsg = "HTTP EXCEPTION ENCOUNTERED:" +
+                                    aggregateException;
+                        Console.WriteLine(exMsg);
+                        // I'm getting 503 response after backing off rapidly from the CloudFlare auth.
+                        // My guess is that it's not the intermittent 503's I've been getting when testing
+                        // (or perhaps it is and this is the cause of those).
+                        // I backoff for a few minutes to let the DDOS protection cool-down.
+                        var backOff = TimeSpan.FromMinutes(3);
+                        Console.WriteLine($"BACKING OFF: {backOff.TotalMilliseconds}ms");
+                        Thread.Sleep(backOff);
+                        Console.WriteLine("BACKOFF COMPLETE - REFRESHING CONNECTION");
+                        indexer.RefreshConnection();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
             

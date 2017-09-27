@@ -67,6 +67,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BackpageCrawler.cs" />
+    <Compile Include="HttpHeaders.cs" />
+    <Compile Include="Tests\Backpage\BackpageResponseTests.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\ApiTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
