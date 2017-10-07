@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using NUnit.Framework;
 
@@ -84,7 +85,7 @@ namespace SlideshowCreator
                 response = Client.GetAsync(sampleLinkWomenSeekingMen).Result;
                 html = response.Content.ReadAsStringAsync().Result;
                 response.EnsureSuccessStatusCode();
-                adUris = ParseAdLinks(html);
+                adUris = ParseAdLinks(html, section);
             }
             catch (Exception exception) // Network error where a response may not exist if the connection gets closed. Not a timeout where the connection just stays open.
             {
@@ -130,16 +131,36 @@ namespace SlideshowCreator
                 }
             }
 
-            return adUris;
+            return adUris.Distinct().ToList();
         }
 
-        public List<Uri> ParseAdLinks(string html)
+        public List<Uri> ParseAdLinks(string html, string section)
         {
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
-            var ads = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 'cat')]");
-            var adLinks = ads.Select(x => x.Descendants("a").Single().Attributes["href"].Value);
-            return adLinks.Select(x => new Uri(x)).ToList();
+            var links = new List<Uri>();
+
+            var linkElements = htmlDoc.DocumentNode.Descendants("a");
+            foreach (var linkElement in linkElements)
+            {
+                var link = linkElement.Attributes["href"].Value;
+                if (LinkIsAdd(link, section))
+                {
+                    links.Add(new Uri(link));
+                }
+            }
+
+            return links;
+        }
+
+        public static bool LinkIsAdd(string link, string section)
+        {
+            if (!link.ToLower().Contains(section.ToLower()))
+            {
+                return false;
+            }
+
+            return Regex.IsMatch(link, "\\d+(\\.\\d+)?$");
         }
 
     }

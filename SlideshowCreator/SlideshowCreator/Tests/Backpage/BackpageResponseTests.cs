@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IndexBackend;
 using NUnit.Framework;
@@ -52,14 +53,19 @@ namespace SlideshowCreator.Tests.Backpage
                 response.Headers, HttpHeaders.Names.SERVER, HttpHeaders.Server.ECS));
         }
 
-        /// <summary>
-        /// This only takes about 5 minutes. Not quite as fast as I wanted, but not too bad.
-        /// I'm getting rate limited. Not sure if it's worth circumventing given the relative speed.
-        /// It's probably more important to wait and deal with when getting the details.
-        /// 
-        /// This isn't perfect, because it doesn't get all for the day.
-        /// However, the plan was to scan multiple times a day to see what's getting reported and removed.
-        /// </summary>
+        [Test]
+        public void Get_Ads_On_2017_10_6_For_Los_Angeles()
+        {
+            var adLinksInGeographicRegion = backpageCrawler.GetAdLinksFromSection(
+                new Uri("http://losangeles.backpage.com"), BackpageCrawler.WOMEN_SEEKING_MEN_SECTION, 0);
+            Console.WriteLine(adLinksInGeographicRegion.Count);
+
+            foreach (var link in adLinksInGeographicRegion)
+            {
+                Console.WriteLine(link);
+            }
+        }
+
         [Test]
         public void Get_All_AdLinksInUsOnFirstPageOfEachSection()
         {
@@ -69,14 +75,10 @@ namespace SlideshowCreator.Tests.Backpage
 
             List<Uri> usAdLinks = new List<Uri>();
             //var adLinksInGeographicRegion = backpageCrawler.GetAdLinksFromSection(linkDictionary.Values.First().First(), BackpageCrawler.WOMEN_SEEKING_MEN_SECTION, 0);
+            //usAdLinks.AddRange(adLinksInGeographicRegion);
 
             foreach (KeyValuePair<string, List<Uri>> links in linkDictionary)
             {
-                // Could possibly go in parallel two, but it's not safe yet. Needs more testing.
-                // I trust this code here though.
-                //var parallelOptions = new ParallelOptions();
-                //parallelOptions.MaxDegreeOfParallelism = int.MaxValue; // Getting 502 errors with int.maxValue
-                //Parallel.ForEach(links.Value, parallelOptions, geographicLink => // Links by state e.g. New York, California, Texas, etc.
                 foreach (var geographicLink in links.Value)
                 {
                     var adLinksInGeographicRegion = backpageCrawler.GetAdLinksFromSection(geographicLink, BackpageCrawler.WOMEN_SEEKING_MEN_SECTION);
@@ -93,6 +95,16 @@ namespace SlideshowCreator.Tests.Backpage
             {
                 Console.WriteLine(usAdLink);
             }
+        }
+
+        [Test]
+        public void Ends_With_Digits()
+        {
+            Assert.IsFalse(BackpageCrawler.LinkIsAdd("http://auburn.backpage.com/WomenSeekMen/?layout=gallery", BackpageCrawler.WOMEN_SEEKING_MEN_SECTION));
+            Assert.IsFalse(BackpageCrawler.LinkIsAdd("http://auburn.backpage.com/WomenSeekMen/?layout=video", BackpageCrawler.WOMEN_SEEKING_MEN_SECTION));
+
+            Assert.IsTrue(BackpageCrawler.LinkIsAdd("http://auburn.backpage.com/WomenSeekMen/im-back-all-3-call-me-big-bootie-red-outs-ins-205-566-56-94-ll-3-ready/24863202", BackpageCrawler.WOMEN_SEEKING_MEN_SECTION));
+            Assert.IsTrue(BackpageCrawler.LinkIsAdd("http://auburn.backpage.com/WomenSeekMen/fl%CE%B1%CF%89l%D1%94%D1%95%D1%95-%D0%B2%D1%94%CE%B1%CF%85%D1%82%D1%83-%CF%83%D0%B8-%CF%85%D1%82%D1%83-%CF%81%CF%85re-%CF%81l-%CE%B1%CE%B4%CF%85r%CE%B5-/24420777", BackpageCrawler.WOMEN_SEEKING_MEN_SECTION));
         }
 
         [Test]
