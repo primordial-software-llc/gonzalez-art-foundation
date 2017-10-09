@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using IndexBackend.Backpage;
 using NUnit.Framework;
 
 namespace SlideshowCreator
@@ -73,10 +74,10 @@ namespace SlideshowCreator
             return geographicLocationLinkDictionary;
         }
 
-        public List<Uri> GetAdLinksFromSection(Uri uri, string section, int attempt = 0)
+        public List<BackpageAd> GetAdLinksFromSection(Uri uri, string section, int attempt = 0)
         {
             string sampleLinkWomenSeekingMen = uri + section;
-            List<Uri> adUris;
+            List<BackpageAd> adUris;
             HttpResponseMessage response = null;
             string html = null;
 
@@ -132,22 +133,40 @@ namespace SlideshowCreator
                 }
             }
 
-            return adUris.Distinct().ToList();
+            // If the ad appears multiple times, give me the ad with an age over the duplicate that doesn't have an age.
+            // This occurs on the sponsored ads on the side. I can't say with 100% certainty that they aren't all duplicates.
+            adUris = adUris.OrderByDescending(x => x.Age).ToList();
+            adUris = adUris.GroupBy(x => x.Uri).Select(x => x.First()).ToList();
+
+            return adUris;
         }
 
-        public List<Uri> ParseAdLinks(string html, string section)
+        public List<BackpageAd> ParseAdLinks(string html, string section)
         {
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
-            var links = new List<Uri>();
+            var links = new List<BackpageAd>();
 
             var linkElements = htmlDoc.DocumentNode.Descendants("a");
             foreach (var linkElement in linkElements)
             {
                 var link = linkElement.Attributes["href"].Value;
-                if (LinkIsAdd(link, section))
+                var text = linkElement.InnerText;
+                if (LinkIsAdd(link, section) &&
+                    !string.IsNullOrWhiteSpace(text)) // Could be an image link, in which case the text link should exist as well. The gallery portion isn't being used the text ads are.
                 {
-                    links.Add(new Uri(link));
+                    var ad = new BackpageAd {Uri = new Uri(link)};
+                    var textWords = text.Split(' ');
+                    var age = textWords.Last();
+
+                    if (IsNumber(age) &&
+                        textWords.Length >= 2 &&
+                        textWords[textWords.Length - 2].Equals("-")) // Check for age delimiter to eliminate side-ads without age.
+                    {
+                        ad.Age = int.Parse(age);
+                    }
+
+                    links.Add(ad);
                 }
             }
 
@@ -162,6 +181,11 @@ namespace SlideshowCreator
             }
 
             return Regex.IsMatch(link, "\\d+(\\.\\d+)?$");
+        }
+
+        public static bool IsNumber(string value)
+        {
+            return Regex.IsMatch(value, @"^\d+$");
         }
 
     }

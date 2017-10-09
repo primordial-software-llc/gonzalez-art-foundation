@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using IndexBackend;
+using IndexBackend.Backpage;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.Backpage
@@ -73,8 +72,8 @@ namespace SlideshowCreator.Tests.Backpage
             Assert.IsTrue(linkDictionary.All(x => x.Value.Count > 0));
             Assert.AreEqual(435, linkDictionary.Values.Sum(x => x.Count));
 
-            List<Uri> usAdLinks = new List<Uri>();
-
+            List<BackpageAd> usAds = new List<BackpageAd>();
+            
             foreach (KeyValuePair<string, List<Uri>> links in linkDictionary)
             {
                 foreach (var geographicLink in links.Value)
@@ -83,31 +82,35 @@ namespace SlideshowCreator.Tests.Backpage
 
                     foreach (var adLink in adLinksInGeographicRegion)
                     {
-                        usAdLinks.Add(adLink);
+                        usAds.Add(adLink);
                     }
-                    
-                    // Minimum of 7.25 miutes throttling alone here.
-                    // Then add an additional second to the request time
-                    // and that is about 15 minutes to pull a link back from every add.
-
-                    // To get around this is difficult.
-                    // I'll leave that challenge for pulling back the ad content.
-                    // It's going to be far larger. I still dont know the exact numbers.
-                    // Lambda will have to be used to scale that work (and distribute it across IP addresses hopefully).
-                    // I can divvy that wor out easily, but to do it by IP I'm still struggling with it.
-                    // What would be awesome was if I knew the origin IP and can get past the server-side throttle.
-                    // However, if the site isn't a piece of crap, which it doesn't seem to be,
-                    // the origin servers will be white-listed to the CDN edgecast.
-                    // In which case even knowing the origin IP's would be of no use whatsoever.
                     System.Threading.Thread.Sleep(TimeSpan.FromSeconds(1));
                 }
             }
 
-            Console.WriteLine(usAdLinks.Count);
-            foreach (var usAdLink in usAdLinks)
+            var adsThirtyAndUnder = usAds.Where(x => x.Age <= 30 || x.Age == 0).ToList();
+
+            Console.WriteLine("Showing ads for persons aged thirty and under:");
+            Console.WriteLine(adsThirtyAndUnder.Count);
+            foreach (var usAd in adsThirtyAndUnder)
             {
-                Console.WriteLine(usAdLink);
+                Console.WriteLine(usAd.Age + ": " + usAd.Uri);
             }
+        }
+
+        [Test]
+        public void Is_Number_Tests()
+        {
+            Assert.IsFalse(BackpageCrawler.IsNumber("🌟🌟🌟"));
+            Assert.IsFalse(BackpageCrawler.IsNumber("3🚪💯"));
+            Assert.IsFalse(BackpageCrawler.IsNumber("-3"));
+            Assert.IsFalse(BackpageCrawler.IsNumber("a4"));
+            Assert.IsFalse(BackpageCrawler.IsNumber("4b"));
+
+            Assert.IsTrue(BackpageCrawler.IsNumber("4"));
+            Assert.IsTrue(BackpageCrawler.IsNumber("24"));
+            Assert.IsTrue(BackpageCrawler.IsNumber("29"));
+            Assert.IsTrue(BackpageCrawler.IsNumber("37"));
         }
 
         [Test]
