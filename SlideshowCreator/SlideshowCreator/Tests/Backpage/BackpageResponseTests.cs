@@ -74,8 +74,6 @@ namespace SlideshowCreator.Tests.Backpage
             Assert.AreEqual(435, linkDictionary.Values.Sum(x => x.Count));
 
             List<Uri> usAdLinks = new List<Uri>();
-            //var adLinksInGeographicRegion = backpageCrawler.GetAdLinksFromSection(linkDictionary.Values.First().First(), BackpageCrawler.WOMEN_SEEKING_MEN_SECTION, 0);
-            //usAdLinks.AddRange(adLinksInGeographicRegion);
 
             foreach (KeyValuePair<string, List<Uri>> links in linkDictionary)
             {
@@ -83,11 +81,26 @@ namespace SlideshowCreator.Tests.Backpage
                 {
                     var adLinksInGeographicRegion = backpageCrawler.GetAdLinksFromSection(geographicLink, BackpageCrawler.WOMEN_SEEKING_MEN_SECTION);
 
-                    foreach (var adLink in adLinksInGeographicRegion) // Links by city/region e.g. Manhattan, Los Angeles, Dallas
+                    foreach (var adLink in adLinksInGeographicRegion)
                     {
                         usAdLinks.Add(adLink);
                     }
-                }//);
+                    
+                    // Minimum of 7.25 miutes throttling alone here.
+                    // Then add an additional second to the request time
+                    // and that is about 15 minutes to pull a link back from every add.
+
+                    // To get around this is difficult.
+                    // I'll leave that challenge for pulling back the ad content.
+                    // It's going to be far larger. I still dont know the exact numbers.
+                    // Lambda will have to be used to scale that work (and distribute it across IP addresses hopefully).
+                    // I can divvy that wor out easily, but to do it by IP I'm still struggling with it.
+                    // What would be awesome was if I knew the origin IP and can get past the server-side throttle.
+                    // However, if the site isn't a piece of crap, which it doesn't seem to be,
+                    // the origin servers will be white-listed to the CDN edgecast.
+                    // In which case even knowing the origin IP's would be of no use whatsoever.
+                    System.Threading.Thread.Sleep(TimeSpan.FromSeconds(1));
+                }
             }
 
             Console.WriteLine(usAdLinks.Count);

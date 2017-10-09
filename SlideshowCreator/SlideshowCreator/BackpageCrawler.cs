@@ -120,8 +120,9 @@ namespace SlideshowCreator
                             .Any(x => x is HttpRequestException) ||
                     exception is HttpRequestException))
                 {
-                    Console.WriteLine("Waiting 30 seonds for " + uri);
-                    System.Threading.Thread.Sleep(TimeSpan.FromSeconds(30));
+                    var waitPeriod = TimeSpan.FromSeconds(60);
+                    Console.WriteLine($"Waiting {waitPeriod.TotalSeconds} seconds for " + uri);
+                    System.Threading.Thread.Sleep(waitPeriod);
                     Console.WriteLine("Retrying " + uri);
                     adUris = GetAdLinksFromSection(uri, section, attempt + 1);
                 }
