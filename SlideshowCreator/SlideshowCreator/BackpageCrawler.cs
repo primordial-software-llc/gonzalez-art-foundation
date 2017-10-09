@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using GalleryBackend.Model;
 using HtmlAgilityPack;
-using IndexBackend.Backpage;
+using IndexBackend.DataAccess;
 using NUnit.Framework;
 
 namespace SlideshowCreator
 {
     class BackpageCrawler
     {
-        public static Uri UnitedStatesHomePage => new Uri("http://us.backpage.com/");
+        public static Uri UnitedStatesHomePage => new Uri(BackpageAdAccess.SOURCE);
         public const string WOMEN_SEEKING_MEN_SECTION = "WomenSeekMen/";
 
         private HttpClient client;
@@ -74,10 +75,10 @@ namespace SlideshowCreator
             return geographicLocationLinkDictionary;
         }
 
-        public List<BackpageAd> GetAdLinksFromSection(Uri uri, string section, int attempt = 0)
+        public List<BackpageAdModel> GetAdLinksFromSection(Uri uri, string section, int attempt = 0)
         {
             string sampleLinkWomenSeekingMen = uri + section;
-            List<BackpageAd> adUris;
+            List<BackpageAdModel> adUris;
             HttpResponseMessage response = null;
             string html = null;
 
@@ -141,11 +142,11 @@ namespace SlideshowCreator
             return adUris;
         }
 
-        public List<BackpageAd> ParseAdLinks(string html, string section)
+        public List<BackpageAdModel> ParseAdLinks(string html, string section)
         {
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
-            var links = new List<BackpageAd>();
+            var links = new List<BackpageAdModel>();
 
             var linkElements = htmlDoc.DocumentNode.Descendants("a");
             foreach (var linkElement in linkElements)
@@ -155,7 +156,8 @@ namespace SlideshowCreator
                 if (LinkIsAdd(link, section) &&
                     !string.IsNullOrWhiteSpace(text)) // Could be an image link, in which case the text link should exist as well. The gallery portion isn't being used the text ads are.
                 {
-                    var ad = new BackpageAd {Uri = new Uri(link)};
+                    var uri = new Uri(link);
+                    int parsedAge = 0;
                     var textWords = text.Split(' ');
                     var age = textWords.Last();
 
@@ -163,10 +165,10 @@ namespace SlideshowCreator
                         textWords.Length >= 2 &&
                         textWords[textWords.Length - 2].Equals("-")) // Check for age delimiter to eliminate side-ads without age.
                     {
-                        ad.Age = int.Parse(age);
+                        parsedAge = int.Parse(age);
                     }
 
-                    links.Add(ad);
+                    links.Add(new BackpageAdAccess().CreateModel(uri, parsedAge));
                 }
             }
 

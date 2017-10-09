@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using GalleryBackend.Model;
 using IndexBackend;
-using IndexBackend.Backpage;
+using IndexBackend.DataAccess;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.Backpage
@@ -66,13 +67,13 @@ namespace SlideshowCreator.Tests.Backpage
         }
 
         [Test]
-        public void Get_All_AdLinksInUsOnFirstPageOfEachSection()
+        public void Index_All_AdLinksInUsOnFirstPageOfEachSection()
         {
             Assert.AreEqual(51, linkDictionary.Count);
             Assert.IsTrue(linkDictionary.All(x => x.Value.Count > 0));
             Assert.AreEqual(435, linkDictionary.Values.Sum(x => x.Count));
 
-            List<BackpageAd> usAds = new List<BackpageAd>();
+            List<BackpageAdModel> usAds = new List<BackpageAdModel>();
             
             foreach (KeyValuePair<string, List<Uri>> links in linkDictionary)
             {
@@ -89,12 +90,15 @@ namespace SlideshowCreator.Tests.Backpage
             }
 
             var adsThirtyAndUnder = usAds.Where(x => x.Age <= 30 || x.Age == 0).ToList();
-
-            Console.WriteLine("Showing ads for persons aged thirty and under:");
+            Console.WriteLine("Indexing ads for persons aged thirty and under:");
             Console.WriteLine(adsThirtyAndUnder.Count);
+
+            var access = new BackpageAdAccess();
+            var client = new AwsClientFactory().CreateDynamoDbClient();
             foreach (var usAd in adsThirtyAndUnder)
             {
-                Console.WriteLine(usAd.Age + ": " + usAd.Uri);
+                access.Insert(client, usAd);
+                Console.WriteLine("Indexed - " + usAd.Age + ": " + usAd.Uri);
             }
         }
 

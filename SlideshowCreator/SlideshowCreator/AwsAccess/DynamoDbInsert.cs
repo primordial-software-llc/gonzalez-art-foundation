@@ -26,7 +26,7 @@ namespace SlideshowCreator.AwsAccess
 
         public static Dictionary<string, List<WriteRequest>> GetBatchInserts(List<ClassificationModel> classifications)
         {
-            var request = new DynamoDbTableFactory().GetTableDefinition();
+            var request = DynamoDbTableFactoryImageClassification.GetTableDefinition();
 
             var batchWrite = new Dictionary<string, List<WriteRequest>> { [request.TableName] = new List<WriteRequest>() };
 

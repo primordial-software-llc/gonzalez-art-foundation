@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Amazon.DynamoDBv2;
 using IndexBackend;
+using IndexBackend.DataAccess;
 using IndexBackend.Indexing;
 using NUnit.Framework;
 

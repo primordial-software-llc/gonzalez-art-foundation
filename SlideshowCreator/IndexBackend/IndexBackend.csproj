@@ -63,14 +63,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Backpage\BackpageAd.cs" />
     <Compile Include="ClassificationConversion.cs" />
     <Compile Include="Classifier.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="AwsClientFactory.cs" />
+    <Compile Include="DataAccess\BackpageAdAccess.cs" />
     <Compile Include="DynamoDbToS3Backup.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
-    <Compile Include="ImageClassificationAccess.cs" />
+    <Compile Include="DataAccess\ImageClassificationAccess.cs" />
     <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageEncoding.cs" />
@@ -102,6 +102,9 @@
       <Project>{D91AB026-70A1-432F-833E-3F02A17B44CF}</Project>
       <Name>GalleryBackend</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Backpage\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

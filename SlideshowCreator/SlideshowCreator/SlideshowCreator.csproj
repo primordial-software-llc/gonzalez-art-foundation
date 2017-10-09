@@ -69,6 +69,9 @@
   <ItemGroup>
     <Compile Include="BackpageCrawler.cs" />
     <Compile Include="HttpHeaders.cs" />
+    <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
+    <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryBackpageAd.cs" />
+    <Compile Include="Tests\Backpage\BackpageAdTableInfrastructure.cs" />
     <Compile Include="Tests\Backpage\BackpageResponseTests.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\ApiTests.cs" />
@@ -78,7 +81,7 @@
     <Compile Include="Tests\UnitTests\AuthenticationTests.cs" />
     <Compile Include="Tests\NationalGalleryOfArtIndexingTests.cs" />
     <Compile Include="Tests\TheAthenaeumIndexingTests.cs" />
-    <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
+    <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageClassification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

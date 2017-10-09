@@ -8,6 +8,7 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using GalleryBackend.Model;
+using IndexBackend.DataAccess;
 using Newtonsoft.Json;
 
 namespace IndexBackend

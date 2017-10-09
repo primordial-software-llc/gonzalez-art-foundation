@@ -54,6 +54,7 @@
     <Compile Include="Authentication.cs" />
     <Compile Include="AuthenticationTokenModel.cs" />
     <Compile Include="GalleryClient.cs" />
+    <Compile Include="Model\BackpageAdModel.cs" />
     <Compile Include="Model\ClassificationModel.cs" />
     <Compile Include="Model\RequestIPAddress.cs" />
     <Compile Include="Model\WaitTime.cs" />
