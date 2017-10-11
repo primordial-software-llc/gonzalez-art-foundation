@@ -3,6 +3,7 @@ using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using GalleryBackend.Model;
+using IndexBackend.DataAccess.ModelConversions;
 
 namespace IndexBackend.DataAccess
 {

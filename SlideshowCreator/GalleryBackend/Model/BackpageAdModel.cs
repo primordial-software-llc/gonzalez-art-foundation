@@ -16,5 +16,8 @@ namespace GalleryBackend.Model
 
         [JsonProperty("date")]
         public string Date { get; set; }
+
+        [JsonProperty("body")]
+        public string Body { get; set; }
     }
 }

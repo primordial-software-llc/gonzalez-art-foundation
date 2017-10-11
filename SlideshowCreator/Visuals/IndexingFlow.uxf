@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>50</x>
+      <y>20</y>
+      <w>120</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>First Level Link
+--
+us.backpage.com</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>240</x>
+      <y>20</y>
+      <w>220</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>Second Level Links
+--
+http://longbeach.backpage.com/
+http://losangeles.backpage.com/
+http://mendocino.backpage.com/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>160</x>
+      <y>10</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>80.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>520</x>
+      <y>20</y>
+      <w>210</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>Second Level Link Set
+--
+http://mendocino.backpage.com/
+http://merced.backpage.com/
+http://modesto.backpage.com/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>450</x>
+      <y>10</y>
+      <w>90</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>70.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>520</x>
+      <y>120</y>
+      <w>210</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>Second Level Link Set
+--
+http://monterey.backpage.com/
+http://northbay.backpage.com/
+http://eastbay.backpage.com/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>520</x>
+      <y>220</y>
+      <w>210</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>Second Level Link Set
+--
+http://orangecounty.backpage.com/
+http://palmsprings.backpage.com/
+http://palmdale.backpage.com/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>450</x>
+      <y>10</y>
+      <w>90</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>70.0;110.0;40.0;90.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>450</x>
+      <y>10</y>
+      <w>90</w>
+      <h>230</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>70.0;210.0;30.0;180.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>360</y>
+      <w>270</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>Front Page Ads for Second Level Link
+--
+http://mendocino.backpage.com/
+--
+http://mendocino.backpage.com/WomenSeekMen/707-272-8977-estoy-de-vuelta-en-la-ciudad-y-lista-para-jugar/8118877
+http://mendocino.backpage.com/WomenSeekMen/ukiahs-favorite-exotic-gorgeous-asian-mixed-doll-1000-real-perfect-petite-naughty-new-pics/8154482
+http://mendocino.backpage.com/WomenSeekMen/sexy-dominican-waiting-for-you-in-out/8261207</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>50</x>
+      <y>360</y>
+      <w>210</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>Second Level Link Set
+--
+http://mendocino.backpage.com/
+http://merced.backpage.com/
+http://modesto.backpage.com/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>480</y>
+      <w>270</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>Front Page Ads for Second Level Link
+--
+http://merced.backpage.com/WomenSeekMen/
+--
+http://merced.backpage.com/WomenSeekMen/new-in-town-guerita-latina-lista-para-jugar-open-minded-llamame-soy-real/22916602
+http://merced.backpage.com/WomenSeekMen/breail-s-in-town-R%CE%B5al-%CF%84%CE%B8%CF%81-q%CF%85%CE%B1l%CE%B9%CF%84%CE%B3-%C3%9F%CE%B5%CE%B1uty-%CF%81%CF%85r%CE%B5-%CF%81l-%CE%B1%CE%B4%CF%85r%CE%B5-/22915447
+http://merced.backpage.com/WomenSeekMen/jazzy-love/22916382</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>600</y>
+      <w>270</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>Front Page Ads for Second Level Link
+--
+http://modesto.backpage.com/
+--
+http://modesto.backpage.com/WomenSeekMen/classy-ebony-come-play-quality-provider-new-in-town-20/20910463
+http://modesto.backpage.com/WomenSeekMen/ready-for-fun-hosting/22441382
+http://modesto.backpage.com/WomenSeekMen/9254642469-sexy-100-real-wett-petite-puerto-rican-princess/21293263</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>40</x>
+      <y>100</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;260.0;10.0;10.0;480.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>250</x>
+      <y>350</y>
+      <w>80</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>60.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>250</x>
+      <y>350</y>
+      <w>80</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>60.0;130.0;30.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>250</x>
+      <y>350</y>
+      <w>80</w>
+      <h>270</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>60.0;250.0;20.0;200.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>570</x>
+      <y>310</y>
+      <w>490</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>430.0;80.0;470.0;80.0;470.0;10.0;10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>650</x>
+      <y>360</y>
+      <w>350</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>Ad
+http://mendocino.backpage.com/WomenSeekMen/11
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>570</x>
+      <y>380</y>
+      <w>100</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+Next Ad</panel_attributes>
+    <additional_attributes>10.0;20.0;80.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>740</x>
+      <y>480</y>
+      <w>170</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>DynamoDb</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>810</x>
+      <y>420</y>
+      <w>30</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;60.0;10.0;10.0</additional_attributes>
+  </element>
+</diagram>

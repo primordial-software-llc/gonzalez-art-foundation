@@ -9,6 +9,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using GalleryBackend.Model;
 using IndexBackend.DataAccess;
+using IndexBackend.DataAccess.ModelConversions;
 using Newtonsoft.Json;
 
 namespace IndexBackend

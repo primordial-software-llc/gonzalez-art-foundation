@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Amazon.DynamoDBv2.Model;
-using GalleryBackend.Model;
 using IndexBackend;
-using SlideshowCreator.InfrastructureAsCode;
+using IndexBackend.DataAccess.ModelConversions;
 
 namespace SlideshowCreator.AwsAccess
 {
@@ -11,31 +9,21 @@ namespace SlideshowCreator.AwsAccess
     {
         public const int BATCH_SIZE = 25;
 
-        public static List<List<ClassificationModel>> Batch(List<ClassificationModel> classifications)
+        public static List<List<T>> Batch<T>(List<T> classifications)
         {
-            List<List<ClassificationModel>> classificationBatches = new List<List<ClassificationModel>>();
-
-            while (classifications.Any())
-            {
-                classificationBatches.Add(classifications.Take(BATCH_SIZE).ToList());
-                classifications = classifications.Skip(BATCH_SIZE).ToList();
-            }
-
-            return classificationBatches;
+            return Batcher.Batch(BATCH_SIZE, classifications);
         }
 
-        public static Dictionary<string, List<WriteRequest>> GetBatchInserts(List<ClassificationModel> classifications)
+        public static Dictionary<string, List<WriteRequest>> GetBatchInserts<T>(List<T> pocoModels, IModelConversion<T> modelConversion)
         {
-            var request = DynamoDbTableFactoryImageClassification.GetTableDefinition();
+            var batchWrite = new Dictionary<string, List<WriteRequest>> { [modelConversion.DynamoDbTableName] = new List<WriteRequest>() };
 
-            var batchWrite = new Dictionary<string, List<WriteRequest>> { [request.TableName] = new List<WriteRequest>() };
-
-            foreach (var classification in classifications)
+            foreach (var pocoModel in pocoModels)
             {
-                var dyamoDbModel = new ClassificationConversion().ConvertToDynamoDb(classification);
+                var dyamoDbModel = modelConversion.ConvertToDynamoDb(pocoModel);
                 var putRequest = new PutRequest(dyamoDbModel);
                 var writeRequest = new WriteRequest(putRequest);
-                batchWrite[request.TableName].Add(writeRequest);
+                batchWrite[modelConversion.DynamoDbTableName].Add(writeRequest);
             }
 
             return batchWrite;

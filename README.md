@@ -1,5 +1,137 @@
 # Slide Show Creator
 
+
+Alright so here is my grand plan for scaling indexing. While running I thought about a way to distribute the load in what I consider a remarkable way. It will get that 15 minute time down to pull all the ad links way down and optimize from the top.
+
+There are about 435 sections. AWS has the following 14 regions:
+
+1. us-east-1 US East (N. Virginia)
+2. us-east-2 US East (Ohio)
+3. us-west-1 US West (N. California)
+4. us-west-2 US West (Oregon)
+5. ca-central-1 Canada (Central)
+6. eu-west-1 EU (Ireland)
+7. eu-central-1 EU (Frankfurt)
+8. eu-west-2 EU (London)
+9. ap-northeast-1 Asia Pacific (Tokyo)
+10. ap-northeast-2 Asia Pacific (Seoul)
+11. p-southeast-1 Asia Pacific (Singapore)
+12. ap-southeast-2 Asia Pacific (Sydney)
+13. ap-south-1 Asia Pacific (Mumbai)
+14. sa-east-1 South America (São Paulo)
+
+I don't think I can use china for my purposes and definetely not US Gov Cloud
+15. China (Beijing) - cn-north-1
+16. US GovCloud West (Oregon) - us-gov-west-1
+
+The beauty of this process is that I don't care about latency. I mean there are only about 35,00 ads. That's 35,000 requests after the initial 435 requests to get the front page ads for each US geographical region. If you think about 35,000 requests isn't that much. The limiting factor is the CDN's rate limiter. Latency isn't an issue and I can scale this globally.
+
+The great thing about scaling globally is that I'm pretty much guaranteed to get a new IP. IP's represent physical locations so I'm guaranteed to have at least 14 IP addresses. Potentially even more, but I can only operate on absolute certainties. Each geographical region I expect to have at least one set of distinct IP's. So I can distribute the 35,000 ads over 14 physical machines (ahh the cloud doesn't escape physicalities)
+
+I will have to create a special deployment process from scratch to upload one piece of code to 14 symmetrical lambda functions with the only variance being region. This is one of the great reasons to automate these processes. After speed there is `perfection`. I hate writing for the sake of speed. I love writing for the sake of perfection. It's just not feasible to deploy to 14 geographic regions and expect to have the same application. I would be nuts to think that. It's hard enough to manage one version.
+
+I am calling this the `Lambda Symphony`. Now `Lambda Symphony` will take some .net core c# interface and publish the implementations all around the globe. Now the underlying code will all access data in one region US however, I will have a global network piping the data into one central location! Pretty sick huh? Worst case scenario, I need to develop a web service to pipe the data, but AWS should itself be operating on web services so I should have that taken care of for me. So here's what it will look like broken out.
+
+
+## Get the link dictionary
+
+For example:
+
+- http://longbeach.backpage.com/
+- http://losangeles.backpage.com/
+- http://mendocino.backpage.com/
+
+## Split the link dictionary by region
+
+For example:
+
+1. us-east-1 US East (N. Virginia)
+- http://mendocino.backpage.com/
+- http://merced.backpage.com/
+- http://modesto.backpage.com/
+
+2. us-east-2 US East (Ohio)
+- http://monterey.backpage.com/
+- http://northbay.backpage.com/
+- http://eastbay.backpage.com/
+
+3. us-west-1 US West (N. California)
+- http://orangecounty.backpage.com/
+- http://palmsprings.backpage.com/
+- http://palmdale.backpage.com/
+
+4. us-west-2 US West (Oregon)
+- http://redding.backpage.com/
+- http://sacramento.backpage.com/
+- http://sandiego.backpage.com/
+
+5. ca-central-1 Canada (Central)
+- http://sanfernandovalley.backpage.com/
+- http://sf.backpage.com/
+- http://sangabrielvalley.backpage.com/
+
+6. eu-west-1 EU (Ireland)
+- http://sanjose.backpage.com/
+- http://sanluisobispo.backpage.com/
+- http://sanmateo.backpage.com/
+
+7. eu-central-1 EU (Frankfurt)
+- http://santabarbara.backpage.com/
+- http://santacruz.backpage.com/
+- http://santamaria.backpage.com/
+
+8. eu-west-2 EU (London)
+- http://siskiyou.backpage.com/
+- http://stockton.backpage.com/
+- http://susanville.backpage.com/
+
+9. ap-northeast-1 Asia Pacific (Tokyo)
+- http://ventura.backpage.com/
+- http://visalia.backpage.com/
+- http://boulder.backpage.com/
+
+10. ap-northeast-2 Asia Pacific (Seoul)
+- http://coloradosprings.backpage.com/
+- http://denver.backpage.com/
+- http://fortcollins.backpage.com/
+
+11. p-southeast-1 Asia Pacific (Singapore)
+- http://pueblo.backpage.com/
+- http://rockies.backpage.com/
+- http://westslope.backpage.com/
+
+12. ap-southeast-2 Asia Pacific (Sydney)
+- http://bridgeport.backpage.com/
+- http://newlondon.backpage.com/
+- http://hartford.backpage.com/
+
+13. ap-south-1 Asia Pacific (Mumbai)
+- http://newhaven.backpage.com/
+- http://nwct.backpage.com/
+- http://delaware.backpage.com/
+
+14. sa-east-1 South America (São Paulo)
+- http://nova.backpage.com/
+- http://southernmaryland.backpage.com/
+- http://dc.backpage.com/
+
+## Drill into the links for a link dictionary
+
+1. Get all front-page links
+    1. For each link, get the content
+2. Dump the link, date, title and content into DynamoDb
+
+## Process the data
+Now I have all the data. See the amount of data I'm working with isn't anything insane. It's big, but it's not insane. It's entirely manageable. It's really not that bad at all. So you see from here, for now, I can just pull back all of this data into a windows machine with Java 7 every night and anayze the content as shown in [memex](https://github.com/timg456789/CMU_memex).
+
+I would like to use GateCloud then I could distribute the work and let each region run its own analysis and finish up its unit of work. Now I also could just feed the second level (top level is us.backpage.com) links into a SQS queue then let the regions fight to pull back all of the ads. Crap, so the max timeout is 300 seconds or 5 minutes in Lambda. I don't think I will be able to run through potentially 50 downloads in 3 minutes. I mean potentially I could, but the question raises issues. This needs another layer of distribution. I need two sets of lambda functions. Check this out.
+
+Refer to indexing flow in /Visuals.
+
+Now my mind is starting to break down on my ability to explain and describe this process. I need to retreat into sweet c# to describe this fine process. The one question is exactly how to distribute. I have all the mechanics, but the exact points at which I make certain moves will determine a great deal. The main question is does the process use a queue or not. Then is the process broken down into 3 or four distinct pieces.
+
+Look to my pseudo code with this commit to describe the skeleton for this process. My concern is a timeout or some kind of failure. I need to make everything so distinct that failure is rare and not an issue when it does finally occur. It's the way we fall.
+
 This repository is dedicated to documenting my journey to systematically discover and acquire fine art paintings.
 
 https://tgonzalez.net

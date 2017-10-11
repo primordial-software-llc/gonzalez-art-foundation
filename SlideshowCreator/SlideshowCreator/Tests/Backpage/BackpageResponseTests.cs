@@ -7,6 +7,7 @@ using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.DataAccess;
 using NUnit.Framework;
+using SlideshowCreator.Backpage;
 
 namespace SlideshowCreator.Tests.Backpage
 {
@@ -31,7 +32,7 @@ namespace SlideshowCreator.Tests.Backpage
         {
             var cofig = PrivateConfig.CreateFromPersonalJson();
 
-            var url = cofig.SomeUrl + Guid.NewGuid();
+            var url = cofig.SomeUrl + Guid.NewGuid(); // Not really a secret anymore. The site is public, there's nothing to hide.
             Console.WriteLine(url);
 
             HttpResponseMessage response = backpageCrawler.Client.GetAsync(url).Result;
@@ -54,15 +55,34 @@ namespace SlideshowCreator.Tests.Backpage
         }
 
         [Test]
-        public void Get_Ads_On_2017_10_6_For_Los_Angeles()
+        public void Test_Ad_Links_From_Second_Level_Link()
         {
             var adLinksInGeographicRegion = backpageCrawler.GetAdLinksFromSection(
-                new Uri("http://losangeles.backpage.com"), BackpageCrawler.WOMEN_SEEKING_MEN_SECTION, 0);
+                new Uri("http://losangeles.backpage.com"),
+                BackpageCrawler.WOMEN_SEEKING_MEN_SECTION);
+
             Console.WriteLine(adLinksInGeographicRegion.Count);
+
+            Assert.IsTrue(adLinksInGeographicRegion.Count > 200);
 
             foreach (var link in adLinksInGeographicRegion)
             {
-                Console.WriteLine(link);
+                Console.WriteLine(link.Uri);
+            }
+
+            Assert.IsFalse(adLinksInGeographicRegion
+                .Any(x => x.Uri.AbsoluteUri.ToLower().StartsWith("http://losangeles.backpage.com/WomenSeekMen/?page=", StringComparison.OrdinalIgnoreCase)));
+        }
+
+        [Test]
+        public void Print_Us_Link_Dictionary()
+        {
+            foreach (KeyValuePair<string, List<Uri>> links in linkDictionary)
+            {
+                foreach (var geographicLink in links.Value)
+                {
+                    Console.WriteLine(geographicLink.AbsoluteUri);
+                }
             }
         }
 
@@ -74,7 +94,7 @@ namespace SlideshowCreator.Tests.Backpage
             Assert.AreEqual(435, linkDictionary.Values.Sum(x => x.Count));
 
             List<BackpageAdModel> usAds = new List<BackpageAdModel>();
-            
+
             foreach (KeyValuePair<string, List<Uri>> links in linkDictionary)
             {
                 foreach (var geographicLink in links.Value)

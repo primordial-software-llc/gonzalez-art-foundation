@@ -8,7 +8,7 @@ using HtmlAgilityPack;
 using IndexBackend.DataAccess;
 using NUnit.Framework;
 
-namespace SlideshowCreator
+namespace SlideshowCreator.Backpage
 {
     class BackpageCrawler
     {
@@ -177,6 +177,11 @@ namespace SlideshowCreator
 
         public static bool LinkIsAdd(string link, string section)
         {
+            if (link.ToLower().Contains("?page=")) // http://losangeles.backpage.com/WomenSeekMen/?page=2
+            {
+                return false;
+            }
+
             if (!link.ToLower().Contains(section.ToLower()))
             {
                 return false;
@@ -188,6 +193,24 @@ namespace SlideshowCreator
         public static bool IsNumber(string value)
         {
             return Regex.IsMatch(value, @"^\d+$");
+        }
+
+        public string GetAdBody(Uri adLink)
+        {
+            var adHtml = Client.GetStringAsync(adLink).Result;
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(adHtml);
+            var adBody = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 'postingBody')]")
+                .Single()
+                .InnerText
+                .Trim();
+            adBody = ReplaceAllWhitespaceWithASingleSpace(adBody);
+            return adBody;
+        }
+        
+        private string ReplaceAllWhitespaceWithASingleSpace(string text)
+        {
+            return Regex.Replace(text, @"\s+", " ");
         }
 
     }

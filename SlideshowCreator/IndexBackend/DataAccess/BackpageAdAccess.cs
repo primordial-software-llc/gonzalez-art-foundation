@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
 using GalleryBackend.Model;
+using IndexBackend.DataAccess.ModelConversions;
 
 namespace IndexBackend.DataAccess
 {
@@ -14,7 +13,7 @@ namespace IndexBackend.DataAccess
 
         public void Insert(AmazonDynamoDBClient client, BackpageAdModel backpageAd)
         {
-            var conversion = ConvertToDynamoDb(backpageAd);
+            var conversion = new BackpageAdModelConversion().ConvertToDynamoDb(backpageAd);
             client.PutItem(TABLE_NAME, conversion);
         }
 
@@ -26,30 +25,6 @@ namespace IndexBackend.DataAccess
                 Uri = uri,
                 Age = age,
                 Date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-            };
-            return model;
-        }
-        
-        public Dictionary<string, AttributeValue> ConvertToDynamoDb(BackpageAdModel backpageAd)
-        {
-            var kvp = new Dictionary<string, AttributeValue>
-            {
-                {"source", new AttributeValue {S = backpageAd.Source}},
-                {"url", new AttributeValue {S = backpageAd.Uri.AbsoluteUri}},
-                {"age", new AttributeValue {N = backpageAd.Age.ToString()}},
-                {"date", new AttributeValue {S = backpageAd.Date} }
-            };
-            return kvp;
-        }
-        
-        public BackpageAdModel ConvertToPoco(Dictionary<string, AttributeValue> dynamoDbModel)
-        {
-            var model = new BackpageAdModel
-            {
-                Source = dynamoDbModel["source"].S,
-                Uri = new Uri(dynamoDbModel["url"].S),
-                Age = int.Parse(dynamoDbModel["age"].N),
-                Date = dynamoDbModel["date"].S
             };
             return model;
         }

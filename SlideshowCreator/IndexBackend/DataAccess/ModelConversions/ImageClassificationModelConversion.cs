@@ -3,10 +3,11 @@ using System.Linq;
 using Amazon.DynamoDBv2.Model;
 using GalleryBackend.Model;
 
-namespace IndexBackend
+namespace IndexBackend.DataAccess.ModelConversions
 {
-    public class ClassificationConversion
+    public class ClassificationConversion : IModelConversion<ClassificationModel>
     {
+        public string DynamoDbTableName => ImageClassificationAccess.IMAGE_CLASSIFICATION_V2;
 
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {
@@ -93,5 +94,6 @@ namespace IndexBackend
 
             return classification;
         }
+
     }
 }

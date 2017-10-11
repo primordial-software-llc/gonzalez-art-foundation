@@ -67,7 +67,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BackpageCrawler.cs" />
+    <Compile Include="Backpage\BackpageCrawler.cs" />
+    <Compile Include="Backpage\BackagepageIndexMasterTests.cs" />
     <Compile Include="HttpHeaders.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryBackpageAd.cs" />
