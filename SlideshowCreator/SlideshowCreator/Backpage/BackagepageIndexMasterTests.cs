@@ -8,6 +8,7 @@ using IndexBackend;
 using IndexBackend.DataAccess.ModelConversions;
 using NUnit.Framework;
 using SlideshowCreator.AwsAccess;
+using SlideshowCreator.LambdaSymphony;
 
 namespace SlideshowCreator.Backpage
 {
@@ -32,10 +33,8 @@ namespace SlideshowCreator.Backpage
         {
             var sw = new Stopwatch();
             sw.Start();
-            var regions = RegionEndpoint.EnumerableAllRegions
-                .Where(x => x != RegionEndpoint.USGovCloudWest1 &&
-                            x != RegionEndpoint.CNNorth1).ToList();
 
+            var regions = BackpageLambdaConfig.Regions;
             Console.WriteLine($"Distributing work into {regions.Count} AWS regions");
             foreach (RegionEndpoint region in regions)
             {
@@ -94,37 +93,7 @@ namespace SlideshowCreator.Backpage
                 var batchInsertResult = client.BatchWriteItem(adBatchInsert);
                 Assert.AreEqual(0, batchInsertResult.UnprocessedItems.Count); // There is code for this crap, but I don't want that complexity.
             }
-            Console.WriteLine(sw.Elapsed.TotalSeconds); // 85 seconds.
-            // 85 * 435 = 10 hours to process all the ads! Now that's exagerated, because there aren't 150,00 ads there are only about 35-45,000. Los angeles is one of the biggest regions and most don't have 350 on the first page let alone have the first page filled by a single calendar day.
-
-            // Still though let's say that's the case.
-            // That means there will be 10 total hours.
-            // Now let's split that up by 14 for each regoin and that now becomes.
-            // 85 * (435/14) = 44 minutes.
-            // Not bad. I can index every backpage ad in the united states every 45 minutes!
-            // Now we are talking.
-            // But I need two things.
-            // First is an sqs queue, then my lambda symphony.
-
-            // You see the process needs to be triggered by a master overseer who will take the 435 second level links and place them gently into an SQS queue.
-            // Then the lambda functions are on a trigger to check for an item in the SQS queue.
-            // When an item is found, it just runs this process here.
-            // So two takeaways.
-
-            // 1. Need an SQS queue so I can coodinate lambda functions around the globe.
-            // 2. Need the ability to deploy a piece of code to lambda functions around the globe.
-            
-            // Once I have all of this I can start to do the processing with gate.
-            // To start, I will ad the processing fields and a flag for "hasProcessedByGate" in dynamodb.
-            // Then just do table scans for anything that hasn't been processed.
-            // I might just have to scan once a night.
-            // It shouldn't be a big deal.
-            // What I really want is that god damn phone number field.
-            // I mean think about it, I'll be collecting 30,000+ phone numbers per day.
-            // My mind goes wild just thinking about the possibilities and making use of them.
-            // There is so much potential. Alright get this.
-            // Backpage Ad Phone Number -> Twilio -> ChatBot
-            // Turn the tables on the advertisers pushing their smut.
+            Console.WriteLine(sw.Elapsed.TotalSeconds);
         }
     }
 }
