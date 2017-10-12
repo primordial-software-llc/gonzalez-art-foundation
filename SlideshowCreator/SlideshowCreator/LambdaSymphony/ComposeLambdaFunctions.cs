@@ -21,7 +21,7 @@ namespace SlideshowCreator.LambdaSymphony
         {
             foreach (var region in BackpageLambdaConfig.Regions)
             {
-                var client = CreateLambdaClient(region);
+                var client = BackpageLambdaConfig.CreateLambdaClient(region);
                 ListFunctionsResponse functionResponse = client.ListFunctions();
                 Assert.IsNull(functionResponse.NextMarker);
 
@@ -34,32 +34,25 @@ namespace SlideshowCreator.LambdaSymphony
         }
 
         [Test]
-        public void Create_Lamda_Functions_In_Each_Region()
+        public void Rebuild_Lamda_Functions_In_Each_Region()
         {
-            var client = CreateLambdaClient(RegionEndpoint.USEast1);
-
-            var path = @"C:\Users\peon\Desktop\NestStatusCheck-f57d0018-9b64-4b07-a6ce-9ca438d8c526.zip";
-            using (var fileMemoryStream = new MemoryStream(File.ReadAllBytes(path)))
+            foreach (var region in BackpageLambdaConfig.Regions)
             {
-                var createFunctionRequest = new CreateFunctionRequest();
-                createFunctionRequest.FunctionName = BackpageLambdaConfig.AdIndexerFunctionName;
-                createFunctionRequest.Runtime = Runtime.Dotnetcore10;
-                createFunctionRequest.Handler = "Nest::Nest.Function::FunctionHandler";
-                createFunctionRequest.Role = "arn:aws:iam::363557355695:role/lambda_exec_Backpage";
-                createFunctionRequest.Code = new FunctionCode {ZipFile = fileMemoryStream};
-
-                client.CreateFunction(createFunctionRequest);
+                new LambdaSymphonyComposure().CreateOrUpdateFunction(region);
+                Assert.IsTrue(new LambdaSymphonyComposure().FunctionExists(BackpageLambdaConfig.AdIndexerFunctionName, region));
             }
-
-
         }
 
-        private AmazonLambdaClient CreateLambdaClient(RegionEndpoint region)
+        [Test]
+        public void Test_Non_Existing_Function()
         {
-            AmazonLambdaClient lambdaClient = new AmazonLambdaClient(
-                GalleryAwsCredentialsFactory.CreateCredentialsFromDefaultProfile(),
-                region);
-            return lambdaClient;
+            Assert.IsFalse(new LambdaSymphonyComposure().FunctionExists(Guid.NewGuid().ToString(), RegionEndpoint.USEast1));
+        }
+
+        [Test]
+        public void Test_Existing_Function()
+        {
+            Assert.IsTrue(new LambdaSymphonyComposure().FunctionExists("NestStatusCheck", RegionEndpoint.USEast1));
         }
 
     }

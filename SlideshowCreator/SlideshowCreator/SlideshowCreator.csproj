@@ -87,6 +87,7 @@
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryBackpageAd.cs" />
     <Compile Include="LambdaSymphony\BackpageLambdaConfig.cs" />
     <Compile Include="LambdaSymphony\ComposeLambdaFunctions.cs" />
+    <Compile Include="LambdaSymphony\LambdaSymphonyComposure.cs" />
     <Compile Include="Tests\Backpage\BackpageAdTableInfrastructure.cs" />
     <Compile Include="Tests\Backpage\BackpageResponseTests.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
