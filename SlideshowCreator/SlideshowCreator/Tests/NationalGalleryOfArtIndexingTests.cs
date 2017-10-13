@@ -83,45 +83,25 @@ namespace SlideshowCreator.Tests
         public void Get_Home_Page_Through_500_Response()
         {
             var assetId2 = 1;
-
             IndexAndAssertInS3(46482);
-
-            System.Threading.Thread.Sleep(40 * 1000);
             var asset2Index = indexer.Index(assetId2);
-            
             Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + assetId2 + ".jpg"));
             Assert.IsNull(asset2Index);
         }
 
         [Test]
-        public void ParallelIndexing()
+        public void Index_Tif_Image()
         {
-            var parallelOptions = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = -1
-            };
-
-            var validIdsIterable = ValidIds.ToList();
-
-            Parallel.ForEach(validIdsIterable, parallelOptions, id =>
-            {
-                Console.WriteLine("Classifying " + id);
-                indexer.Index(id);
-                ValidIds.Remove(id);
-                Console.WriteLine("Throttling.");
-                Thread.Sleep(indexer.GetNextThrottleInMilliseconds);
-            });
-
-            Assert.AreEqual(0, ValidIds.Count); // Needs to update with removals.
+            IndexAndAssertInS3(64554, ".tif");
         }
 
-        private void IndexAndAssertInS3(int id)
+        private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {
             var asset1Index = indexer.Index(id);
             Assert.AreEqual("http://images.nga.gov", asset1Index.Source);
             Assert.AreEqual(id, asset1Index.PageId);
-            Assert.AreEqual(indexer.S3Bucket + "/" + "image-" + id + ".jpg", asset1Index.S3Path);
-            s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + id + ".jpg");
+            Assert.AreEqual(indexer.S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.S3Path);
+            s3Client.GetObjectMetadata(indexer.S3Bucket, "image-" + id + expectedImageFormat);
         }
 
         private const string DECODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE =
@@ -152,28 +132,6 @@ namespace SlideshowCreator.Tests
             Assert.AreEqual(ENCODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE,
                 reference);
         }
-
-        private List<int> ValidIds = new List<int>
-        {
-            33000,
-            87551,
-            24822,
-            106015,
-            100912,
-            64536,
-            106620,
-            92478,
-            89496,
-            89598,
-            59078,
-            89057,
-            99440,
-            43938,
-            21301,
-            94863,
-            114557,
-            81396
-        };
 
     }
 }

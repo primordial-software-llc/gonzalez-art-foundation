@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Amazon.DynamoDBv2;
@@ -65,13 +67,14 @@ namespace IndexBackend.Indexing
 
         public string SendToS3(byte[] zipFile, int id)
         {
-            var imgExt = ".jpg";
-            string key = "image-" + id + imgExt;
+            string key = "image-" + id;
             using (MemoryStream zipFileStream = new MemoryStream(zipFile))
             using (ZipArchive archive = new ZipArchive(zipFileStream))
             {
                 ZipArchiveEntry imgArchive = archive.Entries
-                    .Single(x => x.FullName.EndsWith(imgExt));
+                    .Single(x => ImageExtensions.Any(
+                        imgExt => x.FullName.EndsWith(imgExt, StringComparison.OrdinalIgnoreCase)));
+                key += "." + imgArchive.FullName.Split('.').Last();
                 using (Stream imgStream = imgArchive.Open())
                 {
                     PutObjectRequest request = new PutObjectRequest
@@ -86,5 +89,8 @@ namespace IndexBackend.Indexing
 
             return key;
         }
+
+        private List<string> ImageExtensions => new List<string> {".jpg",".tif"};
+
     }
 }
