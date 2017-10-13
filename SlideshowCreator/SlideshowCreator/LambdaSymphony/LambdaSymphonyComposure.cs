@@ -7,7 +7,7 @@ namespace SlideshowCreator.LambdaSymphony
 {
     class LambdaSymphonyComposure
     {
-        public CreateFunctionRequest CreateOrUpdateFunction(RegionEndpoint region, string deploymentPackagePath)
+        public CreateFunctionRequest RebuildFunction(RegionEndpoint region, string deploymentPackagePath)
         {
             var client = BackpageLambdaConfig.CreateLambdaClient(region);
 

@@ -45,7 +45,7 @@ namespace SlideshowCreator.LambdaSymphony
             foreach (var region in BackpageLambdaConfig.Regions)
             {
                 var path = @"C:\Users\peon\Desktop\NestStatusCheck-f57d0018-9b64-4b07-a6ce-9ca438d8c526.zip";
-                var deployment = new LambdaSymphonyComposure().CreateOrUpdateFunction(region, path);
+                var deployment = new LambdaSymphonyComposure().RebuildFunction(region, path);
                 Console.WriteLine($"Deployed {path.Split('\\').Last()} to {deployment.FunctionName} in {region.DisplayName}");
                 Assert.IsTrue(new LambdaSymphonyComposure().FunctionExists(BackpageLambdaConfig.AdIndexerFunctionName, region));
             }
