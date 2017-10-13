@@ -7,7 +7,7 @@ namespace SlideshowCreator.LambdaSymphony
 {
     class LambdaSymphonyComposure
     {
-        public void CreateOrUpdateFunction(RegionEndpoint region)
+        public CreateFunctionRequest CreateOrUpdateFunction(RegionEndpoint region, string deploymentPackagePath)
         {
             var client = BackpageLambdaConfig.CreateLambdaClient(region);
 
@@ -16,10 +16,9 @@ namespace SlideshowCreator.LambdaSymphony
                 client.DeleteFunction(BackpageLambdaConfig.AdIndexerFunctionName);
             }
 
-            var path = @"C:\Users\peon\Desktop\NestStatusCheck-f57d0018-9b64-4b07-a6ce-9ca438d8c526.zip";
-            using (var fileMemoryStream = new MemoryStream(File.ReadAllBytes(path)))
+            var createFunctionRequest = new CreateFunctionRequest();
+            using (var fileMemoryStream = new MemoryStream(File.ReadAllBytes(deploymentPackagePath)))
             {
-                var createFunctionRequest = new CreateFunctionRequest();
                 createFunctionRequest.FunctionName = BackpageLambdaConfig.AdIndexerFunctionName;
                 createFunctionRequest.Runtime = Runtime.Dotnetcore10;
                 createFunctionRequest.Handler = "Nest::Nest.Function::FunctionHandler";
@@ -28,6 +27,8 @@ namespace SlideshowCreator.LambdaSymphony
 
                 client.CreateFunction(createFunctionRequest);
             }
+
+            return createFunctionRequest;
         }
 
         public bool FunctionExists(string functionName, RegionEndpoint region)

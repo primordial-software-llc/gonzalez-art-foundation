@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Amazon;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
@@ -14,6 +15,11 @@ namespace SlideshowCreator.LambdaSymphony
         public void Check_Lambda_Regions()
         {
             Assert.AreEqual(14, BackpageLambdaConfig.Regions.Count);
+            foreach (var region in BackpageLambdaConfig.Regions)
+            {
+                Console.WriteLine(region.DisplayName); // Asia Pacific (Tokyo)
+                Console.WriteLine(region.SystemName); // ap-northeast-1
+            }
         }
 
         [Test]
@@ -38,7 +44,9 @@ namespace SlideshowCreator.LambdaSymphony
         {
             foreach (var region in BackpageLambdaConfig.Regions)
             {
-                new LambdaSymphonyComposure().CreateOrUpdateFunction(region);
+                var path = @"C:\Users\peon\Desktop\NestStatusCheck-f57d0018-9b64-4b07-a6ce-9ca438d8c526.zip";
+                var deployment = new LambdaSymphonyComposure().CreateOrUpdateFunction(region, path);
+                Console.WriteLine($"Deployed {path.Split('\\').Last()} to {deployment.FunctionName} in {region.DisplayName}");
                 Assert.IsTrue(new LambdaSymphonyComposure().FunctionExists(BackpageLambdaConfig.AdIndexerFunctionName, region));
             }
         }
