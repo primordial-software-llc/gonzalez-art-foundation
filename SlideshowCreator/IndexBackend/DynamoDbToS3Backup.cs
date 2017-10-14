@@ -42,9 +42,9 @@ namespace IndexBackend
             {
                 using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
-                    var demoFile = archive.CreateEntry("dynamodb-backup.json", CompressionLevel.Optimal);
+                    var backupFile = archive.CreateEntry("dynamodb-backup.json", CompressionLevel.Optimal);
 
-                    using (var entryStream = demoFile.Open())
+                    using (var entryStream = backupFile.Open())
                     using (var streamWriter = new StreamWriter(entryStream))
                     {
                         streamWriter.Write(JsonConvert.SerializeObject(allItems));
