@@ -68,8 +68,6 @@
     <Compile Include="Classifier.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="AwsClientFactory.cs" />
-    <Compile Include="DataAccess\BackpageAdAccess.cs" />
-    <Compile Include="DataAccess\ModelConversions\BackpageAdModelConversion.cs" />
     <Compile Include="DataAccess\ModelConversions\IModelConversion.cs" />
     <Compile Include="DynamoDbToS3Backup.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />

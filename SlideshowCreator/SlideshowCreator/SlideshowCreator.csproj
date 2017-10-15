@@ -80,13 +80,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Backpage\BackpageCrawler.cs" />
-    <Compile Include="Backpage\BackagepageIndexMasterTests.cs" />
     <Compile Include="HttpHeaders.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
-    <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryBackpageAd.cs" />
-    <Compile Include="Tests\Backpage\BackpageAdTableInfrastructure.cs" />
-    <Compile Include="Tests\Backpage\BackpageResponseTests.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\GalleryApiTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
