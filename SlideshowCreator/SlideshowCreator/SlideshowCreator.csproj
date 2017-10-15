@@ -88,7 +88,7 @@
     <Compile Include="Tests\Backpage\BackpageAdTableInfrastructure.cs" />
     <Compile Include="Tests\Backpage\BackpageResponseTests.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
-    <Compile Include="Tests\DataAccessTests\ApiTests.cs" />
+    <Compile Include="Tests\DataAccessTests\GalleryApiTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
     <Compile Include="AwsAccess\DynamoDbDelete.cs" />
     <Compile Include="AwsAccess\DynamoDbInsert.cs" />

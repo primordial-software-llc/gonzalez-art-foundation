@@ -17,7 +17,7 @@ using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.DataAccessTests
 {
-    class ApiTests
+    class GalleryApiTests
     {
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private GalleryClient client;
