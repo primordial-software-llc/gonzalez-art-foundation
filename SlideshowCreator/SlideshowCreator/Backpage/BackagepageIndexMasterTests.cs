@@ -8,7 +8,6 @@ using IndexBackend;
 using IndexBackend.DataAccess.ModelConversions;
 using NUnit.Framework;
 using SlideshowCreator.AwsAccess;
-using SlideshowCreator.LambdaSymphony;
 
 namespace SlideshowCreator.Backpage
 {
@@ -34,7 +33,7 @@ namespace SlideshowCreator.Backpage
             var sw = new Stopwatch();
             sw.Start();
 
-            var regions = BackpageLambdaConfig.Regions;
+            var regions = RegionEndpoint.EnumerableAllRegions.ToList(); // This needs to be moved.
             Console.WriteLine($"Distributing work into {regions.Count} AWS regions");
             foreach (RegionEndpoint region in regions)
             {

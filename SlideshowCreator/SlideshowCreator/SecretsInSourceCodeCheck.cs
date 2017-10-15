@@ -30,10 +30,13 @@ namespace SlideshowCreator
             ).ToList();
             files.Remove(PrivateConfig.PersonalJson);
             files.Remove("C:\\Users\\peon\\Desktop\\projects\\Nest\\Nest\\aws-lambda-tools-defaults.json");
+            files.Remove("C:\\Users\\peon\\Desktop\\projects\\Memex\\personal.json");
             
             var gitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\.gitignore");
-
             Assert.IsTrue(gitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
+
+            var memexGitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\Memex\\.gitignore");
+            Assert.IsTrue(memexGitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
 
             var nestGitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\Nest\\.gitignore");
             Assert.IsTrue(nestGitIgnore.Contains("Nest/aws-lambda-tools-defaults.json"));
