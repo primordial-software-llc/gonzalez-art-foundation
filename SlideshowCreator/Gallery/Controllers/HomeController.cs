@@ -9,13 +9,6 @@ namespace MVC5App.Controllers
             return View();
         }
 
-        public ActionResult Slideshow()
-        {
-            ViewBag.Message = "Gallery slideshow.";
-
-            return View();
-        }
-
         public ActionResult ImageViewer()
         {
             return View();

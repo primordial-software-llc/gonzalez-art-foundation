@@ -5,7 +5,6 @@
 }
 
 body .form-control {
-    width: 300px;
     display: inline-block;
     padding-top: 8px;
 }
@@ -51,4 +50,16 @@ a.nav-link:hover {
 
 .btn:hover {
     cursor: pointer;
+}
+
+#likeSearchText,
+#exactSearchText,
+#idSearchText {
+    width: 85%;
+}
+
+#likeSearch,
+#exactSearch,
+#idSearch {
+    width: 13%;
 }

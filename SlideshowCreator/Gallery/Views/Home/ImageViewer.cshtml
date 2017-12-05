@@ -9,59 +9,10 @@
     <title>@ViewBag.Title - Digital Art Gallery</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/jquery")
-    <style>
-        
-        html, body
-        {
-            height: 100%;
-        }
-
-        body
-        {
-            background-color: #EEE;
-        }
-
-        #slideshow-start
-        {
-            cursor: pointer;
-        }
-
-        #slideshow-player
-        {
-            text-align: center;
-            height: 8%;
-        }
-
-        #slideshow-player > img
-        {
-            cursor: pointer;
-        }
-
-        #slideshow-player > img
-        {
-            margin-left: 10px;
-            margin-right: 10px;
-        }
-
-        #slideshow-interval
-        {
-            width: 30px;
-        }
-
-        #slideshow-image-container
-        {
-            height: 92%;
-            text-align: center;
-        }
-
-        #slideshow-image
-        {
-            height: 100%;
-            max-width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/Content/ImageViewer.css">
     <script>
         var slideshowTimer;
+        var hasMovedMouseOnImageViewerPage = false;
 
         function getImageUrl(item) {
             return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
@@ -98,6 +49,31 @@
 
         $(document).ready(function () {
             showCurrentImage();
+            
+            $(this).mousemove(function () {
+                hasMovedMouseOnImageViewerPage = true;
+                $("#slideshow-player").slideDown("slow", function () {
+                    $("#slideshow-player").show();
+                    $('#slideshow-image-container').height('92%');
+                });
+            });
+            $(this).keypress(function () {
+                hasMovedMouseOnImageViewerPage = true;
+                $("#slideshow-player").slideDown("slow", function () {
+                    $("#slideshow-player").show();
+                    $('#slideshow-image-container').height('92%');
+                });
+            });
+
+            setInterval(function () {
+                if (!hasMovedMouseOnImageViewerPage) {
+                    $("#slideshow-player").slideUp("slow", function () {
+                        $("#slideshow-player").hide();
+                        $('#slideshow-image-container').height('100%');
+                    });
+                }
+                hasMovedMouseOnImageViewerPage = false;
+            }, 15000);
 
             $('#slideshow-previous').click(function() {
                 previouseImage();

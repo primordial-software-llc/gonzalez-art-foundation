@@ -29,6 +29,7 @@ namespace GalleryBackend
 
         public bool IsTokenValid(string token)
         {
+            token = token ?? string.Empty;
             var authoritativeToken = GetToken(IdentityHash);
             return token.Equals(authoritativeToken);
         }

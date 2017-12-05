@@ -4,7 +4,6 @@ using System.Web;
 using System.Web.Http;
 using GalleryBackend;
 using GalleryBackend.Model;
-using IndexBackend;
 
 namespace MVC5App.Controllers
 {
@@ -15,6 +14,10 @@ namespace MVC5App.Controllers
     [RoutePrefix("api/Gallery")]
     public class GalleryController : ApiController
     {
+        /// <summary>
+        ///  This really needs to go into dynamo db or even s3 for sanitization.
+        /// This should be the next improvement made to the site in the back-end before adding more data.
+        /// </summary>
         const string DISCLOSED_IDENTITY_HASH = "3vwD/tk27FM5baxW1aEh+C6DGjS7Jr5FH9/RtsuH4Lk=";
         private static readonly Authentication Authentication = new Authentication(DISCLOSED_IDENTITY_HASH);
 

@@ -135,6 +135,7 @@
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\connection.png" />
+    <Content Include="Content\ImageViewer.css" />
     <Content Include="Content\newproject.png" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
@@ -943,6 +944,7 @@
     <Content Include="Images\Glyphicons\glyphicons-99-vector-path-curve.png" />
     <Content Include="Images\Glyphicons\license.txt" />
     <None Include="Scripts\jquery-3.2.1.intellisense.js" />
+    <Content Include="Scripts\gallery-search.js" />
     <Content Include="Scripts\jquery-3.2.1.js" />
     <Content Include="Scripts\jquery-3.2.1.min.js" />
     <Content Include="Scripts\jquery-3.2.1.slim.js" />
@@ -968,7 +970,6 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\Slideshow.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Home\ImageViewer.cshtml" />
   </ItemGroup>

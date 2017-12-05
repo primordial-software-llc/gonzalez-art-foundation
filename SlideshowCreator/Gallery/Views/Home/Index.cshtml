@@ -1,19 +1,33 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = "Digital Art Gallery";
 }
+<script src="/Scripts/gallery-search.js"></script>
+<style>
+    #slideshow-start {
+        cursor: pointer;
+    }
+</style>
 
 <div class="jumbotron">
     <h1>Digital Art Gallery</h1>
-    
-    <p>
-        This site is a work in progress. The goal is to be able to create a slideshow using works in the public domain.
-        <br />
-        While seaching the web for fine visual art I have found it unenjoyable even though there is a tremendous amount available with relatively no access restrictions. While the art is highly physically accessible, accessing the art isn't user friendly. Viewing the images in the source repositories was nice for brief exploratory work, but I found it difficult to observe the images full-size one after another. With hundreds of thousands of fine art images, it's simply not feasible to be forced to click around. Even one click to go from seach results for an artist to each full size image is too much and I was finding it would take 2-3 clicks to view a full-screen image from search results. This is simply not adequate to view hundreds of thousands of images in my spare time. The only feasible way is to have the images constantly playing on a slideshow on a dedicated monitor (I have a projector for this purpose with a dedicated laptop). Even with a dedicated screen playing an automatic slideshow, it will take years to view all of the fine art I have indexed from only one site, but it is now possible. Furthermore, I want to live with my art. I believe art must be lived with not simply viewed mechanically or visited. Only when you live with art do you fully appreciate it and fall in love with it as you escape all accessability restrictions. Downloading the images proved to have a horrible viewing experience for a slideshow. Since I have the technical expertise to create a digital art gallery featuring a slideshow I decided to take on the challenge of creating an interface while I was already busy downloading and indexing image repositories.
-        <br />
-        At this time the images and the indexes are currently restricted. I can't release any images until I have classified the copywritten images. While my goal is to view all images transiently (over the open internet) and avoid copyright issues altogether, I don't feel it would be respectful to point to images under copyright which may be accessible in a way which breaks the terms of the copyright even if I am exonerated of responsibilty using such a tactic.
-        <br />
-        Once I have indexed a few image repositories, I will then begin to classify the images which are and are not under copyright. Only then can I publicly release my data for all images not under copyright.
-        <br />
-        So far I have successfully indexed http://the-athenaeum.org/ and have approximately 286,100 images which are searchable by artist name. The key is that I have the index data so I can now setup my own user experience for those images even though this functionality is technically already available on the site itself. My next plan is to index images.nga.gov. Now that website has a horrible interface and I would estimate would take one minute to view the high resolution versions if not more. That's just to pull down the image and view it full-size with time completely wasted without the chance to enjoy the image. This is simply unreasonable. I would spend nearly a month just downloading the images working 24x7. If I used all my spare time that's 3 months and I have yet to view a single image. That's just absurd.
-    </p>
+</div>
+
+<h1>Slideshow</h1>
+
+<div class="input-form">
+    <input id="likeSearchText" type="text" placeholder="Search by Like Artist e.g. Renoir" class="form-control" />
+    <input id="likeSearch" type="button" value="Search" class="btn btn-secondary" />
+</div>
+
+<div class="input-form">
+    <input id="exactSearchText" type="text" placeholder="Search by Exact Artist e.g Pierre Auguste Renoir" class="form-control" />
+    <input id="exactSearch" type="button" value="Search" class="btn btn-secondary" />
+</div>
+
+<div class="input-form">
+    <input id="idSearchText" type="text" placeholder="View from last image ID e.g. 0" class="form-control" />
+    <input id="idSearch" type="button" value="Search" class="btn btn-secondary" />
+</div>
+
+<div id="search-results">
 </div>

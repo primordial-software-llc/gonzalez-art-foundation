@@ -1,0 +1,48 @@
+﻿html, body
+{
+    height: 100%;
+}
+
+body
+{
+    background-color: #EEE;
+}
+
+#slideshow-start
+{
+    cursor: pointer;
+}
+
+#slideshow-player
+{
+    text-align: center;
+    height: 8%;
+}
+
+#slideshow-player > img
+{
+    cursor: pointer;
+}
+
+#slideshow-player > img
+{
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#slideshow-interval
+{
+    width: 30px;
+}
+
+#slideshow-image-container
+{
+    height: 92%;
+    text-align: center;
+}
+
+#slideshow-image
+{
+    height: 100%;
+    max-width: 100%;
+}
