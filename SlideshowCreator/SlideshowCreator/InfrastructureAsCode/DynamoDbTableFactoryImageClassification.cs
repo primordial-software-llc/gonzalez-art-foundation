@@ -20,7 +20,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         {
             var request = new CreateTableRequest
             {
-                TableName = ImageClassificationAccess.IMAGE_CLASSIFICATION_V2,
+                TableName = ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION,
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement
@@ -61,7 +61,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         {
             var request = GetTableDefinition();
             TableFactory.CreateTable(request);
-            AddArtistNameGlobalSecondaryIndex(ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+            AddArtistNameGlobalSecondaryIndex(ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION);
         }
         
         private void AddArtistNameGlobalSecondaryIndex(string tableName)

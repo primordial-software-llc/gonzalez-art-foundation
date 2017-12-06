@@ -21,7 +21,7 @@ namespace IndexBackend
             string bucket = "tgonzalez-dynamodb-imageclassification-backup";
             string key = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + ".zip";
 
-            var scanRequest = new ScanRequest(ImageClassificationAccess.IMAGE_CLASSIFICATION_V2);
+            var scanRequest = new ScanRequest(ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION);
 
             var allItems = new List<ClassificationModel>();
             var conversion = new ClassificationConversion();

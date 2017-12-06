@@ -54,7 +54,7 @@ namespace IndexBackend.Indexing
 
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
-                DynamoDbClient.PutItem(ImageClassificationAccess.IMAGE_CLASSIFICATION_V2, dynamoDbClassification);
+                DynamoDbClient.PutItem(ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
             }
 
             return classification;

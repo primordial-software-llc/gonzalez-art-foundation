@@ -7,7 +7,7 @@ namespace IndexBackend.DataAccess.ModelConversions
 {
     public class ClassificationConversion : IModelConversion<ClassificationModel>
     {
-        public string DynamoDbTableName => ImageClassificationAccess.IMAGE_CLASSIFICATION_V2;
+        public string DynamoDbTableName => ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION;
 
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {
