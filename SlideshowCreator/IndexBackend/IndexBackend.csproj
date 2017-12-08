@@ -36,14 +36,17 @@
     <Reference Include="AWSSDK.DynamoDBv2, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.DynamoDBv2.3.3.5\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
     </Reference>
+    <Reference Include="AWSSDK.Rekognition, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.Rekognition.3.3.8\lib\net45\AWSSDK.Rekognition.dll</HintPath>
+    </Reference>
     <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.S3.3.3.15\lib\net45\AWSSDK.S3.dll</HintPath>
     </Reference>
     <Reference Include="CloudFlareImUnderAttackMode">
       <HintPath>..\..\Dlls\CloudFlareImUnderAttackMode.dll</HintPath>
     </Reference>
-    <Reference Include="Cryptography">
-      <HintPath>..\..\Dlls\Cryptography.dll</HintPath>
+    <Reference Include="Cryptography, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Tgonzalez.Cryptography.1.0.0\lib\net47\Cryptography.dll</HintPath>
     </Reference>
     <Reference Include="Diacritics">
       <HintPath>..\..\Dlls\Diacritics.dll</HintPath>
@@ -69,7 +72,6 @@
     <Compile Include="Crawler.cs" />
     <Compile Include="AwsClientFactory.cs" />
     <Compile Include="DataAccess\ModelConversions\IModelConversion.cs" />
-    <Compile Include="DynamoDbToS3Backup.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="DataAccess\ImageClassificationAccess.cs" />
     <Compile Include="Indexing\IIndex.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="VpnCheck.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +103,8 @@
       <Name>GalleryBackend</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Analyzer Include="..\packages\AWSSDK.Rekognition.3.3.8\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

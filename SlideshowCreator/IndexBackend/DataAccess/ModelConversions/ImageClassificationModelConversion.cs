@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
+using GalleryBackend;
 using GalleryBackend.Model;
 
 namespace IndexBackend.DataAccess.ModelConversions
 {
     public class ClassificationConversion : IModelConversion<ClassificationModel>
     {
-        public string DynamoDbTableName => ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION;
+        public string DynamoDbTableName => ImageClassification.TABLE_IMAGE_CLASSIFICATION;
 
         public Dictionary<string, AttributeValue> ConvertToDynamoDb(ClassificationModel classification)
         {

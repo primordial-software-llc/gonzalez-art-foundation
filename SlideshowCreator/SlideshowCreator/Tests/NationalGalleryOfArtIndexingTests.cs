@@ -74,6 +74,12 @@ namespace SlideshowCreator.Tests
             // Assert.AreEqual(48574, imageIds.Count); //  The actual count is 48572, some images don't have links even though the filter in use was "Open Access Available" specifically meaning there was a download link. Gosh must I test everything in this granular detail to just see basic things?
         }
 
+        [Test]
+        public void BucketPath()
+        {
+            Assert.AreEqual("tgonzalez-image-archive/national-gallery-of-art", indexer.S3Bucket);
+        }
+
         /// <summary>
         /// This is failing on occasion.
         /// There is probably an issue with the decoding.

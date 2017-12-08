@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend.DataAccess;
 using IndexBackend.DataAccess.ModelConversions;
@@ -50,7 +51,7 @@ namespace IndexBackend.Indexing
                 classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
-                Client.PutItem(ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
+                Client.PutItem(ImageClassification.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
             }
 
             return classification;

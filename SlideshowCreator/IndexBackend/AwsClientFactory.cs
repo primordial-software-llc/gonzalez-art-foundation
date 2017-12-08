@@ -1,5 +1,6 @@
 ﻿using Amazon;
 using Amazon.DynamoDBv2;
+using Amazon.Rekognition;
 using Amazon.S3;
 
 namespace IndexBackend
@@ -16,6 +17,13 @@ namespace IndexBackend
         public AmazonS3Client CreateS3Client()
         {
             return new AmazonS3Client(
+                GalleryAwsCredentialsFactory.CreateCredentialsFromDefaultProfile(),
+                RegionEndpoint.USEast1);
+        }
+
+        public AmazonRekognitionClient CreateRekognitionClientClient()
+        {
+            return new AmazonRekognitionClient(
                 GalleryAwsCredentialsFactory.CreateCredentialsFromDefaultProfile(),
                 RegionEndpoint.USEast1);
         }

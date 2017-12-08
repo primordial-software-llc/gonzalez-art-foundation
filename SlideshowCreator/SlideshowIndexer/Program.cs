@@ -1,5 +1,6 @@
 ﻿using System;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
 using GalleryBackend;
 using IndexBackend;
@@ -31,9 +32,13 @@ namespace SlideshowIndexer
             Console.WriteLine("VPN is in use with IP: " + vpnInUse);
 
             Console.WriteLine("Backing up DynamoDb Data to S3");
-            var backup = new DynamoDbToS3Backup();
-            var backupPath = backup.BackupDynamoDbTableToS3Archive(S3Client, DynamoDbClient);
-            Console.WriteLine("Data backed up to S3: " + backupPath);
+            var request = new CreateBackupRequest
+            {
+                TableName = ImageClassification.TABLE_IMAGE_CLASSIFICATION,
+                BackupName = "image-classification-backup-" + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ssZ")
+            };
+            var backupResponse = DynamoDbClient.CreateBackup(request);
+            Console.WriteLine("Backup started: " + backupResponse.BackupDetails.BackupStatus + " - " + backupResponse.BackupDetails.BackupArn);
 
             IIndex indexer = GetIndexer(IndexType.NationalGalleryOfArt);
             var fileIdQueueIndexer = new FileIdQueueIndexer();

@@ -1,9 +1,12 @@
 ﻿
+using System.Collections.Generic;
+using Amazon.DynamoDBv2.Model;
+using AwsTools;
 using Newtonsoft.Json;
 
 namespace GalleryBackend.Model
 {
-    public class ClassificationModel
+    public class ClassificationModel : IModel
     {
         public const string SOURCE = "source";
         public const string ID = "pageId"; // Should just be "id", because NGA uses the term "assetId" and loads pages based on asset and size. Whereas the-athenaeum uses a pageId then an imageId for the "asset" on the page.
@@ -38,5 +41,16 @@ namespace GalleryBackend.Model
 
         [JsonProperty("s3Path")]
         public string S3Path { get; set; }
+
+        public Dictionary<string, AttributeValue> GetKey()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        string IModel.GetTable()
+        {
+            return ImageClassification.TABLE_IMAGE_CLASSIFICATION;
+        }
+
     }
 }

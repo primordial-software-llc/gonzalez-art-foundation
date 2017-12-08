@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Tgonzalez.Cryptography</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/timg456789/SlideshowCreator/blob/master/LICENSE.txt</licenseUrl>
+    <projectUrl>https://github.com/timg456789/SlideshowCreator/tree/master/Cryptography</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>AES Symmetric Key Cryptography</description>
+    <copyright>Copyright 2017</copyright>
+    <tags>AES Cryptography</tags>
+  </metadata>
+</package>

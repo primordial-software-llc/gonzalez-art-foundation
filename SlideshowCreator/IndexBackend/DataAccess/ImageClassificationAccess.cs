@@ -2,6 +2,7 @@
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend.DataAccess.ModelConversions;
 
@@ -9,7 +10,6 @@ namespace IndexBackend.DataAccess
 {
     public class ImageClassificationAccess
     {
-        public const string TABLE_IMAGE_CLASSIFICATION = "ImageClassificationV2";
         public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
 
         private AmazonDynamoDBClient Client { get; }
@@ -21,7 +21,7 @@ namespace IndexBackend.DataAccess
 
         public List<ClassificationModel> Scan(int lastPageId, string source)
         {
-            var queryRequest = new QueryRequest(TABLE_IMAGE_CLASSIFICATION)
+            var queryRequest = new QueryRequest(ImageClassification.TABLE_IMAGE_CLASSIFICATION)
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
@@ -50,7 +50,7 @@ namespace IndexBackend.DataAccess
         {
             artist = artist.ToLower();
 
-            var queryRequest = new QueryRequest(TABLE_IMAGE_CLASSIFICATION)
+            var queryRequest = new QueryRequest(ImageClassification.TABLE_IMAGE_CLASSIFICATION)
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
@@ -85,7 +85,7 @@ namespace IndexBackend.DataAccess
         {
             artist = artist.ToLower();
 
-            var scanRequest = new ScanRequest(TABLE_IMAGE_CLASSIFICATION)
+            var scanRequest = new ScanRequest(ImageClassification.TABLE_IMAGE_CLASSIFICATION)
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {

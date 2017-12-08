@@ -40,11 +40,17 @@
     <Reference Include="AWSSDK.Lambda, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.Lambda.3.3.10\lib\net45\AWSSDK.Lambda.dll</HintPath>
     </Reference>
+    <Reference Include="AWSSDK.Rekognition, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.Rekognition.3.3.8\lib\net45\AWSSDK.Rekognition.dll</HintPath>
+    </Reference>
     <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.S3.3.3.15\lib\net45\AWSSDK.S3.dll</HintPath>
     </Reference>
-    <Reference Include="Cryptography">
-      <HintPath>..\..\Dlls\Cryptography.dll</HintPath>
+    <Reference Include="AwsTools, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AwsTools.1.0.2\lib\net47\AwsTools.dll</HintPath>
+    </Reference>
+    <Reference Include="Cryptography, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Tgonzalez.Cryptography.1.0.0\lib\net47\Cryptography.dll</HintPath>
     </Reference>
     <Reference Include="Diacritics">
       <HintPath>..\..\Dlls\Diacritics.dll</HintPath>
@@ -60,6 +66,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Console, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Console.4.3.0\lib\net46\System.Console.dll</HintPath>
     </Reference>
@@ -80,11 +87,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleLogging.cs" />
     <Compile Include="HttpHeaders.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
+    <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageLabel.cs" />
     <Compile Include="Scripts\Backup.cs" />
+    <Compile Include="Scripts\DeployImageTable.cs" />
+    <Compile Include="Scripts\DeployLabelTable.cs" />
+    <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\GalleryApiTests.cs" />
+    <Compile Include="Tests\DataAccessTests\ImageAnalysisTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
     <Compile Include="AwsAccess\DynamoDbDelete.cs" />
     <Compile Include="AwsAccess\DynamoDbInsert.cs" />
@@ -110,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.DynamoDBv2.3.3.5\analyzers\dotnet\cs\AWSSDK.DynamoDBv2.CodeAnalysis.dll" />
+    <Analyzer Include="..\packages\AWSSDK.Rekognition.3.3.8\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

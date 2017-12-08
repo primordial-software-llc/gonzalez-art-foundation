@@ -6,6 +6,7 @@ using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.S3.Model;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend.DataAccess;
 using IndexBackend.DataAccess.ModelConversions;
@@ -15,7 +16,9 @@ namespace IndexBackend.Indexing
 {
     public class NationalGalleryOfArtIndexer : IIndex
     {
-        public string S3Bucket => "tgonzalez-image-archive/national-gallery-of-art";
+        public static readonly string BUCKET = "tgonzalez-image-archive";
+        public static readonly string S3_Path = "national-gallery-of-art";
+        public string S3Bucket => BUCKET + "/" + S3_Path;
         public string Source => "http://images.nga.gov";
         public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
         public int GetNextThrottleInMilliseconds => 0;
@@ -54,7 +57,7 @@ namespace IndexBackend.Indexing
 
                 var classificationConversion = new ClassificationConversion();
                 var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
-                DynamoDbClient.PutItem(ImageClassificationAccess.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
+                DynamoDbClient.PutItem(ImageClassification.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
             }
 
             return classification;
