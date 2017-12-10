@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web;
 using System.Web.Http;
+using Amazon.DynamoDBv2.Model;
+using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 
@@ -14,16 +17,29 @@ namespace MVC5App.Controllers
     [RoutePrefix("api/Gallery")]
     public class GalleryController : ApiController
     {
-        /// <summary>
-        ///  This really needs to go into dynamo db or even s3 for sanitization.
-        /// This should be the next improvement made to the site in the back-end before adding more data.
-        /// </summary>
-        const string DISCLOSED_IDENTITY_HASH = "3vwD/tk27FM5baxW1aEh+C6DGjS7Jr5FH9/RtsuH4Lk=";
-        private static readonly Authentication Authentication = new Authentication(DISCLOSED_IDENTITY_HASH);
+        private static string authoritativeHash;
+        private static readonly Authentication AUTHENTICATION = new Authentication();
 
         private void Authenticate(string token)
         {
-            if (!Authentication.IsTokenValid(token))
+            if (string.IsNullOrWhiteSpace(authoritativeHash))
+            {
+                var galleryUserRaw = DynamoDbClientFactory.Client.Query(
+                    new QueryRequest(
+                        new GalleryUser().GetTable())
+                    {
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                        {
+                            {":id", new AttributeValue {S = "47dfa78b-9c28-41a5-9048-1df383e4c48a"}}
+                        },
+                        KeyConditionExpression = "id = :id",
+                })
+                    .Items
+                    .FirstOrDefault();
+                var galleryUser = Conversion<GalleryUser>.ConvertToPoco(galleryUserRaw);
+                authoritativeHash = galleryUser.Hash;
+            }
+            if (!AUTHENTICATION.IsTokenValid(token, authoritativeHash))
             {
                 throw new Exception("Not authenticated");
             }
@@ -40,8 +56,8 @@ namespace MVC5App.Controllers
             var identityHash = Authentication.GetIdentityHash(username, password);
             var response = new AuthenticationTokenModel
             {
-                Token = Authentication.GetToken(identityHash),
-                ExpirationDate = Authentication.GetUtcCalendarDayExpiration
+                Token = AUTHENTICATION.GetToken(identityHash),
+                ExpirationDate = AUTHENTICATION.GetUtcCalendarDayExpiration
             };
             return response;
         }

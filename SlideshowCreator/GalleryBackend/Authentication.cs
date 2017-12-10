@@ -15,22 +15,15 @@ namespace GalleryBackend
         private string randomness;
         private string RandomnessText => dateOfRandomness + ":" + randomness;
 
-        private string IdentityHash { get; }
-
-        public Authentication(string identityHash)
-        {
-            IdentityHash = identityHash;
-        }
-
         public static string GetIdentityHash(string username, string password)
         {
             return Hash($"{username}:{password}");
         }
 
-        public bool IsTokenValid(string token)
+        public bool IsTokenValid(string token, string authoritativeHash)
         {
             token = token ?? string.Empty;
-            var authoritativeToken = GetToken(IdentityHash);
+            var authoritativeToken = GetToken(authoritativeHash);
             return token.Equals(authoritativeToken);
         }
 

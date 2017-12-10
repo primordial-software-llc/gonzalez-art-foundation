@@ -6,10 +6,9 @@ using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.S3.Model;
+using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
-using IndexBackend.DataAccess;
-using IndexBackend.DataAccess.ModelConversions;
 using IndexBackend.NationalGalleryOfArt;
 
 namespace IndexBackend.Indexing
@@ -55,8 +54,7 @@ namespace IndexBackend.Indexing
                     S3Path = S3Bucket + "/" + key
                 };
 
-                var classificationConversion = new ClassificationConversion();
-                var dynamoDbClassification = classificationConversion.ConvertToDynamoDb(classification);
+                var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
                 DynamoDbClient.PutItem(ImageClassification.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
             }
 

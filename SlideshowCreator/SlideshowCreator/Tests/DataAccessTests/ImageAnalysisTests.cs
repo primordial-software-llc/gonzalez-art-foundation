@@ -12,7 +12,6 @@ using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
-using IndexBackend.DataAccess.ModelConversions;
 using IndexBackend.Indexing;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -123,7 +122,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             };
             var dbResponse = client.Query(dbRequest);
             var result = dbResponse.Items.Single();
-            var sampleWork = new ClassificationConversion().ConvertToPoco(result);
+            var sampleWork = Conversion<ClassificationModel>.ConvertToPoco(result);
 
             var label = GetLabel(sampleWork);
 

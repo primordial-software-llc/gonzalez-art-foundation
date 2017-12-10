@@ -2,9 +2,9 @@
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
-using IndexBackend.DataAccess.ModelConversions;
 
 namespace IndexBackend.DataAccess
 {
@@ -12,9 +12,9 @@ namespace IndexBackend.DataAccess
     {
         public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
 
-        private AmazonDynamoDBClient Client { get; }
+        private IAmazonDynamoDB Client { get; }
 
-        public ImageClassificationAccess(AmazonDynamoDBClient client)
+        public ImageClassificationAccess(IAmazonDynamoDB client)
         {
             Client = client;
         }
@@ -42,7 +42,7 @@ namespace IndexBackend.DataAccess
 
             var response = Client.Query(queryRequest);
 
-            var typedResponse = new ClassificationConversion().ConvertToPoco(response.Items);
+            var typedResponse = Conversion<ClassificationModel>.ConvertToPoco(response.Items);
             return typedResponse;
         }
 
@@ -77,7 +77,7 @@ namespace IndexBackend.DataAccess
                 }
             } while (queryResponse.LastEvaluatedKey.Any());
 
-            var typedResponse = new ClassificationConversion().ConvertToPoco(allMatches);
+            var typedResponse = Conversion<ClassificationModel>.ConvertToPoco(allMatches);
             return typedResponse;
         }
 
@@ -112,7 +112,7 @@ namespace IndexBackend.DataAccess
                 }
             } while (scanResponse.LastEvaluatedKey.Any());
 
-            var typedResponse = new ClassificationConversion().ConvertToPoco(allMatches);
+            var typedResponse = Conversion<ClassificationModel>.ConvertToPoco(allMatches);
             return typedResponse;
         }
     }

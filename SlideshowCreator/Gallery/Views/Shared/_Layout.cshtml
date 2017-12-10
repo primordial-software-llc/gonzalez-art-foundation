@@ -52,7 +52,9 @@
             updateAuthenticationForm();
 
             $('#login').click(function() {
-                var url = '/api/Gallery/token?username=' + $('#username').val() + '&password=' + $('#password').val();
+                var url = '/api/Gallery/token' +
+                    '?username=' + encodeURIComponent($('#username').val()) +
+                    '&password=' + encodeURIComponent($('#password').val());
 
                 fetch(url, { mode: 'cors' }).then(function(response) {
                     response

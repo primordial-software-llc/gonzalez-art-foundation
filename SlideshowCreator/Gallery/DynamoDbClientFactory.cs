@@ -11,12 +11,14 @@ namespace MVC5App
     public class DynamoDbClientFactory
     {
         private readonly ImageClassificationAccess access;
+
+        public static IAmazonDynamoDB Client => new AmazonDynamoDBClient(
+            GalleryAwsCredentialsFactory.GetCredentialsForWebsite(),
+            RegionEndpoint.USEast1);
+
         public DynamoDbClientFactory()
         {
-            var client = new AmazonDynamoDBClient(
-                GalleryAwsCredentialsFactory.GetCredentialsForWebsite(),
-                RegionEndpoint.USEast1);
-            access = new ImageClassificationAccess(client);
+            access = new ImageClassificationAccess(Client);
         }
 
         public List<ClassificationModel> SearchByExactArtist(string artistName)
