@@ -44,7 +44,11 @@ namespace GalleryBackend.Model
 
         public Dictionary<string, AttributeValue> GetKey()
         {
-            throw new System.NotImplementedException();
+            return new Dictionary<string, AttributeValue>
+            {
+                {"source", new AttributeValue {S = Source}},
+                {"pageId", new AttributeValue {N = PageId.ToString()}}
+            };
         }
 
         string IModel.GetTable()

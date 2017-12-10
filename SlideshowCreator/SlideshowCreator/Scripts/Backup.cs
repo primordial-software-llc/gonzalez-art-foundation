@@ -23,5 +23,6 @@ namespace SlideshowCreator.Scripts
             var backupResponse = client.CreateBackup(request);
             Console.WriteLine(JsonConvert.SerializeObject(backupResponse.BackupDetails));
         }
+
     }
 }

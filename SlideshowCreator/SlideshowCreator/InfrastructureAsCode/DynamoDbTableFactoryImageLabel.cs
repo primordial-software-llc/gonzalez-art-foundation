@@ -1,26 +1,24 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using GalleryBackend;
+using AwsTools;
 
 namespace SlideshowCreator.InfrastructureAsCode
 {
     class DynamoDbTableFactoryImageLabel
     {
         private DynamoDbTableFactory TableFactory { get; }
-        private AmazonDynamoDBClient Client { get; }
 
         public DynamoDbTableFactoryImageLabel(AmazonDynamoDBClient client)
         {
             TableFactory = new DynamoDbTableFactory(client);
-            Client = client;
         }
 
-        public static CreateTableRequest GetTableDefinition()
+        public static CreateTableRequest GetTableDefinition<T>() where T : IModel, new()
         {
             var request = new CreateTableRequest
             {
-                TableName = ImageClassification.TABLE_IMAGE_LABEL,
+                TableName = new T().GetTable(),
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement { AttributeName = "s3Path", KeyType = "HASH" }
@@ -39,9 +37,9 @@ namespace SlideshowCreator.InfrastructureAsCode
             return request;
         }
 
-        public void CreateTable()
+        public void CreateTable<T>() where T : IModel, new()
         {
-            var request = GetTableDefinition();
+            var request = GetTableDefinition<T>();
             TableFactory.CreateTable(request);
         }
 

@@ -1,4 +1,5 @@
-﻿using IndexBackend;
+﻿using GalleryBackend.Model;
+using IndexBackend;
 using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.Scripts
@@ -9,7 +10,7 @@ namespace SlideshowCreator.Scripts
         public void Deploy()
         {
             var client = new AwsClientFactory().CreateDynamoDbClient();
-            new DynamoDbTableFactoryImageLabel(client).CreateTable();
+            new DynamoDbTableFactoryImageLabel(client).CreateTable<ImageLabel>();
         }
     }
 }
