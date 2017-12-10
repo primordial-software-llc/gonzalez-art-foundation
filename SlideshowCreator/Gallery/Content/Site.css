@@ -54,12 +54,14 @@ a.nav-link:hover {
 
 #likeSearchText,
 #exactSearchText,
-#idSearchText {
+#idSearchText,
+#tagSearchText {
     width: 85%;
 }
 
 #likeSearch,
 #exactSearch,
-#idSearch {
+#idSearch,
+#tagSearch {
     width: 13%;
 }

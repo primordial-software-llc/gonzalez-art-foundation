@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Rekognition;
@@ -19,6 +20,11 @@ using S3Object = Amazon.Rekognition.Model.S3Object;
 
 namespace SlideshowCreator.Tests.DataAccessTests
 {
+    /// <summary>
+    /// http://docs.aws.amazon.com/rekognition/latest/dg/limits.html
+    /// Maximum images size as raw bytes passed in as parameter to an API is 5 MB.
+    /// Maximum image size stored as an Amazon S3 object is limited to 15 MB.
+    /// </summary>
     class ImageAnalysisTests
     {
         private readonly IAmazonRekognition rekognitionClient = new AwsClientFactory().CreateRekognitionClientClient();
@@ -59,11 +65,14 @@ namespace SlideshowCreator.Tests.DataAccessTests
                         }
                     }
                 };
-                scanRequest.Limit = PAGE_SIZE; // Cycle between doing a batch of image analaysis labels and inserts. Don't wait too long and slam the db then go quiet.
+                scanRequest.Limit = PAGE_SIZE;
                 scanResponse = client.Query(scanRequest);
-                var images = Conversion<ClassificationModel>.ConvertToPoco(scanResponse.Items);
-                var labels = images.Select(GetLabel).ToList();
-
+                var images = Conversion<ClassificationModel>.ConvertToPoco(scanResponse.Items)
+                    .Where(x =>
+                        x.S3Path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                        x.S3Path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                var labels = GetLabels(images);
                 while (labels.Any())
                 {
                     var batch = labels.Take(PAGE_SIZE).ToList();
@@ -71,7 +80,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
                     var failures = awsToolsClient.Insert(batch);
                     labels.AddRange(failures);
                 }
-
+                
                 File.WriteAllText(path, JsonConvert.SerializeObject(scanRequest.ExclusiveStartKey));
             } while (scanResponse.LastEvaluatedKey.Any());
 
@@ -122,6 +131,20 @@ namespace SlideshowCreator.Tests.DataAccessTests
 
             // The image is of a half-circle of monks using a tall device to drive poles over the river to make a bridge on a farm.
             Assert.IsTrue(label.Labels.Any(x => x.StartsWith("Flower Arrangement: 5")));
+        }
+
+        private List<ImageLabel> GetLabels(List<ClassificationModel> images)
+        {
+            var labels = new ConcurrentBag<ImageLabel>();
+            Parallel.ForEach(
+                images,
+                new ParallelOptions { MaxDegreeOfParallelism = 10 },
+                image =>
+                {
+                    ImageLabel label = GetLabel(image);
+                    labels.Add(label);
+                });
+            return labels.ToList();
         }
 
         private ImageLabel GetLabel(ClassificationModel image)

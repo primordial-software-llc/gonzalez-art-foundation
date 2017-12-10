@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -8,13 +7,11 @@ using GalleryBackend;
 using IndexBackend;
 using IndexBackend.Indexing;
 using NUnit.Framework;
-using SlideshowCreator.InfrastructureAsCode;
 
 namespace SlideshowCreator.Tests
 {
     class TheAthenaeumIndexingTests
     {
-        public const int CONCURRENCY = 100;
         private readonly Throttle throttle = new Throttle();
         private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
