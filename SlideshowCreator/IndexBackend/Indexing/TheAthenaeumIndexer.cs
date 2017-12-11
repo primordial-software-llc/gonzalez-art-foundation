@@ -49,7 +49,7 @@ namespace IndexBackend.Indexing
                 var classifier = new Classifier();
                 classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
                 var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
-                Client.PutItem(ImageClassification.TABLE_IMAGE_CLASSIFICATION, dynamoDbClassification);
+                Client.PutItem(new ClassificationModel().GetTable(), dynamoDbClassification);
             }
 
             return classification;

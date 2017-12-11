@@ -9,7 +9,6 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
 using AwsTools;
-using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -29,12 +28,39 @@ namespace SlideshowCreator.Tests.DataAccessTests
         private readonly IAmazonRekognition rekognitionClient = new AwsClientFactory().CreateRekognitionClientClient();
         private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
 
-        [Test]
-        public void Run()
+        //[Test]
+        public void Normalize_Labels()
+        {
+            const int PAGE_SIZE = 25;
+            var scanRequest = new ScanRequest(new ImageLabel().GetTable());
+            var awsToolsClient = new DynamoDbClient<ImageLabel>(client, new ConsoleLogging());
+            ScanResponse scanResponse = null;
+            do
+            {
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanRequest.Limit = PAGE_SIZE;
+                scanResponse = client.Scan(scanRequest);
+                var labels = Conversion<ImageLabel>.ConvertToPoco(scanResponse.Items);
+                while (labels.Any())
+                {
+                    var batch = labels.Take(PAGE_SIZE).ToList();
+                    labels = labels.Skip(PAGE_SIZE).ToList();
+                    var failures = awsToolsClient.Insert(batch);
+                    labels.AddRange(failures);
+                }
+            } while (scanResponse.LastEvaluatedKey.Any());
+
+        }
+
+        //[Test]
+        public void Analyze_All()
         {
             const int PAGE_SIZE = 25;
             var path = @"C:\Users\peon\Desktop\projects\SlideshowCreator\SlideshowCreator\image-analysis-progress.json";
-            var scanRequest = new QueryRequest(ImageClassification.TABLE_IMAGE_CLASSIFICATION);
+            var scanRequest = new QueryRequest(new ClassificationModel().GetTable());
             var awsToolsClient = new DynamoDbClient<ImageLabel>(client, new ConsoleLogging());
             QueryResponse scanResponse = null;
 
@@ -93,7 +119,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Image_Analysis_From_Over_5MB_File()
         {
             var sampleWorkId = 100444;
-            var dbRequest = new QueryRequest(ImageClassification.TABLE_IMAGE_CLASSIFICATION)
+            var dbRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 KeyConditions = new Dictionary<string, Condition>
                 {
@@ -129,7 +155,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             Console.WriteLine(JsonConvert.SerializeObject(label));
 
             // The image is of a half-circle of monks using a tall device to drive poles over the river to make a bridge on a farm.
-            Assert.IsTrue(label.Labels.Any(x => x.StartsWith("Flower Arrangement: 5")));
+            Assert.IsTrue(label.LabelsAndConfidence.Any(x => x.StartsWith("Flower Arrangement: 5")));
         }
 
         private List<ImageLabel> GetLabels(List<ClassificationModel> images)
@@ -167,8 +193,11 @@ namespace SlideshowCreator.Tests.DataAccessTests
                 Source = image.Source,
                 PageId = image.PageId,
                 S3Path = image.S3Path,
-                Labels = response.Labels.Select(x => x.Name + ": " + x.Confidence).ToList() // I can't do parallel lists, because duplicates aren't allowed so I'm merging and hoping ": " isn't used in any labels.
-            };
+                LabelsAndConfidence = response
+                    .Labels
+                    .Select(x => x.Name + ": " + x.Confidence).ToList(),
+                NormalizedLabels = response.Labels.Select(x => x.Name.ToLower()).ToList()
+        };
 
             return imageLabel;
         }

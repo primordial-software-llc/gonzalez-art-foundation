@@ -51,9 +51,9 @@ namespace GalleryBackend.Model
             };
         }
 
-        string IModel.GetTable()
+        public string GetTable()
         {
-            return ImageClassification.TABLE_IMAGE_CLASSIFICATION;
+            return "ImageClassificationV2";
         }
 
     }

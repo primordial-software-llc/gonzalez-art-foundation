@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend.DataAccess;
 
 namespace SlideshowCreator.InfrastructureAsCode
@@ -21,7 +21,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         {
             var request = new CreateTableRequest
             {
-                TableName = ImageClassification.TABLE_IMAGE_CLASSIFICATION,
+                TableName = new ClassificationModel().GetTable(),
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement
@@ -62,7 +62,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         {
             var request = GetTableDefinition();
             TableFactory.CreateTable(request);
-            AddArtistNameGlobalSecondaryIndex(ImageClassification.TABLE_IMAGE_CLASSIFICATION);
+            AddArtistNameGlobalSecondaryIndex(new ClassificationModel().GetTable());
         }
         
         private void AddArtistNameGlobalSecondaryIndex(string tableName)

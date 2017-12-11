@@ -3,6 +3,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
 using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;
 using IndexBackend.NationalGalleryOfArt;
@@ -34,7 +35,7 @@ namespace SlideshowIndexer
             Console.WriteLine("Backing up DynamoDb Data to S3");
             var request = new CreateBackupRequest
             {
-                TableName = ImageClassification.TABLE_IMAGE_CLASSIFICATION,
+                TableName = new ClassificationModel().GetTable(),
                 BackupName = "image-classification-backup-" + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ssZ")
             };
             var backupResponse = DynamoDbClient.CreateBackup(request);

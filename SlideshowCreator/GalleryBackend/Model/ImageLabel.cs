@@ -17,7 +17,14 @@ namespace GalleryBackend.Model
         public int PageId { get; set; }
 
         [JsonProperty("Labels")]
-        public List<string> Labels { get; set; }
+        public List<string> LabelsAndConfidence { get; set; }
+
+        [JsonProperty("normalizedLabels")]
+        public List<string> NormalizedLabels { get; set; }
+
+        // Data needs to be cleaned up.
+        // [JsonProperty("originalLabels")]
+        // public List<string> OriginalLabels { get; set; }
 
         public Dictionary<string, AttributeValue> GetKey()
         {

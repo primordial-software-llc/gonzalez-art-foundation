@@ -2,6 +2,7 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -17,7 +18,7 @@ namespace SlideshowCreator.Scripts
         {
             var request = new CreateBackupRequest
             {
-                TableName = ImageClassification.TABLE_IMAGE_CLASSIFICATION,
+                TableName = new ClassificationModel().GetTable(),
                 BackupName = "image-classification-backup-" + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ssZ")
             };
             var backupResponse = client.CreateBackup(request);

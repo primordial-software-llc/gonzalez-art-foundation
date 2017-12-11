@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Amazon.DynamoDBv2;
 using IndexBackend;
 using IndexBackend.DataAccess;
@@ -17,8 +18,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         {
             var dataAccess = new ImageClassificationAccess(client);
             var results = dataAccess.FindAllForExactArtist("Jean-Leon Gerome");
-
-            Assert.AreEqual(238, results.Count); // Should be 244. According to the site.
+            Assert.AreEqual(244, results.Count);
         }
 
         [Test]
@@ -26,22 +26,43 @@ namespace SlideshowCreator.Tests.DataAccessTests
         {
             var dataAccess = new ImageClassificationAccess(client);
             var results = dataAccess.FindAllForLikeArtist("Jean-Leon Gerome");
-            Assert.AreEqual(243, results.Count); // Should be 249. According to the site there are 244 Jean-Leon Gerome and 5 Jean-Leon Gerome Ferris.
+            Assert.AreEqual(249, results.Count);
+        }
+
+        [Test]
+        public void Test_Find_By_Label()
+        {
+            var dataAccess = new ImageClassificationAccess(client);
+            var results = dataAccess.FindByLabel("Ancient Egypt");
+            Assert.AreEqual(2871, results.Count);
+            results = results
+                .Where(
+                    x => x.LabelsAndConfidence.Any(y =>
+                        y.ToLower().StartsWith("ancient egypt: 99", StringComparison.OrdinalIgnoreCase))
+                )
+                .ToList();
+            foreach (var result in results)
+            {
+                foreach (var resultLabel in result.LabelsAndConfidence)
+                {
+                    Console.WriteLine(resultLabel);
+                }
+                Console.WriteLine(result.S3Path);
+            }
+            Console.WriteLine(results.Count);
+            Assert.GreaterOrEqual(results.Count, 2);
         }
 
         [Test]
         public void Test_Scan()
         {
             var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.Scan(0, new TheAthenaeumIndexer().Source);
-            Assert.AreEqual(7331, results.Count);
+            var results = dataAccess.Scan(0, new TheAthenaeumIndexer().Source, 10);
+            Assert.AreEqual(10, results.Count);
             Assert.AreEqual(33, results.First().PageId);
-            Assert.AreEqual(7413, results.Last().PageId);
-
-            var results2 = dataAccess.Scan(results.Last().PageId, new TheAthenaeumIndexer().Source);
-            Assert.AreEqual(7111, results2.Count);
-            Assert.AreEqual(7414, results2.First().PageId);
-            Assert.AreEqual(14752, results2.Last().PageId);
+            Assert.AreEqual(42, results.Last().PageId);
+            var results2 = dataAccess.Scan(results.Last().PageId, new TheAthenaeumIndexer().Source, 10);
+            Assert.AreEqual(43, results2.First().PageId);
         }
     }
 }
