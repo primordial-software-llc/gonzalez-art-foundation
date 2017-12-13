@@ -4,6 +4,7 @@ using Amazon.DynamoDBv2;
 using IndexBackend;
 using IndexBackend.DataAccess;
 using IndexBackend.Indexing;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.DataAccessTests
@@ -17,7 +18,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Find_All_For_Exact_Artist()
         {
             var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForExactArtist("Jean-Leon Gerome");
+            var results = dataAccess.FindAllForExactArtist("Jean-Leon Gerome", new TheAthenaeumIndexer().Source);
             Assert.AreEqual(244, results.Count);
         }
 
@@ -25,7 +26,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Find_All_For_Like_Artist()
         {
             var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForLikeArtist("Jean-Leon Gerome");
+            var results = dataAccess.FindAllForLikeArtist("Jean-Leon Gerome", new TheAthenaeumIndexer().Source);
             Assert.AreEqual(249, results.Count);
         }
 
@@ -51,6 +52,17 @@ namespace SlideshowCreator.Tests.DataAccessTests
             }
             Console.WriteLine(results.Count);
             Assert.GreaterOrEqual(results.Count, 2);
+        }
+
+        [Test]
+        public void Test_Get_Labels()
+        {
+            var dataAccess = new ImageClassificationAccess(client);
+            var results = dataAccess.GetLabel(118814);
+            Console.WriteLine(JsonConvert.SerializeObject(results));
+            // [{"s3Path":"tgonzalez-image-archive/national-gallery-of-art/image-118814.jpg","source":"http://images.nga.gov","pageId":118814,"Labels":["Ancient Egypt: 55.88667","Art: 75.78365","Collage: 53.46183","Drawing: 67.61792","Fossil: 93.04782","Mosaic: 51.66335","Ornament: 75.78365","Outdoors: 57.51022","Paper: 59.10925","Poster: 53.46183","Sand: 57.51022","Sketch: 67.61792","Soil: 57.51022","Tapestry: 75.78365","Tile: 51.66335"],"normalizedLabels":["ancient egypt","art","collage","drawing","fossil","mosaic","ornament","outdoors","paper","poster","sand","sketch","soil","tapestry","tile"]}]
+            Assert.IsTrue(results.LabelsAndConfidence.Any(x => x.StartsWith("Ancient Egypt", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(results.LabelsAndConfidence.Any(x => x.StartsWith("Outdoors")));
         }
 
         [Test]

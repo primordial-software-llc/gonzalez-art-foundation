@@ -21,20 +21,30 @@ namespace MVC5App
             access = new ImageClassificationAccess(Client);
         }
 
-        public List<ClassificationModel> SearchByExactArtist(string artistName)
+        public List<ClassificationModel> SearchByExactArtist(string artistName, string source)
         {
-            return access.FindAllForExactArtist(artistName);
+            return access.FindAllForExactArtist(artistName, source);
         }
 
-        public List<ClassificationModel> SearchByLikeArtist(string artistName)
+        public List<ClassificationModel> SearchByLikeArtist(string artistName, string source)
         {
-            return access.FindAllForLikeArtist(artistName);
+            return access.FindAllForLikeArtist(artistName, source);
         }
 
-        public List<ClassificationModel> ScanByPage(int lastPageId)
+        public List<ClassificationModel> ScanByPage(int? lastPageId, string source)
         {
-            return access.Scan(lastPageId, new TheAthenaeumIndexer().Source);
+            return access.Scan(lastPageId, source);
         }
 
+        public List<ImageLabel> SearchByLabel(string label)
+        {
+            return access.FindByLabel(label);
+        }
+
+        public ImageLabel GetLabel(int pageId)
+        {
+            return access.GetLabel(pageId);
+        }
+        
     }
 }

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using GalleryBackend;
@@ -34,7 +32,7 @@ namespace SlideshowCreator.Tests
             ngaDataAccess.Init();
             indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
 
-            var galleryClient = new GalleryClient(privateConfig.GalleryUsername, privateConfig.GalleryPassword);
+            var galleryClient = new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword);
             vpnCheck = new VpnCheck(galleryClient);
             vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
         }

@@ -20,6 +20,7 @@ namespace SlideshowIndexer
         static void Main(string[] args)
         {
             var galleryClient = new GalleryClient(
+                "tgonzalez.net",
                 PrivateConfig.GalleryUsername,
                 PrivateConfig.GalleryPassword);
             var vpnCheck = new VpnCheck(galleryClient);

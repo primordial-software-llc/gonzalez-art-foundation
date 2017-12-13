@@ -7,32 +7,29 @@
         cursor: pointer;
     }
 </style>
-
-<div class="jumbotron">
-    <h1>Digital Art Gallery</h1>
-</div>
-
+<h1>Digital Art Gallery</h1>
 <h1>Slideshow</h1>
-
+<div class="input-form">
+    <select id="siteSelection" class="form-control">
+        <option value="http://www.the-athenaeum.org">http://www.the-athenaeum.org</option>
+        <option value="http://images.nga.gov">http://images.nga.gov</option>
+    </select>
+</div>
 <div class="input-form">
     <input id="likeSearchText" type="text" placeholder="Search by Like Artist e.g. Renoir" class="form-control" />
     <input id="likeSearch" type="button" value="Search" class="btn btn-secondary" />
 </div>
-
 <div class="input-form">
     <input id="exactSearchText" type="text" placeholder="Search by Exact Artist e.g Pierre Auguste Renoir" class="form-control" />
     <input id="exactSearch" type="button" value="Search" class="btn btn-secondary" />
 </div>
-
 <div class="input-form">
     <input id="idSearchText" type="text" placeholder="View from last image ID e.g. 0" class="form-control" />
     <input id="idSearch" type="button" value="Search" class="btn btn-secondary" />
 </div>
-
 <div class="input-form">
     <input id="tagSearchText" type="text" placeholder="Search by Tags e.g. Landscape, Indoors, Ancient Egypt, Cathedral" class="form-control" />
     <input id="tagSearch" type="button" value="Search" class="btn btn-secondary" />
 </div>
-
 <div id="search-results">
 </div>

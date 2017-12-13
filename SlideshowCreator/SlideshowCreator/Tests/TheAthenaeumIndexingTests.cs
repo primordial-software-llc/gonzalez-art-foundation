@@ -24,7 +24,7 @@ namespace SlideshowCreator.Tests
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, client, PublicConfig.TheAthenaeumArt);
             
-            vpnCheck = new VpnCheck(new GalleryClient(privateConfig.GalleryUsername, privateConfig.GalleryPassword));
+            vpnCheck = new VpnCheck(new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword));
             vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
         }
 

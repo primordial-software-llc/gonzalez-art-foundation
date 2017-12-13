@@ -22,10 +22,6 @@ namespace GalleryBackend.Model
         [JsonProperty("normalizedLabels")]
         public List<string> NormalizedLabels { get; set; }
 
-        // Data needs to be cleaned up.
-        // [JsonProperty("originalLabels")]
-        // public List<string> OriginalLabels { get; set; }
-
         public Dictionary<string, AttributeValue> GetKey()
         {
             return new Dictionary<string, AttributeValue>

@@ -4,6 +4,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
 using GalleryBackend.Model;
+using IndexBackend.Indexing;
 
 namespace IndexBackend.DataAccess
 {
@@ -18,32 +19,35 @@ namespace IndexBackend.DataAccess
             Client = client;
         }
 
-        public List<ClassificationModel> Scan(int lastPageId, string source, int? limit = null)
+        public List<ClassificationModel> Scan(int? lastPageId, string source, int? limit = null)
         {
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":sources", new AttributeValue {S = source}}
+                    {":source", new AttributeValue {S = source}}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     {"#source", "source"}
                 },
-                KeyConditionExpression = "#source = :sources",
+                KeyConditionExpression = "#source = :source",
                 ExclusiveStartKey = new Dictionary<string, AttributeValue>
                 {
                     {"source", new AttributeValue {S = source}},
-                    {"pageId", new AttributeValue {N = lastPageId.ToString()}}
+                    {"pageId", new AttributeValue {N = lastPageId.GetValueOrDefault().ToString()}}
                 },
-                Limit = limit.GetValueOrDefault()
             };
+            if (limit.HasValue)
+            {
+                queryRequest.Limit = limit.GetValueOrDefault();
+            }
             var response = Client.Query(queryRequest);
             return Conversion<ClassificationModel>.ConvertToPoco(response.Items);
         }
 
-        public List<ClassificationModel> FindAllForExactArtist( string artist)
+        public List<ClassificationModel> FindAllForExactArtist(string artist, string source)
         {
             artist = artist.ToLower();
 
@@ -51,10 +55,16 @@ namespace IndexBackend.DataAccess
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":artist", new AttributeValue {S = artist}}
+                    {":artist", new AttributeValue {S = artist}},
+                    {":source", new AttributeValue {S = source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#source", "source" }
                 },
                 KeyConditionExpression = "artist = :artist",
-                IndexName = ARTIST_NAME_INDEX
+                IndexName = ARTIST_NAME_INDEX,
+                FilterExpression = "#source = :source"
             };
 
             QueryResponse queryResponse = null;
@@ -78,7 +88,7 @@ namespace IndexBackend.DataAccess
             return typedResponse;
         }
 
-        public List<ClassificationModel> FindAllForLikeArtist(string artist)
+        public List<ClassificationModel> FindAllForLikeArtist(string artist, string source)
         {
             artist = artist.ToLower();
 
@@ -86,9 +96,14 @@ namespace IndexBackend.DataAccess
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":artist", new AttributeValue {S = artist}}
+                    {":artist", new AttributeValue {S = artist}},
+                    {":source", new AttributeValue {S = source}}
                 },
-                FilterExpression = "contains(artist, :artist)",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#source", "source" }
+                },
+                FilterExpression = "contains(artist, :artist) AND #source = :source",
                 IndexName = ARTIST_NAME_INDEX
             };
 
@@ -139,6 +154,39 @@ namespace IndexBackend.DataAccess
                 }
             } while (scanResponse.LastEvaluatedKey.Any());
             return Conversion<ImageLabel>.ConvertToPoco(allMatches);
+        }
+
+        public ImageLabel GetLabel(int pageId)
+        {
+            var request = new QueryRequest(new ImageLabel().GetTable())
+            {
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = new NationalGalleryOfArtIndexer().Source}},
+                    {":pageId", new AttributeValue {N = pageId.ToString()}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#s", "source" }
+                },
+                KeyConditionExpression = "#s = :source AND pageId = :pageId",
+                IndexName = "source-pageId-index"
+            };
+            QueryResponse response = null;
+            var allMatches = new List<Dictionary<string, AttributeValue>>();
+            do
+            {
+                if (response != null)
+                {
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+                }
+                response = Client.Query(request);
+                if (response.Items.Any())
+                {
+                    allMatches.AddRange(response.Items);
+                }
+            } while (response.LastEvaluatedKey.Any());
+            return Conversion<ImageLabel>.ConvertToPoco(allMatches.FirstOrDefault());
         }
     }
 }

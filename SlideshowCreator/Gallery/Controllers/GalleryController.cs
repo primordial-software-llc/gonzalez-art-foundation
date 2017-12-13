@@ -63,30 +63,38 @@ namespace MVC5App.Controllers
         }
 
         [Route("searchLikeArtist")]
-        public List<ClassificationModel> GetLike(string token, string artist)
+        public List<ClassificationModel> GetLike(string token, string artist, string source = null)
         {
             Authenticate(token);
-
-            var likeJeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByLikeArtist(artist);
-            return likeJeanLeonGeromeWorks;
+            return new DynamoDbClientFactory().SearchByLikeArtist(artist, source);
         }
 
         [Route("searchExactArtist")]
-        public List<ClassificationModel> GetExact(string token, string artist)
+        public List<ClassificationModel> GetExact(string token, string artist, string source = null)
         {
             Authenticate(token);
-
-            var jeanLeonGeromeWorks = new DynamoDbClientFactory().SearchByExactArtist(artist);
-            return jeanLeonGeromeWorks;
+            return new DynamoDbClientFactory().SearchByExactArtist(artist, source);
         }
 
-        [Route("scan")]
-        public List<ClassificationModel> GetScanByPage(string token, int lastPageId)
+        [Route("searchLabel")]
+        public List<ImageLabel> GetSearchByLabel(string token, string label)
         {
             Authenticate(token);
+            return new DynamoDbClientFactory().SearchByLabel(label);
+        }
 
-            var jeanLeonGeromeWorks = new DynamoDbClientFactory().ScanByPage(lastPageId);
-            return jeanLeonGeromeWorks;
+        [Route("{pageId}/label")]
+        public ImageLabel GetLabels(string token, int pageId)
+        {
+            Authenticate(token);
+            return new DynamoDbClientFactory().GetLabel(pageId);
+        }
+        
+        [Route("scan")]
+        public List<ClassificationModel> GetScanByPage(string token, int? lastPageId, string source = null)
+        {
+            Authenticate(token);
+            return new DynamoDbClientFactory().ScanByPage(lastPageId, source);
         }
 
         [Route("ip")]
@@ -100,21 +108,6 @@ namespace MVC5App.Controllers
                 OriginalVisitorIPAddress = HttpContext.Current.Request.Headers["CF-Connecting-IP"]
             };
             return ipAddress;
-        }
-
-        [Route("wait")]
-        public WaitTime GetWait(string token, int waitInMilliseconds)
-        {
-            Authenticate(token);
-
-            var waitTime = new WaitTime
-            {
-                WaitInMilliseconds = waitInMilliseconds
-            };
-
-            System.Threading.Thread.Sleep(waitTime.WaitInMilliseconds);
-
-            return waitTime;
         }
 
     }

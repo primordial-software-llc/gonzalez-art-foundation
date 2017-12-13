@@ -10,13 +10,15 @@ namespace GalleryBackend
     {
         public string Token { get; }
         public HttpClient Client { get; }
+        public string Domain { get; }
 
-        public GalleryClient(string username, string password)
+        public GalleryClient(string domain, string username, string password)
         {
+            Domain = domain;
+            var url = $"https://{Domain}/api/Gallery/token" +
+                      $"?username={HttpUtility.UrlEncode(username)}" +
+                      $"&password={HttpUtility.UrlEncode(password)}";
             Client = new HttpClient();
-            
-            var url = $"https://tgonzalez.net/api/Gallery/token?username={username}&password={password}";
-
             var response = Client.GetStringAsync(url).Result;
             var parsedResponse = JsonConvert.DeserializeObject<AuthenticationTokenModel>(response);
             Token = parsedResponse.Token;
@@ -24,39 +26,58 @@ namespace GalleryBackend
 
         public RequestIPAddress GetIPAddress()
         {
-            var url = $"https://tgonzalez.net/api/Gallery/ip?token={HttpUtility.UrlEncode(Token)}";
+            var url = $"https://{Domain}/api/Gallery/ip" +
+                      $"?token={HttpUtility.UrlEncode(Token)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<RequestIPAddress>(response);
         }
 
-        public WaitTime GetWaitTime(int waitTimeInMilliseconds)
+        public List<ClassificationModel> SearchExactArtist(string artist, string source)
         {
-            var url = "https://tgonzalez.net/api/Gallery/wait" +
-                $"?token={HttpUtility.UrlEncode(Token)}" +
-                $"&waitInMilliseconds={waitTimeInMilliseconds}";
-            var response = Client.GetStringAsync(url).Result;
-            return JsonConvert.DeserializeObject<WaitTime>(response);
-        }
-
-        public List<ClassificationModel> SearchExactArtist(string artist)
-        {
-            var url = $"https://tgonzalez.net/api/Gallery/searchExactArtist?token={HttpUtility.UrlEncode(Token)}&artist={artist}";
+            var url = $"https://{Domain}/api/Gallery/searchExactArtist" +
+                      $"?token={HttpUtility.UrlEncode(Token)}" +
+                      $"&artist={HttpUtility.UrlEncode(artist)}" +
+                      $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
         }
 
-        public List<ClassificationModel> SearchLikeArtist(string artist)
+        public List<ClassificationModel> SearchLikeArtist(string artist, string source)
         {
-            var url = $"https://tgonzalez.net/api/Gallery/searchLikeArtist?token={HttpUtility.UrlEncode(Token)}&artist={artist}";
+            var url = $"https://{Domain}/api/Gallery/searchLikeArtist" +
+                      $"?token={HttpUtility.UrlEncode(Token)}" +
+                      $"&artist={HttpUtility.UrlEncode(artist)}"+
+                      $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
         }
 
-        public List<ClassificationModel> Scan(int lastPageId = 0)
+        public List<ClassificationModel> Scan(int? lastPageId, string source)
         {
-            var url = $"https://tgonzalez.net/api/Gallery/scan?token={HttpUtility.UrlEncode(Token)}&lastPageId={lastPageId}";
+            var url = $"https://{Domain}/api/Gallery/scan" +
+                      $"?token={HttpUtility.UrlEncode(Token)}" +
+                      $"&lastPageId={lastPageId.GetValueOrDefault()}" +
+                      $"&source={HttpUtility.UrlEncode(source)}";
+
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+        }
+
+        public List<ImageLabel> SearchLabel(string label)
+        {
+            var url = $"https://{Domain}/api/Gallery/searchLabel" +
+                      $"?token={HttpUtility.UrlEncode(Token)}" +
+                      $"&label={HttpUtility.UrlEncode(label)}";
+            var response = Client.GetStringAsync(url).Result;
+            return JsonConvert.DeserializeObject<List<ImageLabel>>(response);
+        }
+
+        public List<ImageLabel> GetImageLabels(int pageId)
+        {
+            var url = $"https://{Domain}/api/Gallery/{pageId}/labels" +
+                      $"?token={HttpUtility.UrlEncode(Token)}";
+            var response = Client.GetStringAsync(url).Result;
+            return JsonConvert.DeserializeObject<List<ImageLabel>>(response);
         }
 
     }

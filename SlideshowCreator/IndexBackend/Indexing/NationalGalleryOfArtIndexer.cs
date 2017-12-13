@@ -7,7 +7,6 @@ using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.S3.Model;
 using AwsTools;
-using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend.NationalGalleryOfArt;
 

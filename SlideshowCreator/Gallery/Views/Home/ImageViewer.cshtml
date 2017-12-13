@@ -10,102 +10,7 @@
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/jquery")
     <link rel="stylesheet" type="text/css" href="/Content/ImageViewer.css">
-    <script>
-        var slideshowTimer;
-        var hasMovedMouseOnImageViewerPage = false;
-
-        function getImageUrl(item) {
-            return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
-        }
-
-        function showCurrentImage() {
-            var slideshowItems = JSON.parse(localStorage.getItem('slideshowData'));
-            var slideshowIndex = parseInt(localStorage.getItem("slideshowIndex"));
-            var currentImage = slideshowItems[slideshowIndex];
-            $('#slideshow-index').html(slideshowIndex + 1);
-            $('#slideshow-count').html(slideshowItems.length);
-            $('#slideshow-image').prop('src', getImageUrl(currentImage));
-            $('#slideshow-image-info').html(currentImage.name + ' (' + currentImage.date + ') by ' + currentImage.originalArtist + ' ' +
-                ' Source ' + '<a target="_blank" href="http://www.the-athenaeum.org/art/detail.php?ID=' + currentImage.pageId + '">' + currentImage.source + '</a>');
-        }
-
-        function previouseImage() {
-            var slideshowIndex = parseInt(localStorage.getItem("slideshowIndex", 0));
-            localStorage.setItem("slideshowIndex", slideshowIndex - 1);
-            showCurrentImage();
-        }
-
-        function nextImage() {
-            var slideshowIndex = parseInt(localStorage.getItem("slideshowIndex", 0));
-            localStorage.setItem("slideshowIndex", slideshowIndex + 1);
-            showCurrentImage();
-        }
-
-        function pauseSlideshow() {
-            clearInterval(slideshowTimer);
-            $('#slideshow-pause').hide();
-            $('#slideshow-play').show();
-        }
-
-        $(document).ready(function () {
-            showCurrentImage();
-            
-            $(this).mousemove(function () {
-                hasMovedMouseOnImageViewerPage = true;
-                $("#slideshow-player").slideDown("slow", function () {
-                    $("#slideshow-player").show();
-                    $('#slideshow-image-container').height('92%');
-                });
-            });
-            $(this).keypress(function () {
-                hasMovedMouseOnImageViewerPage = true;
-                $("#slideshow-player").slideDown("slow", function () {
-                    $("#slideshow-player").show();
-                    $('#slideshow-image-container').height('92%');
-                });
-            });
-
-            setInterval(function () {
-                if (!hasMovedMouseOnImageViewerPage) {
-                    $("#slideshow-player").slideUp("slow", function () {
-                        $("#slideshow-player").hide();
-                        $('#slideshow-image-container').height('100%');
-                    });
-                }
-                hasMovedMouseOnImageViewerPage = false;
-            }, 15000);
-
-            $('#slideshow-previous').click(function() {
-                previouseImage();
-                pauseSlideshow();
-            });
-
-            $('#slideshow-next').click(function() {
-                nextImage();
-                pauseSlideshow();
-            });
-
-            var defaultInterval = 6;
-            $('#slideshow-interval').val(defaultInterval);
-            $('#slideshow-pause').hide();
-            $('#slideshow-play').click(function() {
-                function slideshowTimerAction() {
-                    nextImage();
-                }
-
-                var intervalInMs = parseFloat($('#slideshow-interval').val()) * 1000;
-                console.log(intervalInMs);
-                slideshowTimer = setInterval(slideshowTimerAction, intervalInMs);
-                $('#slideshow-pause').show();
-                $('#slideshow-play').hide();
-            });
-
-            $('#slideshow-pause').click(function() {
-                pauseSlideshow();
-            });
-        });
-
-    </script>
+    <script src="/Scripts/gallery.js"></script>
 </head>
 <body>
     <div id="slideshow-image-container">
@@ -119,7 +24,7 @@
         <img id="slideshow-next" alt="Next" title="Next" src="/Images/Glyphicons/glyphicons-177-forward.png">
         <label>Interval in Seconds: <input id="slideshow-interval"/></label>
         Viewing Image <span id="slideshow-index"></span> of <span id="slideshow-count"></span>
-        <a title="This work features Drawing, Art, Human, Nature. Click here to view works with similar tags" href="/Home?tags=Ancient Egypt">View Similar</a>
+        <a id="slideshow-similar" title="This work features Drawing, Art, Human, Nature. Click here to view works with similar tags" href="/Home?tags=Ancient Egypt">View Similar</a>
     </div>
 </body>
 </html>
