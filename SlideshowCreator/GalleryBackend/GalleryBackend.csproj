@@ -59,6 +59,7 @@
     <Compile Include="GalleryClient.cs" />
     <Compile Include="Model\ClassificationModel.cs" />
     <Compile Include="Model\ImageLabel.cs" />
+    <Compile Include="Model\ImageLabelType.cs" />
     <Compile Include="Model\RequestIPAddress.cs" />
     <Compile Include="Model\GalleryUser.cs" />
     <Compile Include="Model\WaitTime.cs" />

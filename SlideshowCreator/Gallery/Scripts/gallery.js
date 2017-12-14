@@ -52,6 +52,7 @@ function showCurrentImage() {
             .then(function (json) {
                 if (assertSuccess(response, json)) {
                     $('#slideshow-similar').prop('title', 'This work features ' + json.normalizedLabels);
+                    $('#slideshow-similar').prop('href', '/Home?tags=' + json.normalizedLabels.join(','));
                 }
             })
             .catch(function (error) {

@@ -94,6 +94,7 @@
     <Compile Include="Scripts\DeployAuthenticationTable.cs" />
     <Compile Include="Scripts\DeployImageTable.cs" />
     <Compile Include="Scripts\DeployLabelTable.cs" />
+    <Compile Include="Scripts\ImageLabelTypeDeploy.cs" />
     <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\GalleryApiTests.cs" />
