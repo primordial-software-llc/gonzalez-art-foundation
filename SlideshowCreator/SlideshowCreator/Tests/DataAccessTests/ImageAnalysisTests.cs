@@ -28,6 +28,16 @@ namespace SlideshowCreator.Tests.DataAccessTests
         private readonly IAmazonRekognition rekognitionClient = new AwsClientFactory().CreateRekognitionClientClient();
         private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
 
+        [Test]
+        public void Parsing_S3_Path()
+        {
+            var s3Path = "tgonzalez-image-archive/national-gallery-of-art/image-80117.jpg";
+            var bucket = s3Path.Substring(0, s3Path.IndexOf('/'));
+            var key = s3Path.Substring(s3Path.IndexOf('/'));
+            Assert.AreEqual("tgonzalez-image-archive", bucket);
+            Assert.AreEqual("/national-gallery-of-art/image-80117.jpg", key);
+        }
+
         //[Test]
         public void Normalize_Labels()
         {

@@ -1,5 +1,12 @@
 ﻿function getImageUrl(item) {
-    return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
+    if (item.s3Path) {
+        var url = `/api/Gallery/image` +
+            `?token=${encodeURIComponent(getCookie('token'))}` +
+            `&s3Path=${encodeURIComponent(item.s3Path)}`;
+        return url;
+    } else {
+        return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
+    }
 }
 
 function loadSearchResults(results) {
@@ -87,6 +94,11 @@ $(document).ready(function () {
 
     $('#idSearch').click(function () {
         var url = `/api/Gallery/scan?token=${encodeURIComponent(getCookie('token'))}&lastPageId=${encodeURIComponent($('#idSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
+        loadSearchResultsFromUrl(url);
+    });
+
+    $('#tagSearch').click(function () {
+        var url = `/api/Gallery/searchLabel?token=${encodeURIComponent(getCookie('token'))}&label=${encodeURIComponent($('#tagSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
         loadSearchResultsFromUrl(url);
     });
 

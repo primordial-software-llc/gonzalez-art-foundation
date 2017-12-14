@@ -1,12 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
 using Amazon.DynamoDBv2.Model;
+using Amazon.S3.Model;
 using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
+using IndexBackend;
+using IndexBackend.Indexing;
 
 namespace MVC5App.Controllers
 {
@@ -62,6 +69,38 @@ namespace MVC5App.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Route through website so all images can be served securely and through the cloudflare cache.
+        /// </summary>
+        [Route("image")]
+        public HttpResponseMessage GetImage(string token, string s3Path)
+        {
+            Authenticate(token);
+            if (!s3Path.StartsWith(new TheAthenaeumIndexer().S3Bucket) &&
+                    !s3Path.StartsWith(new NationalGalleryOfArtIndexer().S3Bucket))
+            {
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
+            }
+            if (!s3Path.EndsWith(".jpg") && !s3Path.EndsWith(".png") && !s3Path.EndsWith(".tif"))
+            {
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
+            }
+
+            var bucket = "tgonzalez-image-archive"; // I hard code the bucket for security.
+            var key = s3Path.Substring(s3Path.IndexOf('/') + 1);
+            var splitPath = s3Path.Split('.');
+
+            GetObjectResponse s3Object = new AwsClientFactory().CreateS3Client().GetObject(bucket, key);
+            var memoryStream = new MemoryStream();
+            s3Object.ResponseStream.CopyTo(memoryStream);
+
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            result.Content = new ByteArrayContent(memoryStream.ToArray());
+            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + splitPath.Last());
+
+            return result;
+        }
+
         [Route("searchLikeArtist")]
         public List<ClassificationModel> GetLike(string token, string artist, string source = null)
         {
@@ -77,10 +116,10 @@ namespace MVC5App.Controllers
         }
 
         [Route("searchLabel")]
-        public List<ImageLabel> GetSearchByLabel(string token, string label)
+        public List<ImageLabel> GetSearchByLabel(string token, string label, string source = null)
         {
             Authenticate(token);
-            return new DynamoDbClientFactory().SearchByLabel(label);
+            return new DynamoDbClientFactory().SearchByLabel(label, source);
         }
 
         [Route("{pageId}/label")]

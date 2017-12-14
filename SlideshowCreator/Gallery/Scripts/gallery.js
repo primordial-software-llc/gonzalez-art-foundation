@@ -2,8 +2,14 @@
 var hasMovedMouseOnImageViewerPage = false;
 
 function getImageUrl(item) {
-    return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
-}
+    if (item.s3Path) {
+        var url = `/api/Gallery/image` +
+            `?token=${encodeURIComponent(getCookie('token'))}` +
+            `&s3Path=${encodeURIComponent(item.s3Path)}`;
+        return url;
+    } else {
+        return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
+    }}
 
 function getCookie(cname) {
     var name = cname + "=";

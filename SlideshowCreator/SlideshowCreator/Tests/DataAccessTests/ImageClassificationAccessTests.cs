@@ -34,7 +34,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Find_By_Label()
         {
             var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindByLabel("Ancient Egypt");
+            var results = dataAccess.FindByLabel("Ancient Egypt", new NationalGalleryOfArtIndexer().Source);
             Assert.AreEqual(2871, results.Count);
             results = results
                 .Where(

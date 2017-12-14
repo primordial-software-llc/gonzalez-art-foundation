@@ -36,9 +36,9 @@ namespace MVC5App
             return access.Scan(lastPageId, source);
         }
 
-        public List<ImageLabel> SearchByLabel(string label)
+        public List<ImageLabel> SearchByLabel(string label, string source)
         {
-            return access.FindByLabel(label);
+            return access.FindByLabel(label, source);
         }
 
         public ImageLabel GetLabel(int pageId)

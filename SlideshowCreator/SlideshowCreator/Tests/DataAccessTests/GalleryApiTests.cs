@@ -55,7 +55,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         [Test]
         public void Search_Labels()
         {
-            var results = client.SearchLabel("Ancient Egypt");
+            var results = client.SearchLabel("Ancient Egypt", new NationalGalleryOfArtIndexer().Source);
             Assert.AreEqual(2871, results.Count);
             results = results
                 .Where(

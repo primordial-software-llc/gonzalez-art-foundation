@@ -63,11 +63,12 @@ namespace GalleryBackend
             return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
         }
 
-        public List<ImageLabel> SearchLabel(string label)
+        public List<ImageLabel> SearchLabel(string label, string source)
         {
             var url = $"https://{Domain}/api/Gallery/searchLabel" +
                       $"?token={HttpUtility.UrlEncode(Token)}" +
-                      $"&label={HttpUtility.UrlEncode(label)}";
+                      $"&label={HttpUtility.UrlEncode(label)}" +
+                      $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ImageLabel>>(response);
         }

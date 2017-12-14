@@ -128,16 +128,21 @@ namespace IndexBackend.DataAccess
             return typedResponse;
         }
 
-        public List<ImageLabel> FindByLabel(string label)
+        public List<ImageLabel> FindByLabel(string label, string source)
         {
             label = (label ?? string.Empty).ToLower();
             var scanRequest = new ScanRequest(new ImageLabel().GetTable())
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":label", new AttributeValue {S = label}}
+                    {":label", new AttributeValue {S = label}},
+                    {":source", new AttributeValue {S = source}}
                 },
-                FilterExpression = "contains(normalizedLabels, :label)"
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#source", "source" }
+                },
+                FilterExpression = "contains(normalizedLabels, :label) AND #source = :source"
             };
             ScanResponse scanResponse = null;
             var allMatches = new List<Dictionary<string, AttributeValue>>();
