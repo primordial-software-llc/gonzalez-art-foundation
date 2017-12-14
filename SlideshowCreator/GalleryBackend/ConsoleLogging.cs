@@ -1,9 +1,9 @@
 ﻿using System;
 using AwsTools;
 
-namespace SlideshowCreator
+namespace GalleryBackend
 {
-    class ConsoleLogging : ILogging
+    public class ConsoleLogging : ILogging
     {
         public void Log(string message)
         {

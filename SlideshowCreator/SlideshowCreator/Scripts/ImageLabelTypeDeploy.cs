@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
 using NUnit.Framework;

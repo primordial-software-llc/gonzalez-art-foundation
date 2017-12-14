@@ -4,7 +4,6 @@ using Amazon.DynamoDBv2;
 using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.DataAccess;
-using IndexBackend.Indexing;
 
 namespace MVC5App
 {

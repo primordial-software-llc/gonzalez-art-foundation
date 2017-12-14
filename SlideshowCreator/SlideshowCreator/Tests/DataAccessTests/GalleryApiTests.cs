@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using GalleryBackend;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -73,6 +75,13 @@ namespace SlideshowCreator.Tests.DataAccessTests
             }
             Console.WriteLine(results.Count);
             Assert.GreaterOrEqual(results.Count, 2);
+        }
+
+        [Test]
+        public void Get_Image()
+        {
+            var image = client.GetImage(26633);
+            File.WriteAllBytes(@"C:\Users\peon\Desktop\26633-a.jpg", image.ReadAsByteArrayAsync().Result);
         }
 
     }

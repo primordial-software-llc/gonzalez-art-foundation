@@ -81,5 +81,14 @@ namespace GalleryBackend
             return JsonConvert.DeserializeObject<List<ImageLabel>>(response);
         }
 
+        public HttpContent GetImage(int id)
+        {
+            var url = $"https://{Domain}/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/{id}" +
+                      $"?token={HttpUtility.UrlEncode(Token)}";
+            var response = Client.GetAsync(url).Result;
+            response.EnsureSuccessStatusCode();
+            return response.Content;
+        }
+
     }
 }

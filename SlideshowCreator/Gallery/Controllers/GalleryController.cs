@@ -7,12 +7,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
-using Amazon.DynamoDBv2.Model;
 using Amazon.S3.Model;
 using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
+using IndexBackend.DataAccess;
 using IndexBackend.Indexing;
 
 namespace MVC5App.Controllers
@@ -31,20 +31,9 @@ namespace MVC5App.Controllers
         {
             if (string.IsNullOrWhiteSpace(authoritativeHash))
             {
-                var galleryUserRaw = DynamoDbClientFactory.Client.Query(
-                    new QueryRequest(
-                        new GalleryUser().GetTable())
-                    {
-                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                        {
-                            {":id", new AttributeValue {S = "47dfa78b-9c28-41a5-9048-1df383e4c48a"}}
-                        },
-                        KeyConditionExpression = "id = :id",
-                })
-                    .Items
-                    .FirstOrDefault();
-                var galleryUser = Conversion<GalleryUser>.ConvertToPoco(galleryUserRaw);
-                authoritativeHash = galleryUser.Hash;
+                var client = new GalleryUserAccess(DynamoDbClientFactory.Client, new ConsoleLogging());
+                var user = client.GetUser();
+                authoritativeHash = user.Hash;
             }
             if (!AUTHENTICATION.IsTokenValid(token, authoritativeHash))
             {
@@ -68,35 +57,28 @@ namespace MVC5App.Controllers
             };
             return response;
         }
-
-        /// <summary>
-        /// Route through website so all images can be served securely and through the cloudflare cache.
-        /// </summary>
-        [Route("image")]
-        public HttpResponseMessage GetImage(string token, string s3Path)
+        
+        [Route("image/tgonzalez-image-archive/national-gallery-of-art/{id}")]
+        public HttpResponseMessage GetImage(int id, string token)
         {
             Authenticate(token);
-            if (!s3Path.StartsWith(new TheAthenaeumIndexer().S3Bucket) &&
-                    !s3Path.StartsWith(new NationalGalleryOfArtIndexer().S3Bucket))
-            {
-                return new HttpResponseMessage(HttpStatusCode.BadRequest);
-            }
-            if (!s3Path.EndsWith(".jpg") && !s3Path.EndsWith(".png") && !s3Path.EndsWith(".tif"))
-            {
-                return new HttpResponseMessage(HttpStatusCode.BadRequest);
-            }
 
-            var bucket = "tgonzalez-image-archive"; // I hard code the bucket for security.
-            var key = s3Path.Substring(s3Path.IndexOf('/') + 1);
-            var splitPath = s3Path.Split('.');
+            var awsToolsClient = new DynamoDbClient<ClassificationModel>(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var image = awsToolsClient.Get(new ClassificationModel
+            {
+                Source = new NationalGalleryOfArtIndexer().Source,
+                PageId = id
+            });
 
-            GetObjectResponse s3Object = new AwsClientFactory().CreateS3Client().GetObject(bucket, key);
+            var key = image.S3Path.Substring(image.S3Path.IndexOf('/') + 1);
+
+            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3Client.GetObject("tgonzalez-image-archive", key);
             var memoryStream = new MemoryStream();
             s3Object.ResponseStream.CopyTo(memoryStream);
 
             HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
             result.Content = new ByteArrayContent(memoryStream.ToArray());
-            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + splitPath.Last());
+            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + image.S3Path.Split('.').Last());
 
             return result;
         }

@@ -9,6 +9,7 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
 using AwsTools;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;

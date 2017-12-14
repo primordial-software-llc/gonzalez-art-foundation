@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using AwsTools;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
 using Newtonsoft.Json;

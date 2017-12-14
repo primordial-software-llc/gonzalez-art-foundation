@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using Amazon.DynamoDBv2;
+using AwsTools;
+using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.DataAccess;
 using IndexBackend.Indexing;
@@ -76,5 +79,21 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var results2 = dataAccess.Scan(results.Last().PageId, new TheAthenaeumIndexer().Source, 10);
             Assert.AreEqual(43, results2.First().PageId);
         }
+
+        [Test]
+        public void Get_By_Key()
+        {
+
+            var awsToolsClient = new DynamoDbClient<ClassificationModel>(client, new ConsoleLogging());
+            var image = awsToolsClient.Get(new ClassificationModel
+            {
+                Source = new NationalGalleryOfArtIndexer().Source,
+                PageId = 18392
+            });
+            Assert.AreEqual(18392, image.PageId);
+            Assert.IsNotNull(image.S3Path);
+            Assert.IsNotEmpty(image.S3Path);
+        }
+
     }
 }

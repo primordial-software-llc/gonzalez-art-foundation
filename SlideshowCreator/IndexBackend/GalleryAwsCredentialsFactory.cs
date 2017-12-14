@@ -1,6 +1,8 @@
 ﻿using System;
+using Amazon;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
+using Amazon.S3;
 
 namespace IndexBackend
 {
@@ -35,6 +37,10 @@ namespace IndexBackend
             }
             return credentials;
         }
+
+        public static IAmazonS3 S3Client => new AmazonS3Client(
+            GetCredentialsForWebsite(),
+            RegionEndpoint.USEast1);
 
         public static AWSCredentials CreateCredentialsFromDefaultProfile()
         {
