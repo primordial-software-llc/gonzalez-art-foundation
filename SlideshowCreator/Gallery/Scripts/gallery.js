@@ -3,8 +3,8 @@ var hasMovedMouseOnImageViewerPage = false;
 
 function getImageUrl(item) {
     if (item.s3Path) {
-        var url = '/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/' + item.pageId +
-            `?token=${encodeURIComponent(getCookie('token'))}`;
+        var url = '/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/' +
+            item.s3Path.split('/').pop() + '/';
         return url;
     } else {
         return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
@@ -51,8 +51,8 @@ function showCurrentImage() {
     $('#slideshow-image-info').html(currentImage.name + ' (' + currentImage.date + ') by ' + currentImage.originalArtist + ' ' +
         ' Source ' + '<a target="_blank" href="http://www.the-athenaeum.org/art/detail.php?ID=' + currentImage.pageId + '">' + currentImage.source + '</a>');
 
-    var url = `/api/Gallery/${currentImage.pageId}/label?token=${encodeURIComponent(getCookie('token'))}`;
-    fetch(url).then(function (response) {
+    var url = `/api/Gallery/${currentImage.pageId}/label`;
+    fetch(url, { credentials: "same-origin" }).then(function (response) {
         response
             .json()
             .then(function (json) {

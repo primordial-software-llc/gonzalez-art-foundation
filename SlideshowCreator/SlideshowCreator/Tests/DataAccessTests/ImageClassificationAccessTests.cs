@@ -1,6 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Amazon.DynamoDBv2;
+using Amazon.S3.Model;
 using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
@@ -89,10 +94,23 @@ namespace SlideshowCreator.Tests.DataAccessTests
             {
                 Source = new NationalGalleryOfArtIndexer().Source,
                 PageId = 18392
-            });
+            }).Result;
             Assert.AreEqual(18392, image.PageId);
             Assert.IsNotNull(image.S3Path);
             Assert.IsNotEmpty(image.S3Path);
+        }
+
+        [Test]
+        public void Get_Image()
+        {
+            var key = "national-gallery-of-art/image-18392.jpg";
+            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3Client.GetObject("tgonzalez-image-archive", key);
+            var memoryStream = new MemoryStream();
+            s3Object.ResponseStream.CopyTo(memoryStream);
+
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            result.Content = new ByteArrayContent(memoryStream.ToArray());
+            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + key.Split('.').Last());
         }
 
     }

@@ -19,7 +19,7 @@ namespace IndexBackend.DataAccess
         {
             var user = new GalleryUser {Id = "47dfa78b-9c28-41a5-9048-1df383e4c48a"};
             var awsToolsClient = new DynamoDbClient<GalleryUser>(Client, Logging);
-            user = awsToolsClient.Get(user);
+            user = awsToolsClient.Get(user).Result;
             return user;
         }
     }

@@ -27,7 +27,7 @@ namespace SlideshowCreator.Scripts
             {
                 var batch = models.Take(25).ToList();
                 models = models.Skip(25).ToList();
-                models.AddRange(client.Insert(batch));
+                models.AddRange(client.Insert(batch).Result);
                 File.WriteAllText(path, JsonConvert.SerializeObject(models));
             }
         }

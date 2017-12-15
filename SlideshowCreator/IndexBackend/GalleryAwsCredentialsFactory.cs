@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Web;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
@@ -14,28 +15,24 @@ namespace IndexBackend
     public class GalleryAwsCredentialsFactory
     {
         /// <summary>
-        /// 1. Get credentials from an EC2 instance's profile.
-        /// 2. Get credentials from the Visual Studio AWS toolkit C:\Users\peon\AppData\Local
+        /// Get credentials from an EC2 instance's profile or from the Visual Studio AWS toolkit C:\Users\peon\AppData\Local.
+        /// Credentials use the EC2 instance profile when domain is tgonzalez.net.
         /// </summary>
         /// <remarks>
-        /// Website may be run from an EC2 instance or locally so two locations must be searched.
+        /// InstanceProfileAWSCredentials makes an API call for available roles, which is extremely slow to timeout causing delays on a test website which isn't an EC2 instance.
         /// </remarks>
         public static AWSCredentials GetCredentialsForWebsite()
         {
-            AWSCredentials credentials;
-            try
+            if (HttpContext.Current != null &&
+                (HttpContext.Current.Request.Url.Host.Equals("tgonzalez.net", StringComparison.OrdinalIgnoreCase) ||
+                HttpContext.Current.Request.Url.Host.EndsWith("us-east-1.elasticbeanstalk.com", StringComparison.OrdinalIgnoreCase)))
             {
-                credentials = new InstanceProfileAWSCredentials();
+                return new InstanceProfileAWSCredentials();
             }
-            catch (AmazonServiceException credentialsException)
+            else
             {
-                if (credentialsException.Message.Equals("Unable to reach credentials server"))
-                {
-                    credentials = CreateCredentialsFromDefaultProfile();
-                }
-                else throw;
+                return CreateCredentialsFromDefaultProfile();
             }
-            return credentials;
         }
 
         public static IAmazonS3 S3Client => new AmazonS3Client(

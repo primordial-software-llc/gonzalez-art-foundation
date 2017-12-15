@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Web;
 using GalleryBackend.Model;
@@ -8,7 +9,6 @@ namespace GalleryBackend
 {
     public class GalleryClient
     {
-        public string Token { get; }
         public HttpClient Client { get; }
         public string Domain { get; }
 
@@ -18,16 +18,19 @@ namespace GalleryBackend
             var url = $"https://{Domain}/api/Gallery/token" +
                       $"?username={HttpUtility.UrlEncode(username)}" +
                       $"&password={HttpUtility.UrlEncode(password)}";
-            Client = new HttpClient();
+
+            CookieContainer cookies = new CookieContainer();
+            HttpClientHandler cookieHandler = new HttpClientHandler { CookieContainer = cookies };
+            Client = new HttpClient(cookieHandler);
+            
             var response = Client.GetStringAsync(url).Result;
             var parsedResponse = JsonConvert.DeserializeObject<AuthenticationTokenModel>(response);
-            Token = parsedResponse.Token;
+            cookies.Add(new Cookie("token", HttpUtility.UrlEncode(parsedResponse.Token)) {Domain = domain});
         }
 
         public RequestIPAddress GetIPAddress()
         {
-            var url = $"https://{Domain}/api/Gallery/ip" +
-                      $"?token={HttpUtility.UrlEncode(Token)}";
+            var url = $"https://{Domain}/api/Gallery/ip";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<RequestIPAddress>(response);
         }
@@ -35,8 +38,7 @@ namespace GalleryBackend
         public List<ClassificationModel> SearchExactArtist(string artist, string source)
         {
             var url = $"https://{Domain}/api/Gallery/searchExactArtist" +
-                      $"?token={HttpUtility.UrlEncode(Token)}" +
-                      $"&artist={HttpUtility.UrlEncode(artist)}" +
+                      $"?artist={HttpUtility.UrlEncode(artist)}" +
                       $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
@@ -45,8 +47,7 @@ namespace GalleryBackend
         public List<ClassificationModel> SearchLikeArtist(string artist, string source)
         {
             var url = $"https://{Domain}/api/Gallery/searchLikeArtist" +
-                      $"?token={HttpUtility.UrlEncode(Token)}" +
-                      $"&artist={HttpUtility.UrlEncode(artist)}"+
+                      $"?artist={HttpUtility.UrlEncode(artist)}"+
                       $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
@@ -55,8 +56,7 @@ namespace GalleryBackend
         public List<ClassificationModel> Scan(int? lastPageId, string source)
         {
             var url = $"https://{Domain}/api/Gallery/scan" +
-                      $"?token={HttpUtility.UrlEncode(Token)}" +
-                      $"&lastPageId={lastPageId.GetValueOrDefault()}" +
+                      $"?lastPageId={lastPageId.GetValueOrDefault()}" +
                       $"&source={HttpUtility.UrlEncode(source)}";
 
             var response = Client.GetStringAsync(url).Result;
@@ -66,8 +66,7 @@ namespace GalleryBackend
         public List<ImageLabel> SearchLabel(string label, string source)
         {
             var url = $"https://{Domain}/api/Gallery/searchLabel" +
-                      $"?token={HttpUtility.UrlEncode(Token)}" +
-                      $"&label={HttpUtility.UrlEncode(label)}" +
+                      $"?label={HttpUtility.UrlEncode(label)}" +
                       $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ImageLabel>>(response);
@@ -75,16 +74,14 @@ namespace GalleryBackend
 
         public List<ImageLabel> GetImageLabels(int pageId)
         {
-            var url = $"https://{Domain}/api/Gallery/{pageId}/labels" +
-                      $"?token={HttpUtility.UrlEncode(Token)}";
+            var url = $"https://{Domain}/api/Gallery/{pageId}/labels";
             var response = Client.GetStringAsync(url).Result;
             return JsonConvert.DeserializeObject<List<ImageLabel>>(response);
         }
 
-        public HttpContent GetImage(int id)
+        public HttpContent GetImage(string s3Path)
         {
-            var url = $"https://{Domain}/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/{id}" +
-                      $"?token={HttpUtility.UrlEncode(Token)}";
+            var url = $"https://{Domain}/api/Gallery/image/{s3Path}";
             var response = Client.GetAsync(url).Result;
             response.EnsureSuccessStatusCode();
             return response.Content;

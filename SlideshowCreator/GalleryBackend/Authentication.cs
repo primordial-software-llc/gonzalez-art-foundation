@@ -6,18 +6,14 @@ namespace GalleryBackend
 {
     public class Authentication
     {
-        public string GetUtcCalendarDayExpiration => DateTimeSalt.AddDays(1).ToString("yyyy-MM-dd");
+        public static readonly Authentication SINGLETON = new Authentication();
 
-        protected DateTime DateTimeSalt => DateTime.UtcNow.Date;
-        protected string GetUtcCalendarDay => DateTimeSalt.ToString("yyyy-MM-dd");
+        protected string salteDate;
+        protected string base64RandomBytes;
 
-        private string dateOfRandomness;
-        private string randomness;
-        private string RandomnessText => dateOfRandomness + ":" + randomness;
-
-        public static string GetIdentityHash(string username, string password)
+        protected Authentication()
         {
-            return Hash($"{username}:{password}");
+            // Use singleton. Extend to test. In production only one can exist.
         }
 
         public bool IsTokenValid(string token, string authoritativeHash)
@@ -29,32 +25,24 @@ namespace GalleryBackend
 
         public string GetToken(string identityHash)
         {
-            TryTickRandomness();
-            string saltedAuthenticationHashText = identityHash + ":" + Hash(RandomnessText);
-            string saltedIdentityHash = Hash(saltedAuthenticationHashText);
-            return saltedIdentityHash;
-        }
-
-        private static string Hash(string data)
-        {
-            SHA256Managed crypt = new SHA256Managed();
-            byte[] hash = crypt.ComputeHash(Encoding.UTF8.GetBytes(data));
-            string randomnessHashText = Convert.ToBase64String(hash);
-            return randomnessHashText;
-        }
-
-        private void TryTickRandomness()
-        {
-            if (!(dateOfRandomness ?? string.Empty).Equals(GetUtcCalendarDay))
+            if (!(salteDate ?? string.Empty).Equals(DateTime.UtcNow.Date.ToString("yyyy-MM-dd")))
             {
-                dateOfRandomness = GetUtcCalendarDay;
+                salteDate = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
                 using (RNGCryptoServiceProvider cryptoSecureRandomNums = new RNGCryptoServiceProvider())
                 {
                     byte[] randomBytes = new byte[32];
                     cryptoSecureRandomNums.GetBytes(randomBytes, 0, randomBytes.Length);
-                    randomness = Convert.ToBase64String(randomBytes);
+                    base64RandomBytes = Convert.ToBase64String(randomBytes);
                 }
             }
+            return Hash(identityHash + ":" + Hash(salteDate + ":" + base64RandomBytes));
+        }
+        
+        public static string Hash(string data)
+        {
+            SHA256Managed crypt = new SHA256Managed();
+            byte[] hash = crypt.ComputeHash(Encoding.UTF8.GetBytes(data));
+            return Convert.ToBase64String(hash);
         }
     }
 }

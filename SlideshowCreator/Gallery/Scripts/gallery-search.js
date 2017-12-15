@@ -1,8 +1,8 @@
 ﻿
 function getImageUrl(item) {
     if (item.s3Path) {
-        var url = '/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/' + item.pageId +
-            `?token=${encodeURIComponent(getCookie('token'))}`;
+        var url = '/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/' +
+            item.s3Path.split('/').pop() + '/';
         return url;
     } else {
         return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
@@ -45,7 +45,7 @@ function assertSuccess(response, json) {
 }
 
 function loadSearchResultsFromUrl(url) {
-    fetch(url).then(function (response) {
+    fetch(url, { credentials: "same-origin" }).then(function (response) {
         response
             .json()
             .then(function (json) {
@@ -83,22 +83,22 @@ $(document).ready(function () {
     }
 
     $('#likeSearch').click(function () {
-        var url = `/api/Gallery/searchLikeArtist?token=${encodeURIComponent(getCookie('token'))}&artist=${encodeURIComponent($('#likeSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
+        var url = `}/api/Gallery/searchLikeArtist?artist=${encodeURIComponent($('#likeSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
         loadSearchResultsFromUrl(url);
     });
 
     $('#exactSearch').click(function () {
-        var url = `/api/Gallery/searchExactArtist?token=${encodeURIComponent(encodeURIComponent(getCookie('token')))}&artist=${encodeURIComponent($('#exactSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
+        var url = `/api/Gallery/searchExactArtist?artist=${encodeURIComponent($('#exactSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
         loadSearchResultsFromUrl(url);
     });
 
     $('#idSearch').click(function () {
-        var url = `/api/Gallery/scan?token=${encodeURIComponent(getCookie('token'))}&lastPageId=${encodeURIComponent($('#idSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
+        var url = `/api/Gallery/scan?lastPageId=${encodeURIComponent($('#idSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
         loadSearchResultsFromUrl(url);
     });
 
     $('#tagSearch').click(function () {
-        var url = `/api/Gallery/searchLabel?token=${encodeURIComponent(getCookie('token'))}&label=${encodeURIComponent($('#tagSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
+        var url = `/api/Gallery/searchLabel?label=${encodeURIComponent($('#tagSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
         loadSearchResultsFromUrl(url);
     });
 

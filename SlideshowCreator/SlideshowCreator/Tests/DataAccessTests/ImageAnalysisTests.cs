@@ -59,7 +59,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
                 {
                     var batch = labels.Take(PAGE_SIZE).ToList();
                     labels = labels.Skip(PAGE_SIZE).ToList();
-                    var failures = awsToolsClient.Insert(batch);
+                    var failures = awsToolsClient.Insert(batch).Result;
                     labels.AddRange(failures);
                 }
             } while (scanResponse.LastEvaluatedKey.Any());
@@ -113,7 +113,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
                 {
                     var batch = labels.Take(PAGE_SIZE).ToList();
                     labels = labels.Skip(PAGE_SIZE).ToList();
-                    var failures = awsToolsClient.Insert(batch);
+                    var failures = awsToolsClient.Insert(batch).Result;
                     labels.AddRange(failures);
                 }
                 

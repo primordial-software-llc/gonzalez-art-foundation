@@ -48,7 +48,9 @@ Refer to `SlideshowCreator.DataAccessTests.ApiTests` for complete examples.
 
 ### Token
 
-Call the `token` web service to get an authentication token which is safe to store in a cookie, because it is a cryptographic hash which will not leak identity information even if the cookie were to be exposed. The authentication token is good for one UTC day or upon a website publish. After that time, the source information to create the cookie has new random input, from a cryptographically secure random number generator, and produces an entirely new hash.
+Tokens are created using a salted hash. The salt is a cryptographically secure random base 64 string. The token is created like below. With each UTC calendar day, new tokens are generated.
+
+    TOKEN = HASH(HASH(DATE:BASE_64(RANDOM_BYTES)) + HASH(USERNAME:PASSWORD))
 
 Url
 

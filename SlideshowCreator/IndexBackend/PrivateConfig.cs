@@ -45,6 +45,9 @@ namespace IndexBackend
         [JsonProperty("nestEncryptedAccessToken")]
         public string NestEncryptedAccessToken { get; set; }
 
+        [JsonProperty("elasticBeanstalkDomain")]
+        public string ElasticBeanstalkDomain { get; set; }
+
         public string NestDecryptedProductId => Decrypt(NestEncryptedProductId);
         public string NestDecryptedProductSecret => Decrypt(NestEncryptedProductSecret);
         public string NestDecryptedAuthUrl => Decrypt(NestEncryptedAuthUrl);

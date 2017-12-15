@@ -8,36 +8,36 @@ using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
 using Amazon.S3.Model;
-using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.DataAccess;
-using IndexBackend.Indexing;
 
 namespace MVC5App.Controllers
 {
-    /// <inheritdoc />
-    /// <summary>
-    /// https://docs.microsoft.com/en-us/aspnet/web-api/overview/web-api-routing-and-actions/create-a-rest-api-with-attribute-routing
-    /// </summary>
     [RoutePrefix("api/Gallery")]
     public class GalleryController : ApiController
     {
-        private static string authoritativeHash;
-        private static readonly Authentication AUTHENTICATION = new Authentication();
+        private void Authenticate()
+        {
+            string cookie = Request.Headers
+                .GetCookies()
+                .SelectMany(x => x.Cookies
+                    .Where(y => y.Name.Equals("token"))
+                    .Select(y => y.Value))
+                .FirstOrDefault();
+
+            Authenticate(cookie);
+        }
 
         private void Authenticate(string token)
         {
-            if (string.IsNullOrWhiteSpace(authoritativeHash))
+            var client = new GalleryUserAccess(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var user = client.GetUser();
+
+            if (!Authentication.SINGLETON.IsTokenValid(token, user.Hash))
             {
-                var client = new GalleryUserAccess(DynamoDbClientFactory.Client, new ConsoleLogging());
-                var user = client.GetUser();
-                authoritativeHash = user.Hash;
-            }
-            if (!AUTHENTICATION.IsTokenValid(token, authoritativeHash))
-            {
-                throw new Exception("Not authenticated");
+                throw new Exception("Not authenticated.");
             }
         }
 
@@ -49,80 +49,71 @@ namespace MVC5App.Controllers
         [Route("token")]
         public AuthenticationTokenModel GetAuthenticationToken(string username, string password)
         {
-            var identityHash = Authentication.GetIdentityHash(username, password);
             var response = new AuthenticationTokenModel
             {
-                Token = AUTHENTICATION.GetToken(identityHash),
-                ExpirationDate = AUTHENTICATION.GetUtcCalendarDayExpiration
+                Token = Authentication.SINGLETON.GetToken(Authentication.Hash($"{username}:{password}")),
+                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")
             };
+            Authenticate(response.Token);
             return response;
         }
-        
-        [Route("image/tgonzalez-image-archive/national-gallery-of-art/{id}")]
-        public HttpResponseMessage GetImage(int id, string token)
+
+        [Route("image/tgonzalez-image-archive/national-gallery-of-art/{s3Name}")]
+        public HttpResponseMessage GetImage(string s3Name)
         {
-            Authenticate(token);
+            Authenticate();
 
-            var awsToolsClient = new DynamoDbClient<ClassificationModel>(DynamoDbClientFactory.Client, new ConsoleLogging());
-            var image = awsToolsClient.Get(new ClassificationModel
-            {
-                Source = new NationalGalleryOfArtIndexer().Source,
-                PageId = id
-            });
-
-            var key = image.S3Path.Substring(image.S3Path.IndexOf('/') + 1);
-
+            var key = "national-gallery-of-art/" + s3Name; // Mvc doesn't allow forward slash "/". I already "relaxed" the pathing to allowing periods.
             GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3Client.GetObject("tgonzalez-image-archive", key);
             var memoryStream = new MemoryStream();
             s3Object.ResponseStream.CopyTo(memoryStream);
 
             HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
             result.Content = new ByteArrayContent(memoryStream.ToArray());
-            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + image.S3Path.Split('.').Last());
+            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + s3Name.Split('.').Last());
 
             return result;
         }
 
         [Route("searchLikeArtist")]
-        public List<ClassificationModel> GetLike(string token, string artist, string source = null)
+        public List<ClassificationModel> GetLike(string artist, string source = null)
         {
-            Authenticate(token);
+            Authenticate();
             return new DynamoDbClientFactory().SearchByLikeArtist(artist, source);
         }
 
         [Route("searchExactArtist")]
-        public List<ClassificationModel> GetExact(string token, string artist, string source = null)
+        public List<ClassificationModel> GetExact(string artist, string source = null)
         {
-            Authenticate(token);
+            Authenticate();
             return new DynamoDbClientFactory().SearchByExactArtist(artist, source);
         }
 
         [Route("searchLabel")]
-        public List<ImageLabel> GetSearchByLabel(string token, string label, string source = null)
+        public List<ImageLabel> GetSearchByLabel(string label, string source = null)
         {
-            Authenticate(token);
+            Authenticate();
             return new DynamoDbClientFactory().SearchByLabel(label, source);
         }
 
         [Route("{pageId}/label")]
-        public ImageLabel GetLabels(string token, int pageId)
+        public ImageLabel GetLabels(int pageId)
         {
-            Authenticate(token);
+            Authenticate();
             return new DynamoDbClientFactory().GetLabel(pageId);
         }
         
         [Route("scan")]
-        public List<ClassificationModel> GetScanByPage(string token, int? lastPageId, string source = null)
+        public List<ClassificationModel> GetScanByPage(int? lastPageId, string source = null)
         {
-            Authenticate(token);
+            Authenticate();
             return new DynamoDbClientFactory().ScanByPage(lastPageId, source);
         }
 
         [Route("ip")]
-        public RequestIPAddress GetIPAddress(string token)
+        public RequestIPAddress GetIPAddress()
         {
-            Authenticate(token);
-
+            Authenticate();
             var ipAddress = new RequestIPAddress
             {
                 IP = HttpContext.Current.Request.UserHostAddress,

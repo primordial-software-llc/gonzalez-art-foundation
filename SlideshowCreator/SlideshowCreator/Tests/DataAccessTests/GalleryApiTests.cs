@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using GalleryBackend;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -19,7 +18,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Authenticate()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            client = new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword);
+            client = new GalleryClient(privateConfig.ElasticBeanstalkDomain, privateConfig.GalleryUsername, privateConfig.GalleryPassword);
         }
         
         [Test]
@@ -80,8 +79,8 @@ namespace SlideshowCreator.Tests.DataAccessTests
         [Test]
         public void Get_Image()
         {
-            var image = client.GetImage(26633);
-            File.WriteAllBytes(@"C:\Users\peon\Desktop\26633-a.jpg", image.ReadAsByteArrayAsync().Result);
+            var image = client.GetImage("tgonzalez-image-archive/national-gallery-of-art/image-26633.jpg/"); // The trailing forward slash "/" is required. Web API doesn't allow periods in the paths by default. If the web.config file is changed to allow them, the changes don't take affect in AWS Elastic Beanstalk
+            File.WriteAllBytes(@"C:\Users\peon\Desktop\" + "image-26633.jpg", image.ReadAsByteArrayAsync().Result);
         }
 
     }

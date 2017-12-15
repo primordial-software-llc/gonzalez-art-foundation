@@ -37,10 +37,12 @@ namespace SlideshowCreator.Scripts
             var tableFactory = new DynamoDbTableFactory(client);
             tableFactory.CreateTable(request);
             var awsToolsClient = new DynamoDbClient<GalleryUser>(client, new ConsoleLogging());
+            var username = "REDACTED";
+            var password = "REDACTED";
             awsToolsClient.Insert(new GalleryUser
             {
                 Id = Guid.NewGuid().ToString(),
-                Hash = Authentication.GetIdentityHash("REDACTED", "REDACTED")
+                Hash = Authentication.Hash($"{username}:{password}")
             });
         }
 
