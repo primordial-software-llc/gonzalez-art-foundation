@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using AwsTools;
@@ -46,9 +47,9 @@ namespace GalleryBackend
                     log.Add("saltChanged", "salt was " + user.TokenSalt + " salt is now " + user.TokenSalt);
                     user.TokenSalt = Convert.ToBase64String(randomBytes);
                 }
-                
-                UserClient.Insert(user).Wait();
-                log.Add("Gallery user salt updated: " + JsonConvert.SerializeObject(user));
+
+                Task.WaitAll(UserClient.Insert(user));
+                log.Add("updatedGalleryUser", JsonConvert.SerializeObject(user));
             }
             else
             {
