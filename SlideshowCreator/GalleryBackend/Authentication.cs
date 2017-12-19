@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using Amazon.S3;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3.Model;
+using Newtonsoft.Json.Linq;
 
 namespace GalleryBackend
 {
@@ -25,16 +30,37 @@ namespace GalleryBackend
 
         public string GetToken(string identityHash)
         {
-            if (!(salteDate ?? string.Empty).Equals(DateTime.UtcNow.Date.ToString("yyyy-MM-dd")))
+            JObject log = new JObject();
+
+            string newSaltDate = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
+            if (!(salteDate ?? string.Empty).Equals(newSaltDate))
             {
-                salteDate = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
+                log.Add("saltDateChanged", "salt date was " + salteDate + " salt date is now " + newSaltDate);
+                salteDate = newSaltDate;
                 using (RNGCryptoServiceProvider cryptoSecureRandomNums = new RNGCryptoServiceProvider())
                 {
                     byte[] randomBytes = new byte[32];
                     cryptoSecureRandomNums.GetBytes(randomBytes, 0, randomBytes.Length);
-                    base64RandomBytes = Convert.ToBase64String(randomBytes);
+                    string newSalt = Convert.ToBase64String(randomBytes);
+                    log.Add("saltChanged", "salt was " + base64RandomBytes + " salt is now " + newSalt);
+                    base64RandomBytes = newSalt;
                 }
             }
+            else
+            {
+                log.Add("saltNotChanged", true);
+            }
+
+            var s3 = new AmazonS3Client(
+                new InstanceProfileAWSCredentials(),
+                RegionEndpoint.USEast1);
+            s3.PutObject(new PutObjectRequest
+            {
+                BucketName = "tgonzalez-quick-logging",
+                Key = DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ"),
+                ContentBody = log.ToString()
+            });
+
             return Hash(identityHash + ":" + Hash(salteDate + ":" + base64RandomBytes));
         }
         
