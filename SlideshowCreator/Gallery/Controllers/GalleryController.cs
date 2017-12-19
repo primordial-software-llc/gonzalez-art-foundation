@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
 using Amazon.S3.Model;
+using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
@@ -34,8 +35,10 @@ namespace MVC5App.Controllers
         {
             var client = new GalleryUserAccess(DynamoDbClientFactory.Client, new ConsoleLogging());
             var user = client.GetUser();
-
-            if (!Authentication.SINGLETON.IsTokenValid(token, user.Hash))
+            var dbClient = new DynamoDbClient<GalleryUser>(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var auth = new Authentication(GalleryAwsCredentialsFactory.S3Client, dbClient);
+            
+            if (!auth.IsTokenValid(token, user.Hash))
             {
                 throw new Exception("Not authenticated.");
             }
@@ -49,9 +52,11 @@ namespace MVC5App.Controllers
         [Route("token")]
         public AuthenticationTokenModel GetAuthenticationToken(string username, string password)
         {
+            var dbClient = new DynamoDbClient<GalleryUser>(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var auth = new Authentication(GalleryAwsCredentialsFactory.S3Client, dbClient);
             var response = new AuthenticationTokenModel
             {
-                Token = Authentication.SINGLETON.GetToken(Authentication.Hash($"{username}:{password}")),
+                Token = auth.GetToken(Authentication.Hash($"{username}:{password}")),
                 ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")
             };
             Authenticate(response.Token);

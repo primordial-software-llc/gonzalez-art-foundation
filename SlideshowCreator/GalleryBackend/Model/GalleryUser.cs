@@ -13,6 +13,12 @@ namespace GalleryBackend.Model
         [JsonProperty("hash")]
         public string Hash { get; set; }
 
+        [JsonProperty("tokenSaltDate")]
+        public string TokenSaltDate { get; set; }
+
+        [JsonProperty("tokenSalt")]
+        public string TokenSalt { get; set; }
+
         public Dictionary<string, AttributeValue> GetKey()
         {
             return new Dictionary<string, AttributeValue>
