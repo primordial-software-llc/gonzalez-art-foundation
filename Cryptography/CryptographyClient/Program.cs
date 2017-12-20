@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Cryptography;
 
 namespace CryptographyClient
@@ -45,22 +46,43 @@ namespace CryptographyClient
                 Console.WriteLine($"New encrypted file created {output}");
             }
         }
-        
+
+        /// <summary>
+        /// Requires a file with an ending with ".encrypted" for example: "secrets.zip.encrypted".
+        /// Creates a file ending with ".decrypted-2017-12-19" for example: "secrets.zip.decrypted-2017-12-19T08-08-11Z".
+        /// If the file "secrets.zip.decrypted-2017-12-19T08-08-11Z" had already existed, it would be overwritten.
+        /// </summary>
+        /// <returns>Returns the path to the encrypted file.</returns>
         private static string Decrypt(string path, string password)
         {
             var originalPath = path.Substring(0, path.Length - ENCRYPTED_EXT.Length);
+            var originalFileName = originalPath.Split('\\').Last();
             var encryptedData = File.ReadAllBytes(path);
-            var encrypted = new SymmetricKeyCryptography().Decrypt(Convert.ToBase64String(encryptedData), password, originalPath);
-            var today = DateTime.Now.ToString("yyyy-MM-dd");
+            var encrypted = SymmetricKeyCryptography.Decrypt(
+                encrypted: Convert.ToBase64String(encryptedData),
+                keyText: password,
+                initializationVectorText: originalFileName);
+            var today = DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ssZ");
             var safeWritePath = originalPath + $".decrypted-{today}";
             File.WriteAllBytes(safeWritePath, Convert.FromBase64String(encrypted));
             return safeWritePath;
         }
 
+        /// <summary>
+        /// Produces a file ending with ".encrypted".
+        /// WARNING: The file can't not be renmaed or the file can't be decrypted. If the original filename is changed and forgotten the data is lost.
+        /// </summary>
+        /// <param name="path">Full path to file.</param>
+        /// <param name="password">Password to encrpt file.</param>
+        /// <returns>Returns the path to the encrypted file.</returns>
         private static string Encrypt(string path, string password)
         {
+            var fileName = path.Split('\\').Last();
             var data = File.ReadAllBytes(path);
-            var encrypted = new SymmetricKeyCryptography().Encrypt(Convert.ToBase64String(data), password, path);
+            var encrypted = SymmetricKeyCryptography.Encrypt(
+                data: Convert.ToBase64String(data),
+                keyText: password,
+                initializationVectorText: fileName);
             var encryptedPath = path + ".encrypted";
             File.WriteAllBytes(encryptedPath, Convert.FromBase64String(encrypted));
             return encryptedPath;

@@ -10,7 +10,7 @@ namespace Cryptography
     /// </summary>
     public class SymmetricKeyCryptography
     {
-        public string Encrypt(string data, string keyText, string initializationVectorText)
+        public static string Encrypt(string data, string keyText, string initializationVectorText)
         {
             SHA256Managed crypt = new SHA256Managed();
             byte[] key = crypt.ComputeHash(Encoding.UTF8.GetBytes(keyText));
@@ -23,7 +23,7 @@ namespace Cryptography
             return Convert.ToBase64String(encrypted);
         }
 
-        public string Decrypt(string encrypted, string keyText, string initializationVectorText)
+        public static string Decrypt(string encrypted, string keyText, string initializationVectorText)
         {
             SHA256Managed crypt = new SHA256Managed();
             byte[] key = crypt.ComputeHash(Encoding.UTF8.GetBytes(keyText));
@@ -52,7 +52,7 @@ namespace Cryptography
             return plaintext;
         }
 
-        private byte[] EncryptStringToBytes_Aes(string plainText, byte[] key, byte[] initializationVector)
+        private static byte[] EncryptStringToBytes_Aes(string plainText, byte[] key, byte[] initializationVector)
         {
             byte[] encrypted;
             using (Aes aesAlg = Aes.Create())
