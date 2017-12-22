@@ -20,7 +20,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
     class ImageClassificationAccessTests
     {
 
-        private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
+        private readonly IAmazonDynamoDB client = GalleryAwsCredentialsFactory.DbClient;
 
         [Test]
         public void Test_Find_All_For_Exact_Artist()
@@ -112,7 +112,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Get_Image()
         {
             var key = "national-gallery-of-art/image-18392.jpg";
-            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3Client.GetObject("tgonzalez-image-archive", key);
+            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObject("tgonzalez-image-archive", key);
             var memoryStream = new MemoryStream();
             s3Object.ResponseStream.CopyTo(memoryStream);
 

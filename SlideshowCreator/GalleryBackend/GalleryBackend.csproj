@@ -60,7 +60,9 @@
     <Compile Include="Authentication.cs" />
     <Compile Include="AuthenticationTokenModel.cs" />
     <Compile Include="ConsoleLogging.cs" />
+    <Compile Include="ApplicationContext.cs" />
     <Compile Include="GalleryClient.cs" />
+    <Compile Include="IPValidation.cs" />
     <Compile Include="Model\ClassificationModel.cs" />
     <Compile Include="Model\ImageLabel.cs" />
     <Compile Include="Model\ImageLabelType.cs" />

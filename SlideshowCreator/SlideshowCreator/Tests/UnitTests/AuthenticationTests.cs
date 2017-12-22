@@ -8,8 +8,17 @@ using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.UnitTests
 {
-    class DisclosedAuthentication
+    public class DisclosedAuthentication
     {
+
+        [Test]
+        public void VPC_IP()
+        {
+            var sampleIpFromProductionWebServer = "172.31.41.248";
+            var loadBalancersCiderIpRange = "172.31.0.0/16";
+            Assert.IsTrue(IPValidation.IsInSubnet(sampleIpFromProductionWebServer, loadBalancersCiderIpRange));
+        }
+
         [Test]
         public void Test_Publicly_Disclosed_Authentication()
         {

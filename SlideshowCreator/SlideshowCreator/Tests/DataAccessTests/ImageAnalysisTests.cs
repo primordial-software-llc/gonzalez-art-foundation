@@ -26,8 +26,8 @@ namespace SlideshowCreator.Tests.DataAccessTests
     /// </summary>
     class ImageAnalysisTests
     {
-        private readonly IAmazonRekognition rekognitionClient = new AwsClientFactory().CreateRekognitionClientClient();
-        private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
+        private readonly IAmazonRekognition rekognitionClient = GalleryAwsCredentialsFactory.RekognitionClientClient;
+        private readonly IAmazonDynamoDB client = GalleryAwsCredentialsFactory.DbClient;
 
         [Test]
         public void Parsing_S3_Path()

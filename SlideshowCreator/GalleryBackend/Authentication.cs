@@ -31,16 +31,19 @@ namespace GalleryBackend
         
         public string GetToken(string identityHash)
         {
-            JObject log = new JObject();
             var user = UserClient.Get(new GalleryUser { Id = "47dfa78b-9c28-41a5-9048-1df383e4c48a" }).Result;
 
             string newSaltDate = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
             if (!(user.TokenSaltDate ?? string.Empty).Equals(newSaltDate))
             {
-                log.Add("saltDateChanged", "salt date was " + user.TokenSaltDate + " salt date is now " + newSaltDate);
+                JObject log = new JObject
+                {
+                    {"saltDateChanged", "salt date was " + user.TokenSaltDate + " salt date is now " + newSaltDate}
+                };
+
                 user.TokenSaltDate = newSaltDate;
 
-                using (RNGCryptoServiceProvider cryptoSecureRandomNums = new RNGCryptoServiceProvider())
+                using (var cryptoSecureRandomNums = new RNGCryptoServiceProvider())
                 {
                     byte[] randomBytes = new byte[32];
                     cryptoSecureRandomNums.GetBytes(randomBytes, 0, randomBytes.Length);
@@ -50,18 +53,14 @@ namespace GalleryBackend
 
                 Task.WaitAll(UserClient.Insert(user));
                 log.Add("updatedGalleryUser", JsonConvert.SerializeObject(user));
-            }
-            else
-            {
-                log.Add("saltNotChanged", true);
-            }
 
-            S3Client.PutObject(new PutObjectRequest
-            {
-                BucketName = "tgonzalez-quick-logging",
-                Key = DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ"),
-                ContentBody = log.ToString()
-            });
+                S3Client.PutObject(new PutObjectRequest
+                {
+                    BucketName = "tgonzalez-quick-logging",
+                    Key = "token-salt-cycling/" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ"),
+                    ContentBody = log.ToString()
+                });
+            }
 
             return Hash(identityHash + ":" + Hash(user.TokenSaltDate + ":" + user.TokenSalt));
         }

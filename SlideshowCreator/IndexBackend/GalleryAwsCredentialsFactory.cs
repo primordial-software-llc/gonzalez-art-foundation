@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Web;
 using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.Rekognition;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
+using GalleryBackend;
 
 namespace IndexBackend
 {
@@ -21,33 +24,43 @@ namespace IndexBackend
         /// <remarks>
         /// InstanceProfileAWSCredentials makes an API call for available roles, which is extremely slow to timeout causing delays on a test website which isn't an EC2 instance.
         /// </remarks>
-        public static AWSCredentials GetCredentialsForWebsite()
+        public static AWSCredentials GetAssumedCredentials()
         {
-            if (HttpContext.Current != null &&
-                (HttpContext.Current.Request.Url.Host.Equals("tgonzalez.net", StringComparison.OrdinalIgnoreCase) ||
-                HttpContext.Current.Request.Url.Host.EndsWith("us-east-1.elasticbeanstalk.com", StringComparison.OrdinalIgnoreCase)))
+            if (HttpContext.Current == null || ApplicationContext.IsLocal(HttpContext.Current.Request))
             {
-                return new InstanceProfileAWSCredentials();
+                var chain = new CredentialProfileStoreChain();
+                var profile = "default";
+                if (!chain.TryGetAWSCredentials("default", out AWSCredentials awsCredentials))
+                {
+                    throw new Exception($"c not found for \"{profile}\" profile. Is Http context current null? " + (HttpContext.Current == null).ToString());
+                }
+                return awsCredentials;
             }
-            else
-            {
-                return CreateCredentialsFromDefaultProfile();
-            }
+
+            return new InstanceProfileAWSCredentials();
         }
 
         public static IAmazonS3 S3Client => new AmazonS3Client(
-            GetCredentialsForWebsite(),
+            GetAssumedCredentials(),
+            new AmazonS3Config
+            {
+                RegionEndpoint = RegionEndpoint.USEast1
+            });
+
+        public static IAmazonS3 S3AcceleratedClient => new AmazonS3Client(
+            GetAssumedCredentials(),
+            new AmazonS3Config
+            {
+                RegionEndpoint = RegionEndpoint.USEast1,
+                UseAccelerateEndpoint = true
+            });
+
+        public static IAmazonDynamoDB DbClient => new AmazonDynamoDBClient(
+            GetAssumedCredentials(),
             RegionEndpoint.USEast1);
 
-        public static AWSCredentials CreateCredentialsFromDefaultProfile()
-        {
-            var chain = new CredentialProfileStoreChain();
-            var profile = "default";
-            if (!chain.TryGetAWSCredentials("default", out AWSCredentials awsCredentials))
-            {
-                throw new Exception($"c not found for \"{profile}\" profile.");
-            }
-            return awsCredentials;
-        }
+        public static AmazonRekognitionClient RekognitionClientClient => new AmazonRekognitionClient(
+            GetAssumedCredentials(),
+            RegionEndpoint.USEast1);
     }
 }

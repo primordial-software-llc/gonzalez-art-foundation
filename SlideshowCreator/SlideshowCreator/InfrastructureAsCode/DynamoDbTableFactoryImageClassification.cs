@@ -9,9 +9,9 @@ namespace SlideshowCreator.InfrastructureAsCode
     class DynamoDbTableFactoryImageClassification
     {
         private DynamoDbTableFactory TableFactory { get; }
-        private AmazonDynamoDBClient Client { get; }
+        private IAmazonDynamoDB Client { get; }
 
-        public DynamoDbTableFactoryImageClassification(AmazonDynamoDBClient client)
+        public DynamoDbTableFactoryImageClassification(IAmazonDynamoDB client)
         {
             TableFactory = new DynamoDbTableFactory(client);
             Client = client;

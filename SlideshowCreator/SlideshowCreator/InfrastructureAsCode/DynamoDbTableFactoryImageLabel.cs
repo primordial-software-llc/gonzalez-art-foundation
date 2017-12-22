@@ -9,7 +9,7 @@ namespace SlideshowCreator.InfrastructureAsCode
     {
         private DynamoDbTableFactory TableFactory { get; }
 
-        public DynamoDbTableFactoryImageLabel(AmazonDynamoDBClient client)
+        public DynamoDbTableFactoryImageLabel(IAmazonDynamoDB client)
         {
             TableFactory = new DynamoDbTableFactory(client);
         }

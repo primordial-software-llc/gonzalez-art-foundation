@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
 using GalleryBackend;
@@ -13,12 +14,12 @@ namespace SlideshowCreator.Scripts
 {
     class ImageLabelTypeDeploy
     {
+        private readonly IAmazonDynamoDB dbClient = GalleryAwsCredentialsFactory.DbClient;
 
         //[Test]
         public void Run()
         {
-            var client = new AwsClientFactory().CreateDynamoDbClient();
-            var tableFactory = new DynamoDbTableFactory(client);
+            var tableFactory = new DynamoDbTableFactory(dbClient);
             var request = new CreateTableRequest
             {
                 TableName = new ImageLabelType().GetTable(),
@@ -50,8 +51,7 @@ namespace SlideshowCreator.Scripts
         //[Test]
         public void Populate_Image_Label_Types_From_Images()
         {
-            var client = new AwsClientFactory().CreateDynamoDbClient();
-            var awsToolsClient = new DynamoDbClient<ImageLabelType>(client, new ConsoleLogging()); // Aws tools should have a get all. I just had this running for like an hour on the same record...
+            var awsToolsClient = new DynamoDbClient<ImageLabelType>(dbClient, new ConsoleLogging());
 
             HashSet<string> labels = new HashSet<string>();
             var request = new ScanRequest(new ImageLabel().GetTable());
@@ -62,7 +62,7 @@ namespace SlideshowCreator.Scripts
                 {
                     request.ExclusiveStartKey = response.LastEvaluatedKey;
                 }
-                response = client.Scan(request);
+                response = dbClient.Scan(request);
                 var labelBatch = Conversion<ImageLabel>
                     .ConvertToPoco(response.Items)
                     .Where(x => x.NormalizedLabels != null)
@@ -76,7 +76,7 @@ namespace SlideshowCreator.Scripts
                         awsToolsClient.Insert(new ImageLabelType
                         {
                             Label = label
-                        });
+                        }).Wait();
                     }
                 }
             } while (response.LastEvaluatedKey.Any());
@@ -85,7 +85,6 @@ namespace SlideshowCreator.Scripts
         [Test]
         public void Count_Image_Label_Types()
         {
-            var client = new AwsClientFactory().CreateDynamoDbClient();
             var request = new ScanRequest(new ImageLabelType().GetTable());
             var all = new List<ImageLabelType>();
             ScanResponse response = null;
@@ -95,7 +94,7 @@ namespace SlideshowCreator.Scripts
                 {
                     request.ExclusiveStartKey = response.LastEvaluatedKey;
                 }
-                response = client.Scan(request);
+                response = dbClient.Scan(request);
                 all.AddRange(Conversion<ImageLabelType>.ConvertToPoco(response.Items));
             } while (response.LastEvaluatedKey.Any());
 

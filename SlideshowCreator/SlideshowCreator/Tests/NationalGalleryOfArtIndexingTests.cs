@@ -17,8 +17,8 @@ namespace SlideshowCreator.Tests
     class NationalGalleryOfArtIndexingTests
     {
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
-        private readonly IAmazonS3 s3Client = new AwsClientFactory().CreateS3Client();
-        private readonly IAmazonDynamoDB dynamoDbClient = new AwsClientFactory().CreateDynamoDbClient();
+        private readonly IAmazonS3 s3Client = GalleryAwsCredentialsFactory.S3AcceleratedClient;
+        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.DbClient;
 
         private NationalGalleryOfArtDataAccess ngaDataAccess;
         private NationalGalleryOfArtIndexer indexer;

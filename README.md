@@ -1,26 +1,14 @@
 # Slide Show Creator
 
+[Gallery](https://tgonzalez.net)
+
 This repository is dedicated to documenting my journey to systematically discover fine art paintings.
 
 ## Next Steps By Priority
-
 ### Backup The Athenaeum Images to s3
-Last night I went through a terrible scenario. The-athenaeum became inaccessible and the Gallery was shut down! I can't allow such an incident to occur. I have local backups of the images. These images need to go into s3 with a reference in DynamoDb, just like the National Gallery of Art.
-
 ### Index Data for National Galley of Art
-This is actually really simple. CloudFlare's I'm under attack mode has been disabled (last I checked) so crawling should be slightly easier. I can also pull the data back in bulk of 75 items at a time from the search results so this should be a small one night task. I've already done that crawl to get the image links I just never got the name/artist/date data.
-
 ### Make National Gallery of Art Available from the API's and the Gallery Website
-This is self-explanatory. I may need to adjust the HTML/JavaScript to account for the new source e.g. I link to the original source page. That link is probably hard-coded. I store the source website, but not the exact link. This would be an extra field and should probably just go on each record and then all that is abstracted from HTML/JavaScript entirely and in the API.
-
-## Gallery
-The Gallery is where I browse a lifetime supply of visual art in a never-ending slideshow from anywhere in the world that has a web browser with internet. As of this moment only the-athenaeum data can be browsed in the Gallery. While seemingly simple I have found it extraordinarily difficult to browse and explore fine art at scale. The task is far too difficult to do manually. The goal is an experiece that is as rich as visiting a museum. Sacrificing some quality of imagery for breadth of what is explored. My goal with the Gallery website is to truly challenge a visit to a museum. 20MB images look stunning on a 100" HD projector in total darkness with a quality screen.
-
-https://tgonzalez.net
-
 ### Data Sources
-
-*The Athenaeum doesn't have the image files and the National Gallery of Art doesn't have the image data.*
 
 #### The Athenaeum
 
@@ -40,6 +28,42 @@ https://tgonzalez.net
         "pageId": 18392,
         "s3Path": "tgonzalez-image-archive/national-gallery-of-art/image-18392.jpg",
         "source": "http://images.nga.gov"
+    }
+
+#### Labels
+
+    {
+      "Labels": {
+        "SS": [
+          "Coffee Cup: 86.64999",
+          "Cup: 86.64999",
+          "Emblem: 57.37626",
+          "Jug: 77.05539",
+          "Pitcher: 77.05539",
+          "Pottery: 74.03067",
+          "Saucer: 74.03067"
+        ]
+      },
+      "normalizedLabels": {
+        "SS": [
+          "coffee cup",
+          "cup",
+          "emblem",
+          "jug",
+          "pitcher",
+          "pottery",
+          "saucer"
+        ]
+      },
+      "pageId": {
+        "N": "26633"
+      },
+      "s3Path": {
+        "S": "tgonzalez-image-archive/national-gallery-of-art/image-26633.jpg"
+      },
+      "source": {
+        "S": "http://images.nga.gov"
+      }
     }
 
 ### API's
@@ -82,11 +106,38 @@ Response
     var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
     Assert.AreEqual(7350, results.Count);
 
-## Content Delivery Network (CDN)
+## DNS
 
-I think I can perform lossless compression of images with CloudFlare. It's a new feature released on their anniversary. The only question is does it help with a single user? This would be huge if I opened up the Gallery to the public.
+[DNS Registrar - AWS Route53](https://console.aws.amazon.com/route53/home#resource-record-sets:Z1ZQ15FI8WW9I9)
 
-https://www.cloudflare.com/a/overview/tgonzalez.net
+SOA ns-503.awsdns-62.com. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400
+
+NS  brad.ns.cloudflare.com
+
+NS  jocelyn.ns.cloudflare.com
+
+
+[DNS Controller - CloudFlare](https://www.cloudflare.com/a/dns/tgonzalez.net)
+
+CNAME   tgonzalez.net   [Load Balancer Domain](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#LoadBalancers:)
+
+MX      tgonzalez.net  [AWS Workmail](https://console.aws.amazon.com/workmail/home?region=us-east-1#/mail-domains/details/m-8088b0900e9e496c92b4a20deb5a28df/tgonzalez.net)
+
+## Security
+
+Complimentary security to username/password is underway. This second form of authentication/authorization isn't ordinary 2FA, because the second security mechanism will be through CloudFlare which operates at the network level defeating any application vulnerabilities, provided all requests are sent through CloudFlare. The latest changes ensure all requests follow the route `User -> CloudFlare -> Load Balancer -> Web Server`. The CloudFlare IP address is validated dynamically against CloudFlare's published IP range whitelist. IP's in headers can be trusted, because the application will block requests not from the load balancers VPC subnet. When route enforcement has been vetted, CloudFlare security can be configured to authenticate everything under any path e.g. /api/Gallery and instantly adding two very different forms of strong authentication (CloudFlare's passwordless uses email which requires 2FA, so I technically would need three passwords to gain access which is kind of just showing off).
+
+[Web Server](https://default-environment.m5enr2iugv.us-east-1.elasticbeanstalk.com/) - IP doesn't resolve
+
+[Load Balancer](https://awseb-e-v-AWSEBLoa-1RA0LU9VF65ZA-427719651.us-east-1.elb.amazonaws.com) - 403 forbidden from web application IP validation
+
+[tgonzalez.net](tgonzalez.net) Home page is publicly accessible
+
+### Issues
+
+- Can't proxy traffic for www.tgonzalez.net through CloudFlare. An SSL error will occur, because there is no certificate for www.tgonzalez.net.
+
+- Trying DNS only, will it hide the IP? If not this will not work for CloudFlare authentication.
 
 ## Helpful Projects
 

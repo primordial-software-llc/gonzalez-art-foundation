@@ -20,7 +20,7 @@ namespace SlideshowCreator.Scripts
             var json = File.ReadAllText(path);
             var models = JsonConvert.DeserializeObject<List<ClassificationModel>>(json);
 
-            var client = new DynamoDbClient<ClassificationModel>(new AwsClientFactory().CreateDynamoDbClient(), new ConsoleLogging());
+            var client = new DynamoDbClient<ClassificationModel>(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
 
             // This batching should go into the client. 25 is the max allowed.
             while (models.Any())

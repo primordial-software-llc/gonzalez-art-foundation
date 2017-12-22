@@ -33,9 +33,9 @@ namespace MVC5App.Controllers
 
         private void Authenticate(string token)
         {
-            var client = new GalleryUserAccess(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var client = new GalleryUserAccess(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
             var user = client.GetUser();
-            var dbClient = new DynamoDbClient<GalleryUser>(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var dbClient = new DynamoDbClient<GalleryUser>(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
             var auth = new Authentication(GalleryAwsCredentialsFactory.S3Client, dbClient);
             
             if (!auth.IsTokenValid(token, user.Hash))
@@ -52,7 +52,7 @@ namespace MVC5App.Controllers
         [Route("token")]
         public AuthenticationTokenModel GetAuthenticationToken(string username, string password)
         {
-            var dbClient = new DynamoDbClient<GalleryUser>(DynamoDbClientFactory.Client, new ConsoleLogging());
+            var dbClient = new DynamoDbClient<GalleryUser>(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
             var auth = new Authentication(GalleryAwsCredentialsFactory.S3Client, dbClient);
             var response = new AuthenticationTokenModel
             {
@@ -69,7 +69,7 @@ namespace MVC5App.Controllers
             Authenticate();
 
             var key = "national-gallery-of-art/" + s3Name; // Mvc doesn't allow forward slash "/". I already "relaxed" the pathing to allowing periods.
-            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3Client.GetObject("tgonzalez-image-archive", key);
+            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObject("tgonzalez-image-archive", key);
             var memoryStream = new MemoryStream();
             s3Object.ResponseStream.CopyTo(memoryStream);
 

@@ -72,7 +72,6 @@
     <Compile Include="Batcher.cs" />
     <Compile Include="Classifier.cs" />
     <Compile Include="Crawler.cs" />
-    <Compile Include="AwsClientFactory.cs" />
     <Compile Include="DataAccess\GalleryUserAccess.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="DataAccess\ImageClassificationAccess.cs" />

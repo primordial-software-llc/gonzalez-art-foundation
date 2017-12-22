@@ -1,7 +1,5 @@
 ﻿using System;
-using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Amazon.S3;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
@@ -13,9 +11,6 @@ namespace SlideshowIndexer
     class Program
     {
         private static readonly PrivateConfig PrivateConfig = PrivateConfig.CreateFromPersonalJson();
-
-        private static readonly IAmazonS3 S3Client = new AwsClientFactory().CreateS3Client();
-        private static readonly IAmazonDynamoDB DynamoDbClient = new AwsClientFactory().CreateDynamoDbClient();
 
         static void Main(string[] args)
         {
@@ -39,7 +34,7 @@ namespace SlideshowIndexer
                 TableName = new ClassificationModel().GetTable(),
                 BackupName = "image-classification-backup-" + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ssZ")
             };
-            var backupResponse = DynamoDbClient.CreateBackup(request);
+            var backupResponse = GalleryAwsCredentialsFactory.DbClient.CreateBackup(request);
             Console.WriteLine("Backup started: " + backupResponse.BackupDetails.BackupStatus + " - " + backupResponse.BackupDetails.BackupArn);
 
             IIndex indexer = GetIndexer(IndexType.NationalGalleryOfArt);
@@ -67,14 +62,14 @@ namespace SlideshowIndexer
             {
                 var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
                 ngaDataAccess.Init();
-                var indexer = new NationalGalleryOfArtIndexer(S3Client, DynamoDbClient, ngaDataAccess);
+                var indexer = new NationalGalleryOfArtIndexer(GalleryAwsCredentialsFactory.S3AcceleratedClient, GalleryAwsCredentialsFactory.DbClient, ngaDataAccess);
                 return indexer;
             }
             else if (indexType == IndexType.TheAthenaeum)
             {
                 return new TheAthenaeumIndexer(
                     PrivateConfig.PageNotFoundIndicatorText,
-                    DynamoDbClient,
+                    GalleryAwsCredentialsFactory.DbClient,
                     PublicConfig.TheAthenaeumArt);
             }
             else

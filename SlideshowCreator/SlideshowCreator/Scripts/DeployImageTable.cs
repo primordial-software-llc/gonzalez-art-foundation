@@ -8,7 +8,7 @@ namespace SlideshowCreator.Scripts
         //[Test] CAUTION: This script will delete the table and its data if it exists. Create a backup first!
         public void Deploy()
         {
-            var client = new AwsClientFactory().CreateDynamoDbClient();
+            var client = GalleryAwsCredentialsFactory.DbClient;
             new DynamoDbTableFactoryImageClassification(client).CreateTableWithIndexes();
         }
     }

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using Amazon.DynamoDBv2;
 using GalleryBackend;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -13,7 +12,6 @@ namespace SlideshowCreator.Tests
     class TheAthenaeumIndexingTests
     {
         private readonly Throttle throttle = new Throttle();
-        private readonly AmazonDynamoDBClient client = new AwsClientFactory().CreateDynamoDbClient();
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private TheAthenaeumIndexer transientClassifier;
         private VpnCheck vpnCheck;
@@ -22,7 +20,7 @@ namespace SlideshowCreator.Tests
         public void Setup_All_Tests_Once_And_Only_Once()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, client, PublicConfig.TheAthenaeumArt);
+            transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, GalleryAwsCredentialsFactory.DbClient, PublicConfig.TheAthenaeumArt);
             
             vpnCheck = new VpnCheck(new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword));
             vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);

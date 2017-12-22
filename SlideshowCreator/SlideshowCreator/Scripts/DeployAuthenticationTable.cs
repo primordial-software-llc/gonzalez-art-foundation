@@ -14,7 +14,7 @@ namespace SlideshowCreator.Scripts
         //[Test]
         public void Rebuild_Table()
         {
-            var client = new AwsClientFactory().CreateDynamoDbClient();
+            var client = GalleryAwsCredentialsFactory.DbClient;
 
             var request = new CreateTableRequest
             {
