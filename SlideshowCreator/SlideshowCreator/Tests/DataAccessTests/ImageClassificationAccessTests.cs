@@ -39,6 +39,14 @@ namespace SlideshowCreator.Tests.DataAccessTests
         }
 
         [Test]
+        public void Test_Find_All_For_Like_Monet()
+        {
+            var dataAccess = new ImageClassificationAccess(client);
+            var results = dataAccess.FindAllForLikeArtist("monet", new TheAthenaeumIndexer().Source);
+            Assert.AreEqual(1366, results.Count);
+        }
+
+        [Test]
         public void Test_Find_By_Label()
         {
             var dataAccess = new ImageClassificationAccess(client);

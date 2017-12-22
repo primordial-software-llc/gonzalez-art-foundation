@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
@@ -11,6 +13,7 @@ namespace IndexBackend.DataAccess
     public class ImageClassificationAccess
     {
         public const string ARTIST_NAME_INDEX = "ArtistNameIndex";
+        private const int CONCURRENCY = 2;
 
         private IAmazonDynamoDB Client { get; }
 
@@ -88,7 +91,26 @@ namespace IndexBackend.DataAccess
             return typedResponse;
         }
 
-        public List<ClassificationModel> FindAllForLikeArtist(string artist, string source)
+        public List<ClassificationModel> FindAllForLikeArtist(
+            string artist, string source)
+        {
+            var allMatches = new ConcurrentBag<ClassificationModel>();
+
+            Parallel.For(0, CONCURRENCY, new ParallelOptions {MaxDegreeOfParallelism = CONCURRENCY }, threadCt =>
+            {
+                foreach (var match in FindAllForLikeArtistSingleThreaded(artist, source, threadCt, CONCURRENCY))
+                {
+                    allMatches.Add(match);
+                }
+            });
+
+            return allMatches
+                .OrderBy(x => x.Artist)
+                .ThenBy(x => x.Source)
+                .ToList();
+        }
+
+        public List<ClassificationModel> FindAllForLikeArtistSingleThreaded(string artist, string source, int segment, int totalSegments)
         {
             artist = artist.ToLower();
 
@@ -104,7 +126,9 @@ namespace IndexBackend.DataAccess
                     { "#source", "source" }
                 },
                 FilterExpression = "contains(artist, :artist) AND #source = :source",
-                IndexName = ARTIST_NAME_INDEX
+                IndexName = ARTIST_NAME_INDEX,
+                Segment = segment,
+                TotalSegments = totalSegments
             };
 
             ScanResponse scanResponse = null;
@@ -128,7 +152,23 @@ namespace IndexBackend.DataAccess
             return typedResponse;
         }
 
-        public List<ImageLabel> FindByLabel(string label, string source)
+        public List<ImageLabel> FindByLabel(
+            string label, string source)
+        {
+            var allMatches = new ConcurrentBag<ImageLabel>();
+
+            Parallel.For(0, CONCURRENCY, new ParallelOptions { MaxDegreeOfParallelism = CONCURRENCY }, threadCt =>
+            {
+                foreach (var match in FindByLabelSingleThreaded(label, source, threadCt, CONCURRENCY))
+                {
+                    allMatches.Add(match);
+                }
+            });
+
+            return allMatches.ToList();
+        }
+
+        public List<ImageLabel> FindByLabelSingleThreaded(string label, string source, int segment, int totalSegments)
         {
             label = (label ?? string.Empty).ToLower();
             var scanRequest = new ScanRequest(new ImageLabel().GetTable())
@@ -142,7 +182,9 @@ namespace IndexBackend.DataAccess
                 {
                     { "#source", "source" }
                 },
-                FilterExpression = "contains(normalizedLabels, :label) AND #source = :source"
+                FilterExpression = "contains(normalizedLabels, :label) AND #source = :source",
+                Segment = segment,
+                TotalSegments = totalSegments
             };
             ScanResponse scanResponse = null;
             var allMatches = new List<Dictionary<string, AttributeValue>>();

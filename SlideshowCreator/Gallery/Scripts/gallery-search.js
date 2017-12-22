@@ -83,7 +83,7 @@ $(document).ready(function () {
     }
 
     $('#likeSearch').click(function () {
-        var url = `}/api/Gallery/searchLikeArtist?artist=${encodeURIComponent($('#likeSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
+        var url = `/api/Gallery/searchLikeArtist?artist=${encodeURIComponent($('#likeSearchText').val())}&source=${encodeURIComponent($('#siteSelection').val())}`;
         loadSearchResultsFromUrl(url);
     });
 

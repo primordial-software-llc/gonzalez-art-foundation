@@ -18,7 +18,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Authenticate()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            client = new GalleryClient(privateConfig.ElasticBeanstalkDomain, privateConfig.GalleryUsername, privateConfig.GalleryPassword);
+            client = new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword);
         }
         
         [Test]
@@ -56,7 +56,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         [Test]
         public void Search_Labels()
         {
-            var results = client.SearchLabel("Ancient Egypt", new NationalGalleryOfArtIndexer().Source);
+            var results = client.SearchLabel("arabesque pattern", new NationalGalleryOfArtIndexer().Source);
             Assert.AreEqual(2871, results.Count);
             results = results
                 .Where(
