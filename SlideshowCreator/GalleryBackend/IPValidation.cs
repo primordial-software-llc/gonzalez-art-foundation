@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using AwsTools;
 
 namespace GalleryBackend
 {
@@ -11,23 +12,28 @@ namespace GalleryBackend
         public const string CLOUDFLARE_IP_WHITELIST = "https://www.cloudflare.com/ips-v4";
         public const string LOAD_BALANCER_VPC = "172.31.0.0/16";
 
+        private readonly string ipWhitelistUrl;
+        private readonly ILogging logging;
+
         private List<string> ipWhitelist;
         public List<string> IpWhitelist => new List<string>(ipWhitelist);
-        private readonly string ipWhitelistUrl;
+
         private DateTime ipWhiteListLastUpdateUtc;
         private readonly TimeSpan cacheLength = new TimeSpan(hours: 0, minutes: 15, seconds: 0);
 
-        public IPValidation(string ipWhitelistUrl)
+        public IPValidation(string ipWhitelistUrl, ILogging logging)
         {
             this.ipWhitelistUrl = ipWhitelistUrl;
+            this.logging = logging;
         }
 
         public bool IsInSubnet(string ipAddress)
         {
-            if (DateTime.UtcNow > ipWhiteListLastUpdateUtc.Add(cacheLength))
+            if (DateTime.UtcNow > ipWhiteListLastUpdateUtc.Add(cacheLength)) // Probably should lock with a private static object, but no harm is done if the ip list is redundantly retrieved by parallel incoming requests and I can't even change my elastic beanstalk environment at the moment.
             {
-                ipWhiteListLastUpdateUtc = DateTime.UtcNow;
                 ipWhitelist = GetIpWhitelist();
+                logging.Log($"IP whitelist changed. Last whitelist was from {ipWhiteListLastUpdateUtc:yyyy-MM-ddTHH-mm-ssZ} Latest IP's from (https://www.cloudflare.com/ips-v4): " + string.Join(",", ipWhitelist));
+                ipWhiteListLastUpdateUtc = DateTime.UtcNow;
             }
 
             return IsInSubnet(ipAddress, ipWhitelist);

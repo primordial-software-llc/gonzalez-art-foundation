@@ -30,9 +30,9 @@ namespace IndexBackend
             {
                 var chain = new CredentialProfileStoreChain();
                 var profile = "default";
-                if (!chain.TryGetAWSCredentials("default", out AWSCredentials awsCredentials))
+                if (!chain.TryGetAWSCredentials(profile, out AWSCredentials awsCredentials))
                 {
-                    throw new Exception($"c not found for \"{profile}\" profile. Is Http context current null? " + (HttpContext.Current == null).ToString());
+                    throw new Exception($"AWS profile not found \"{profile}\" profile. Is Http context current null? " + (HttpContext.Current == null).ToString());
                 }
                 return awsCredentials;
             }

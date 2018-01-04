@@ -8,70 +8,10 @@
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
     @RenderSection("scripts", required: false)
-    
+    <script src="/Scripts/gallery-template.js"></script>
     <script>
-        function setCookie(authenticationResponse) {
-            var d = new Date(authenticationResponse.expirationDate);
-            var expires = "expires=" + d.toUTCString();
-            document.cookie = 'token=' + encodeURIComponent(authenticationResponse.token) + ';' + expires + ";path=/";
-        }
-
-        function isAuthenticated() {
-            return document.cookie &&
-                document.cookie.indexOf('token=') > -1;
-        }
-
-        function updateAuthenticationForm() {
-            if (isAuthenticated()) {
-                $('#login-form').hide();
-                $('#authenticated-user-form').show();
-            } else {
-                $('#login-form').show();
-                $('#authenticated-user-form').hide();
-            }
-        }
-
-        function getCookie(cname) {
-            var name = cname + "=";
-            var decodedCookie = decodeURIComponent(document.cookie);
-            var ca = decodedCookie.split(';');
-            for(var i = 0; i <ca.length; i++) {
-                var c = ca[i];
-                while (c.charAt(0) == ' ') {
-                    c = c.substring(1);
-                }
-                if (c.indexOf(name) == 0) {
-                    return c.substring(name.length, c.length);
-                }
-            }
-            return "";
-        }
-
-        $(document).ready(function () {
-
-            updateAuthenticationForm();
-
-            $('#login').click(function() {
-                var url = '/api/Gallery/token' +
-                    '?username=' + encodeURIComponent($('#username').val()) +
-                    '&password=' + encodeURIComponent($('#password').val());
-
-                fetch(url, { credentials: "same-origin" }).then(function(response) {
-                    response
-                        .json()
-                        .then(function(json) {
-                            setCookie(json);
-                            updateAuthenticationForm();
-                        });
-                });
-            });
-            
-            $('#signout').click(function() {
-                document.cookie = "token=;expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                updateAuthenticationForm();
-            });
-
-        });
+        var galleryTemplate = new GalleryTemplate();
+        galleryTemplate.init();
     </script>
 </head>
 <body>

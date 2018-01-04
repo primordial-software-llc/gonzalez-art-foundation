@@ -44,6 +44,22 @@ namespace MVC5App.Controllers
             }
         }
 
+        [Route("twoFactorAuthenticationRedirect")]
+        public HttpResponseMessage GetTwoFactorAuthenticationRedirect(string galleryPath)
+        {
+            var url = HttpContext.Current.Request.Url;
+            var s3Logging = new S3Logging("cloudflare-redirect-logs", GalleryAwsCredentialsFactory.S3Client);
+            s3Logging.Log(url.ToString());
+            var response = Request.CreateResponse(HttpStatusCode.Moved);
+            var path = galleryPath.Substring(0, galleryPath.IndexOf("?"));
+            var query = HttpUtility.ParseQueryString(galleryPath.Substring(galleryPath.IndexOf("?")));
+            response.Headers.Location = new Uri(url.Scheme + "://" + url.Host +
+                                                (url.IsDefaultPort ? "" : ":" + url.Port) +
+                                                path + "?username=" + HttpUtility.UrlEncode(query.Get("username")) +
+                                                        "&password=" + HttpUtility.UrlEncode(query.Get("password")));
+            return response;
+        }
+
         /// <remarks>
         /// Success is determined on token usage in order to make brute force more difficult.
         /// At a minimum brute force attacks require 2x the number of requests when checking success on another service;

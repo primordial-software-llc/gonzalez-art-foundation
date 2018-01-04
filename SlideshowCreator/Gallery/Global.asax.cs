@@ -6,7 +6,6 @@ using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
-using Amazon.S3.Model;
 using GalleryBackend;
 using IndexBackend;
 
@@ -14,6 +13,9 @@ namespace MVC5App
 {
     public class MvcApplication : HttpApplication
     {
+        private static readonly object IP_VALIDATION_LOCK = new object();
+        private static IPValidation ipValidation;
+
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
@@ -23,15 +25,14 @@ namespace MVC5App
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
-        
-        protected void Application_BeginRequest(Object sender, EventArgs e)
-        {
-            var dedniedMsg = string.Empty;
 
-            if (!ApplicationContext.IsLocal(HttpContext.Current.Request) &&
-                !IPValidation.IsInSubnet(HttpContext.Current.Request.UserHostAddress, IPValidation.LOAD_BALANCER_VPC))
+        private string GetAccessIssues()
+        {
+            var accessIssues = string.Empty;
+
+            if (!IPValidation.IsInSubnet(HttpContext.Current.Request.UserHostAddress, IPValidation.LOAD_BALANCER_VPC)) // Probably safe to assume IP in headers isn't spoofed without checking sender, because of VPC routing rules, but I'm not very comfortable with VPC's and like clearly documenting/enforcing the relation.
             {
-                dedniedMsg += $"Client IP {HttpContext.Current.Request.UserHostAddress} is not localhost or a known VPC IP range {IPValidation.LOAD_BALANCER_VPC}";
+                accessIssues += $"Client IP {HttpContext.Current.Request.UserHostAddress} is not a known VPC IP range {IPValidation.LOAD_BALANCER_VPC}";
             }
 
             List<string> forwardedIps = HttpContext.Current.Request.Headers["X-Forwarded-For"]
@@ -41,41 +42,65 @@ namespace MVC5App
             var cfConnectingIp = HttpContext.Current.Request.Headers["CF-Connecting-IP"];
             if (!forwardedIps.First().Equals(cfConnectingIp))
             {
-                dedniedMsg += Environment.NewLine + "Load balancer and CloudFlare have conflicting client origin IP's." +
-                    $" Load balancer forwarded IP's: {string.Join(", ", forwardedIps)}. CloudFlare connecting IP {cfConnectingIp}";
-            }
-            
-            var ipValidation = new IPValidation(IPValidation.CLOUDFLARE_IP_WHITELIST);
-            if (!ipValidation.IsInSubnet(forwardedIps.Last()))
-            {
-                dedniedMsg += Environment.NewLine + "Load balancer didn't receive request from CloudFlare." +
-                       $" Load balancer forwarded IP's: {string.Join(", ", forwardedIps)} CloudFlare IP source list {IPValidation.CLOUDFLARE_IP_WHITELIST}." +
-                       $"IP whitelist in memory: {string.Join(", ", ipValidation.IpWhitelist)}";
+                accessIssues += Environment.NewLine + "Load balancer and CloudFlare have conflicting client origin IP's." +
+                              $" Load balancer forwarded IP's: {string.Join(", ", forwardedIps)}. CloudFlare connecting IP {cfConnectingIp}";
             }
 
-            if (!string.IsNullOrWhiteSpace(dedniedMsg))
+            if (ipValidation == null) // Method level thread safe static init, because http context isn't set until after class init.
             {
-                dedniedMsg += Environment.NewLine + Environment.NewLine +
-                    "Headers" + Environment.NewLine + Request.Headers;
-                GalleryAwsCredentialsFactory.S3Client.PutObject(new PutObjectRequest
+                lock (IP_VALIDATION_LOCK)
                 {
-                    BucketName = "tgonzalez-quick-logging",
-                    Key = "denied-ip-access-logs/" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ"),
-                    ContentBody = dedniedMsg
-                });
+                    if (ipValidation == null)
+                    {
+                        ipValidation = new IPValidation(IPValidation.CLOUDFLARE_IP_WHITELIST, new S3Logging("cloudflare-ip-logs", GalleryAwsCredentialsFactory.S3Client));
+                    }
+                }
+            }
+            
+            if (!ipValidation.IsInSubnet(forwardedIps.Last()))
+            {
+                accessIssues += Environment.NewLine + "Load balancer didn't receive request from CloudFlare." +
+                              $" Load balancer forwarded IP's: {string.Join(", ", forwardedIps)} CloudFlare IP source list {IPValidation.CLOUDFLARE_IP_WHITELIST}." +
+                              $"IP whitelist in memory: {string.Join(", ", ipValidation.IpWhitelist)}";
+            }
+
+            return accessIssues;
+        }
+        
+        protected void Application_BeginRequest(Object sender, EventArgs e)
+        {
+            string accessIssues = string.Empty;
+
+            if (!ApplicationContext.IsLocal(HttpContext.Current.Request))
+            {
+                accessIssues = GetAccessIssues();
+            }
+
+            if (!string.IsNullOrWhiteSpace(accessIssues))
+            {
+                accessIssues += Environment.NewLine + Environment.NewLine +
+                              "Headers" + Environment.NewLine + Request.Headers;
+                var s3Logging = new S3Logging("denied-ip-access-logs", GalleryAwsCredentialsFactory.S3Client);
+                s3Logging.Log(accessIssues);
                 HttpContext.Current.Response.StatusCode = 403;
-                CompleteRequest();
+                CompleteRequest(); // Early return
             }
             else
             {
-                GalleryAwsCredentialsFactory.S3Client.PutObject(new PutObjectRequest
+                var content = $"Client IP: {HttpContext.Current.Request.UserHostAddress}.";
+
+                if(HttpContext.Current.Request.Headers.AllKeys.Contains("X-Forwarded-For"))
                 {
-                    BucketName = "tgonzalez-quick-logging",
-                    Key = "allowed-ip-access-logs/" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ"),
-                    ContentBody = $"Client IP: {HttpContext.Current.Request.UserHostAddress}." +
-                                  $" Forwarded IP's: {HttpContext.Current.Request.Headers["X-Forwarded-For"]}." +
-                                  $" CloudFlare Connecting IP: {cfConnectingIp}"
-                });
+                    content += $" Forwarded IP's: {HttpContext.Current.Request.Headers["X-Forwarded-For"]}.";
+                }
+
+                if (HttpContext.Current.Request.Headers.AllKeys.Contains("CF-Connecting-IP"))
+                {
+                    content += $" CloudFlare Connecting IP: {HttpContext.Current.Request.Headers["CF-Connecting-IP"]}";
+                }
+
+                var s3Logging = new S3Logging("allowed-ip-access-logs", GalleryAwsCredentialsFactory.S3Client);
+                s3Logging.Log(content);
             }
         }
         
