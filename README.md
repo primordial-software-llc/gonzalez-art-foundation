@@ -151,9 +151,9 @@ CloudFlare Access is enforced by CloudFlare's proxy servers, so it's imperative 
 
 [Load Balancer](https://awseb-e-v-AWSEBLoa-1RA0LU9VF65ZA-427719651.us-east-1.elb.amazonaws.com) - 403 forbidden from web application IP validation
 
-[tgonzalez.net](tgonzalez.net) Home page is publicly accessible
+[https://tgonzalez.net](https://tgonzalez.net) Home page is publicly accessible
 
-[tgonzalez.net/api](tgonzalez.net/api) CloudFlare Access Secured Path
+[https://tgonzalez.net/api](https://tgonzalez.net/api) CloudFlare Access Secured Path
 
 ### Issues
 
