@@ -93,11 +93,7 @@ namespace SlideshowCreator.Tests
             Assert.IsNull(asset2Index);
         }
 
-        [Test]
-        public void Index_Tif_Image()
-        {
-            IndexAndAssertInS3(64554, ".tif");
-        }
+        // The image is gone from the site.
 
         private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {

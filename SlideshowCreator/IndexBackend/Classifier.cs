@@ -42,7 +42,7 @@ namespace IndexBackend
             return classification;
         }
 
-        private string GetReplacementForEmptyArtist(string artist)
+        public static string GetReplacementForEmptyArtist(string artist)
         {
             if (string.IsNullOrWhiteSpace(artist) ||
                 artist.Equals("artist not listed", StringComparison.OrdinalIgnoreCase))
@@ -53,7 +53,7 @@ namespace IndexBackend
             return artist;
         }
 
-        private string NormalizeArtist(string artist)
+        public static string NormalizeArtist(string artist)
         {
             artist = GetReplacementForEmptyArtist(artist);
             artist = artist.RemoveDiacritics().ToLower();

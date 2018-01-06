@@ -37,6 +37,18 @@ namespace IndexBackend.Indexing
             NgaDataAccess = ngaDataAccess;
         }
 
+        public void SetMetaData(ClassificationModel model)
+        {
+            Console.WriteLine("Getting metadata for page id " + model.PageId);
+            var html = NgaDataAccess.GetAssetDetails(model.PageId);
+            var details = AssetDetailsParser.ParseHtmlToNewModel(html);
+            model.OriginalArtist = details.OriginalArtist;
+            model.Artist = details.Artist;
+            model.Name = details.Name;
+            model.Date = details.Date;
+            model.SourceLink = details.SourceLink;
+        }
+
         public ClassificationModel Index(int id)
         {
             var zipFile = NgaDataAccess.GetHighResImageZipFile(id);
