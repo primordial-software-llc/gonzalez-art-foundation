@@ -35,7 +35,7 @@ The Gallery is already providing National Gallery of Art images. The meta-data j
 #### Labels
 
     {
-      "Labels": {
+      "labels": {
         "SS": [
           "Coffee Cup: 86.64999",
           "Cup: 86.64999",

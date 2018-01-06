@@ -9,11 +9,19 @@ namespace GalleryBackend.Model
     public class ClassificationModel : IModel
     {
         public const string SOURCE = "source";
-        public const string ID = "pageId"; // Should just be "id", because NGA uses the term "assetId" and loads pages based on asset and size. Whereas the-athenaeum uses a pageId then an imageId for the "asset" on the page.
+        public const string ID = "pageId";
         public const string ORIGINAL_ARTIST = "originalArtist";
 
         [JsonProperty(SOURCE)]
         public string Source { get; set; }
+
+        /// <summary>
+        /// "source" is the same url to the site's home page.
+        /// "sourceLink" is the url for the site's specific page for the work of art.
+        /// Whereas the source is only an identifier of the site.
+        /// </summary>
+        [JsonProperty("sourceLink")]
+        public string SourceLink { get; set; }
         
         [JsonProperty(ID)]
         public int PageId { get; set; }

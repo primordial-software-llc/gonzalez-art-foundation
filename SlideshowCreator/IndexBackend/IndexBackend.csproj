@@ -42,8 +42,8 @@
     <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.S3.3.3.16\lib\net45\AWSSDK.S3.dll</HintPath>
     </Reference>
-    <Reference Include="AwsTools, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\AwsTools.1.0.9\lib\net47\AwsTools.dll</HintPath>
+    <Reference Include="AwsTools, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AwsTools.1.0.10\lib\net47\AwsTools.dll</HintPath>
     </Reference>
     <Reference Include="CloudFlareImUnderAttackMode">
       <HintPath>..\..\Dlls\CloudFlareImUnderAttackMode.dll</HintPath>
@@ -53,6 +53,9 @@
     </Reference>
     <Reference Include="Diacritics">
       <HintPath>..\..\Dlls\Diacritics.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlAgilityPack, Version=1.6.11.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.6.11\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -77,6 +80,7 @@
     <Compile Include="DataAccess\ImageClassificationAccess.cs" />
     <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />
+    <Compile Include="NationalGalleryOfArt\AssetDetailsParser.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageEncoding.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReference.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceAsset.cs" />

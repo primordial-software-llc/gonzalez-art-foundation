@@ -16,7 +16,7 @@ namespace GalleryBackend.Model
         [JsonProperty(ClassificationModel.ID)]
         public int PageId { get; set; }
 
-        [JsonProperty("Labels")]
+        [JsonProperty("labels")]
         public List<string> LabelsAndConfidence { get; set; }
 
         [JsonProperty("normalizedLabels")]
