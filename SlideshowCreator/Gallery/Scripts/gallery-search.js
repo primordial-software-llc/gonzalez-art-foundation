@@ -5,7 +5,7 @@ function getImageUrl(item) {
             item.s3Path.split('/').pop() + '/';
         return url;
     } else {
-        return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
+        return 'https://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
     }
 }
 

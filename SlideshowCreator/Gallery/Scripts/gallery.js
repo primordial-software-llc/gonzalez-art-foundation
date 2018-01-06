@@ -7,7 +7,7 @@ function getImageUrl(item) {
             item.s3Path.split('/').pop() + '/';
         return url;
     } else {
-        return 'http://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
+        return 'https://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;
     }
 }
 
@@ -70,22 +70,32 @@ function pauseSlideshow() {
     $('#slideshow-play').show();
 }
 
+function showFullsize() {
+    hasMovedMouseOnImageViewerPage = true;
+    $("#slideshow-player").slideDown("slow", function () {
+        $("#slideshow-player").show();
+        $('#slideshow-image-container').height('92%');
+    });
+    var element = document.getElementsByTagName('html')[0];
+    if (element.webkitRequestFullScreen) {
+        element.webkitRequestFullScreen();
+    } else if (element.requestFullscreen) {
+        element.requestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+        element.mozRequestFullScreen();
+    } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+    }
+}
+
 $(document).ready(function () {
     showCurrentImage();
 
     $(this).mousemove(function () {
-        hasMovedMouseOnImageViewerPage = true;
-        $("#slideshow-player").slideDown("slow", function () {
-            $("#slideshow-player").show();
-            $('#slideshow-image-container').height('92%');
-        });
+        showFullsize();
     });
     $(this).keypress(function () {
-        hasMovedMouseOnImageViewerPage = true;
-        $("#slideshow-player").slideDown("slow", function () {
-            $("#slideshow-player").show();
-            $('#slideshow-image-container').height('92%');
-        });
+        showFullsize();
     });
 
     setInterval(function () {

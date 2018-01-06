@@ -7,7 +7,9 @@ This repository is dedicated to documenting my journey to systematically discove
 ## Next Steps By Priority
 ### Backup The Athenaeum Images to s3
 ### Index Data for National Galley of Art
-### Make National Gallery of Art Available from the API's and the Gallery Website
+
+The Gallery is already providing National Gallery of Art images. The meta-data just needs to be added and the images fed from the web services. The UI has been updated to handle the display.
+
 ### Data Sources
 
 #### The Athenaeum
