@@ -6,7 +6,20 @@ This repository is dedicated to documenting my journey to systematically discove
 
 ## Next Steps By Priority
 ### Backup The Athenaeum Images to s3
-### Index Data for National Galley of Art
+### 2FA Enforced in AWS
+This is needed in case there is an issue with the network or application security for highly privileged actions. Assuming that both CloudFlare's identity provider and the websites username/password validate successfully or are bypassed entirely, then no matter what certain resources would require **active** access to an MFA device.
+
+[AWS POLICY - 2FA CONDITION](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_sample-policies.html)
+
+    {
+      "Version": "2012-10-17",
+      "Statement": [{
+        "Effect": "Allow",
+        "Action": ["ec2:*"],
+        "Resource": ["*"],
+        "Condition": {"NumericLessThan": {"aws:MultiFactorAuthAge": "3600"}}
+      }]
+    }
 
 The Gallery is already providing National Gallery of Art images. The meta-data just needs to be added and the images fed from the web services. The UI has been updated to handle the display.
 
