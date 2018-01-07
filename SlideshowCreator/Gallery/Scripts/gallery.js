@@ -136,6 +136,11 @@
         $(document).ready(function () {
             showCurrentImage();
 
+            $('#slideshow-return-home').click(function () {
+                console.log('clicked');
+                window.location = "/";
+            });
+
             $('#slideshow-fullscreen').click(function () {
                 showFullscreen();
             });
@@ -175,7 +180,6 @@
                 }
 
                 var intervalInMs = parseFloat($('#slideshow-interval').val()) * 1000;
-                console.log(intervalInMs);
                 slideshowTimer = setInterval(slideshowTimerAction, intervalInMs);
                 $('#slideshow-pause').show();
                 $('#slideshow-play').hide();

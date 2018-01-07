@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Web;
 using System.Web.Http;
 using Amazon.S3.Model;
@@ -12,38 +13,13 @@ using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
-using IndexBackend.DataAccess;
+using Newtonsoft.Json;
 
 namespace MVC5App.Controllers
 {
     [RoutePrefix("api/Gallery")]
     public class GalleryController : ApiController
     {
-        private void Authenticate()
-        {
-            string cookie = Request.Headers
-                .GetCookies()
-                .SelectMany(x => x.Cookies
-                    .Where(y => y.Name.Equals("token"))
-                    .Select(y => y.Value))
-                .FirstOrDefault();
-
-            Authenticate(cookie);
-        }
-
-        private void Authenticate(string token)
-        {
-            var client = new GalleryUserAccess(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
-            var user = client.GetUser();
-            var dbClient = new DynamoDbClient<GalleryUser>(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
-            var auth = new Authentication(GalleryAwsCredentialsFactory.S3Client, dbClient);
-            
-            if (!auth.IsTokenValid(token, user.Hash))
-            {
-                throw new Exception("Not authenticated.");
-            }
-        }
-
         [Route("twoFactorAuthenticationRedirect")]
         public HttpResponseMessage GetTwoFactorAuthenticationRedirect(string galleryPath)
         {
@@ -60,30 +36,39 @@ namespace MVC5App.Controllers
             return response;
         }
 
-        /// <remarks>
-        /// Success is determined on token usage in order to make brute force more difficult.
-        /// At a minimum brute force attacks require 2x the number of requests when checking success on another service;
-        /// however no additional latency is incurred for legitimate users!
-        /// </remarks>
         [Route("token")]
-        public AuthenticationTokenModel GetAuthenticationToken(string username, string password)
+        public HttpResponseMessage  GetAuthenticationToken(string username, string password)
         {
-            var dbClient = new DynamoDbClient<GalleryUser>(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
-            var auth = new Authentication(GalleryAwsCredentialsFactory.S3Client, dbClient);
-            var response = new AuthenticationTokenModel
+            var dbClient = GalleryAwsCredentialsFactory.DbClient;
+            var awsToolsClient = new DynamoDbClient<GalleryUser>(dbClient, new ConsoleLogging());
+            var userClient = new GalleryUserAccess(dbClient, new ConsoleLogging(),
+                awsToolsClient,
+                new S3Logging("token-salt-cycling", GalleryAwsCredentialsFactory.S3AcceleratedClient));
+            var auth = new Authentication(userClient);
+            var token = auth.GetToken(Authentication.Hash($"{username}:{password}"));
+            var masterHash = awsToolsClient.Get(new GalleryUser {Id = Authentication.MASTER_USER_ID}).Result.Hash;
+
+            if (!auth.IsTokenValid(token, masterHash))
             {
-                Token = auth.GetToken(Authentication.Hash($"{username}:{password}")),
-                ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")
-            };
-            Authenticate(response.Token);
-            return response;
+                var accessIssues= "Headers" + Environment.NewLine + Request.Headers;
+                var s3Logging = new S3Logging("denied-ip-access-logs", GalleryAwsCredentialsFactory.S3Client);
+                s3Logging.Log(accessIssues);
+                return new HttpResponseMessage(HttpStatusCode.Forbidden);
+            }
+
+            var response = new AuthenticationTokenModel();
+            response.Token = token;
+            response.ExpirationDate = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd");
+
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK);
+            httpResponse.Content = new StringContent(JsonConvert.SerializeObject(response), Encoding.UTF8, "application/json");
+
+            return httpResponse;
         }
 
         [Route("image/tgonzalez-image-archive/national-gallery-of-art/{s3Name}")]
         public HttpResponseMessage GetImage(string s3Name)
         {
-            Authenticate();
-
             var key = "national-gallery-of-art/" + s3Name; // Mvc doesn't allow forward slash "/". I already "relaxed" the pathing to allowing periods.
             GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObject("tgonzalez-image-archive", key);
             var memoryStream = new MemoryStream();
@@ -99,42 +84,36 @@ namespace MVC5App.Controllers
         [Route("searchLikeArtist")]
         public List<ClassificationModel> GetLike(string artist, string source = null)
         {
-            Authenticate();
             return new DynamoDbClientFactory().SearchByLikeArtist(artist, source);
         }
 
         [Route("searchExactArtist")]
         public List<ClassificationModel> GetExact(string artist, string source = null)
         {
-            Authenticate();
             return new DynamoDbClientFactory().SearchByExactArtist(artist, source);
         }
 
         [Route("searchLabel")]
         public List<ImageLabel> GetSearchByLabel(string label, string source = null)
         {
-            Authenticate();
             return new DynamoDbClientFactory().SearchByLabel(label, source);
         }
 
         [Route("{pageId}/label")]
         public ImageLabel GetLabels(int pageId)
         {
-            Authenticate();
             return new DynamoDbClientFactory().GetLabel(pageId);
         }
         
         [Route("scan")]
         public List<ClassificationModel> GetScanByPage(int? lastPageId, string source = null)
         {
-            Authenticate();
             return new DynamoDbClientFactory().ScanByPage(lastPageId, source);
         }
 
         [Route("ip")]
         public RequestIPAddress GetIPAddress()
         {
-            Authenticate();
             var ipAddress = new RequestIPAddress
             {
                 IP = HttpContext.Current.Request.UserHostAddress,

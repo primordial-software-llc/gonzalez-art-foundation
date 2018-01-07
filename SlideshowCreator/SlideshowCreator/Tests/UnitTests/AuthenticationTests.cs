@@ -1,4 +1,5 @@
 ﻿using System;
+using Amazon.DynamoDBv2;
 using Amazon.S3;
 using AwsTools;
 using GalleryBackend;
@@ -8,8 +9,15 @@ using NUnit.Framework;
 
 namespace SlideshowCreator.Tests.UnitTests
 {
-    public class DisclosedAuthentication
+    public class AuthenticationTests
     {
+
+        [Test]
+        public void Authorizing_Web_Api_Paths_From_Uri()
+        {
+            var uri = new Uri("https://tgonzalez.net/api/Gallery/token?=REDACTED&password=REDACTED");
+            Assert.AreEqual("/api/Gallery/token", uri.LocalPath);
+        }
 
         [Test]
         public void VPC_IP()
@@ -19,26 +27,43 @@ namespace SlideshowCreator.Tests.UnitTests
             Assert.IsTrue(IPValidation.IsInSubnet(sampleIpFromProductionWebServer, loadBalancersCiderIpRange));
         }
 
-        [Test]
-        public void Test_Publicly_Disclosed_Authentication()
-        {
-            var username = "username";
-            var password = "password";
-            var authoritativeSecrethash = Authentication.Hash($"{username}:{password}");
-            Assert.AreEqual("vIQsManlTv4yDTDZSL5hKR887uR2bjarJfplJDzXbg4=", authoritativeSecrethash);
+        private string Username => "username";
+        private string Password => "password";
+        private string AuthoritativeSecrethash => Authentication.Hash("username:password");
 
+        [Test]
+        public void Hash()
+        {
+            Assert.AreEqual("vIQsManlTv4yDTDZSL5hKR887uR2bjarJfplJDzXbg4=", AuthoritativeSecrethash);
+        }
+
+        [Test]
+        public void Good_Username_And_Password()
+        {
             var user = new GalleryUser
             {
-                TokenSalt = "bCw0B8BewXZ1IcMGFkJ6gEFa5OkDgvDVwIWG7dMepWY",
-                TokenSaltDate = DateTime.UtcNow.Date.ToString("yyyy-MM-dd")
+                TokenSalt = "EXPIRED",
+                TokenSaltDate = DateTime.UtcNow.Date.AddDays(-2).Date.ToString("yyyy-MM-dd")
             };
             var userClient = Substitute.For<IDynamoDbClient<GalleryUser>>();
             userClient.Get(user).ReturnsForAnyArgs(user);
-            var auth = new Authentication(Substitute.For<IAmazonS3>(), userClient);
-            Assert.IsTrue(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"{username}:{password}")), authoritativeSecrethash));
-            Assert.IsTrue(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"{username}:{password}")), authoritativeSecrethash)); // Verify salt doesn't change except on calendar day changes.
-            Assert.False(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"notusername:{password}")), authoritativeSecrethash));
-            Assert.False(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"{username}:notpassword")), authoritativeSecrethash));
+
+            var galleryUserAccess = new GalleryUserAccess(
+                Substitute.For<IAmazonDynamoDB>(),
+                new ConsoleLogging(), userClient, Substitute.For<ILogging>());
+            var auth = new Authentication(galleryUserAccess);
+
+            Assert.IsTrue(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"{Username}:{Password}")), AuthoritativeSecrethash));
+
+            var newSalt = user.TokenSalt;
+            Assert.AreNotEqual("EXPIRED", user.TokenSalt);
+            Assert.AreEqual(DateTime.UtcNow.Date.ToString("yyyy-MM-dd"), user.TokenSaltDate);
+            Assert.IsTrue(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"{Username}:{Password}")), AuthoritativeSecrethash)); // Verify salt doesn't change except on calendar day changes.
+            Assert.AreEqual(newSalt, user.TokenSalt);
+
+            Assert.False(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"notusername:{Password}")), AuthoritativeSecrethash));
+            Assert.False(auth.IsTokenValid(auth.GetToken(Authentication.Hash($"{Username}:notpassword")), AuthoritativeSecrethash));
         }
+        
     }
 }

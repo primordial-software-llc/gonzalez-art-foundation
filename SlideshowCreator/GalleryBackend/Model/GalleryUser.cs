@@ -19,6 +19,8 @@ namespace GalleryBackend.Model
         [JsonProperty("tokenSalt")]
         public string TokenSalt { get; set; }
 
+        public const string USER_HASH_INDEX = "UserHashIndex";
+
         public Dictionary<string, AttributeValue> GetKey()
         {
             return new Dictionary<string, AttributeValue>

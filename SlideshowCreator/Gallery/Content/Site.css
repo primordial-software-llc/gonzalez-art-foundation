@@ -52,16 +52,16 @@ a.nav-link:hover {
     cursor: pointer;
 }
 
-#likeSearchText,
-#exactSearchText,
 #idSearchText,
 #tagSearchText {
     width: 85%;
 }
 
-#likeSearch,
-#exactSearch,
 #idSearch,
 #tagSearch {
     width: 13%;
+}
+
+.search-group {
+    display: flex;
 }

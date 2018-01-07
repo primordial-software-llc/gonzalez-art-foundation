@@ -32,13 +32,9 @@ function loadSearchResults(results) {
 
 function assertSuccess(response, json) {
     if (!response || response.status < 200 || response.status > 299) {
-        if (json && json.ExceptionMessage === 'Not authenticated') {
-            alert('Please Login');
-        } else {
-            console.log(response);
-            console.log(json);
-            alert('Failed to get data: ' + JSON.stringify(json, 0, 4));
-        }
+        console.log(response);
+        console.log(json);
+        alert('Failed to get data: ' + JSON.stringify(json, 0, 4));
         return false;
     }
     return true;
@@ -46,6 +42,10 @@ function assertSuccess(response, json) {
 
 function loadSearchResultsFromUrl(url) {
     fetch(url, { credentials: "same-origin" }).then(function (response) {
+        if (response.status === 403) {
+            alert('Credentials are invalid. Logout and login with valid credentials');
+            return;
+        }
         response
             .json()
             .then(function (json) {

@@ -10,7 +10,9 @@ namespace GalleryBackend
         private readonly string bucket;
         private readonly string prefix;
         private readonly IAmazonS3 s3Client;
-
+        
+        /// <param name="prefix">For example: access-logs</param>
+        /// <param name="s3Client"></param>
         public S3Logging(string prefix, IAmazonS3 s3Client)
             : this("tgonzalez-quick-logging", prefix, s3Client)
         {

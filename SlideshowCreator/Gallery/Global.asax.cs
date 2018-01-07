@@ -6,8 +6,12 @@ using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using AwsTools;
 using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MVC5App
 {
@@ -26,7 +30,22 @@ namespace MVC5App
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
 
-        private string GetAccessIssues()
+        private bool IsAuthenticatedByToken()
+        {
+            string token = HttpUtility.UrlDecode(Request.Cookies.Get("token")?.Value);
+            var dbClient = GalleryAwsCredentialsFactory.DbClient;
+            var awsToolsClient = new DynamoDbClient<GalleryUser>(dbClient, new ConsoleLogging());
+            var userClient = new GalleryUserAccess(dbClient, new ConsoleLogging(),awsToolsClient,
+                new S3Logging("token-salt-cycling", GalleryAwsCredentialsFactory.S3AcceleratedClient));
+            var auth = new Authentication(userClient);
+
+            var masterUser = new GalleryUser {Id = Authentication.MASTER_USER_ID};
+            masterUser =  awsToolsClient.Get(masterUser).Result;
+
+            return auth.IsTokenValid(token, masterUser.Hash);
+        }
+
+        private string GetRouteAccessIssues()
         {
             var accessIssues = string.Empty;
 
@@ -69,12 +88,23 @@ namespace MVC5App
         
         protected void Application_BeginRequest(Object sender, EventArgs e)
         {
-            string accessIssues = string.Empty;
+            JObject accessIssuesJson = new JObject();
 
             if (!ApplicationContext.IsLocal(HttpContext.Current.Request))
             {
-                accessIssues = GetAccessIssues();
+                accessIssuesJson.Add("route", GetRouteAccessIssues());
             }
+
+            if (!HttpContext.Current.Request.Url.LocalPath.Equals("/api/Gallery/token", StringComparison.OrdinalIgnoreCase) &&
+                HttpContext.Current.Request.Url.LocalPath.StartsWith("/api/Gallery/", StringComparison.OrdinalIgnoreCase) &&
+                !IsAuthenticatedByToken())
+            {
+                accessIssuesJson.Add("token", "Invalid");
+            }
+
+            string accessIssues = accessIssuesJson.Properties().Any()
+                ? JsonConvert.SerializeObject(accessIssuesJson)
+                : string.Empty;
 
             if (!string.IsNullOrWhiteSpace(accessIssues))
             {

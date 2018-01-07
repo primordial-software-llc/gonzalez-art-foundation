@@ -2,8 +2,9 @@
 
     /**
      * https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-     * @param {any} name
-     * @param {any} url
+     * @param {string} name Cookie name
+     * @param {string} url Site url
+     * @returns {string} url parameter value
      */
     function getParameterByName(name, url) {
         if (!url) url = window.location.href;
@@ -15,10 +16,21 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
+    /**
+     * CloudFlare Access has no affect outside of production without requests being proxied through CloudFlare.
+     * I would need to have a a public test site on a subdomain.
+     * @returns {boolean} true if in production and CloudFlare Authorization cookie exists.
+     */
+    function isAuthenticatedInCloudFlare() {
+        if (window.location.hostname !== 'tgonzalez.net') {
+            return true;
+        }
+        return document.cookie && document.cookie.indexOf('CF_Authorization=') > -1;
+    }
+
     function isAuthenticated() {
         return document.cookie &&
-            document.cookie.indexOf('token=') > -1 &&
-            document.cookie.indexOf('CF_Authorization=') > -1;
+            document.cookie.indexOf('token=') > -1 && isAuthenticatedInCloudFlare();
     }
 
     function updateAuthenticationForm() {
@@ -36,6 +48,11 @@
             '?username=' + encodeURIComponent(username) +
             '&password=' + encodeURIComponent(password);
         fetch(url, { credentials: "same-origin" }).then(function (response) {
+            if (response.status === 403) {
+                alert('Credentials are invalid. Logout and login with valid credentials');
+                return;
+            }
+            
             response
                 .json()
                 .then(function (json) {
@@ -61,7 +78,7 @@
             updateAuthenticationForm();
 
             $('#login').click(function () {
-                if (document && document.cookie.indexOf('CF_Authorization=') < 0) {
+                if (!isAuthenticatedInCloudFlare()) { // It's better to login with a token first, then you don't need the awkwardly timed delay after the redirect.
                     window.location.href = 'https://tgonzalez.net/api/Gallery/twoFactorAuthenticationRedirect?galleryPath=' +
                         encodeURIComponent(
                             '/?username=' + $('#username').val() +
