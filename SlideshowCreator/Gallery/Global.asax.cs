@@ -49,6 +49,11 @@ namespace MVC5App
         {
             var accessIssues = string.Empty;
 
+            if (ApplicationContext.IsLocal(HttpContext.Current.Request))
+            {
+                return string.Empty;
+            }
+
             if (!IPValidation.IsInSubnet(HttpContext.Current.Request.UserHostAddress, IPValidation.LOAD_BALANCER_VPC)) // Probably safe to assume IP in headers isn't spoofed without checking sender, because of VPC routing rules, but I'm not very comfortable with VPC's and like clearly documenting/enforcing the relation.
             {
                 accessIssues += $"Client IP {HttpContext.Current.Request.UserHostAddress} is not a known VPC IP range {IPValidation.LOAD_BALANCER_VPC}";
@@ -90,9 +95,10 @@ namespace MVC5App
         {
             JObject accessIssuesJson = new JObject();
 
-            if (!ApplicationContext.IsLocal(HttpContext.Current.Request))
+            var routeIssues = GetRouteAccessIssues();
+            if (!string.IsNullOrWhiteSpace(routeIssues))
             {
-                accessIssuesJson.Add("route", GetRouteAccessIssues());
+                accessIssuesJson.Add("route", routeIssues);
             }
 
             if (!HttpContext.Current.Request.Url.LocalPath.Equals("/api/Gallery/token", StringComparison.OrdinalIgnoreCase) &&
