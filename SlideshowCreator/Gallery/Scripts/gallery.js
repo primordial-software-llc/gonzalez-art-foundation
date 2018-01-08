@@ -57,8 +57,8 @@
                 .json()
                 .then(function (json) {
                     if (assertSuccess(response, json)) {
-                        $('#slideshow-similar').prop('title', 'This work features ' + json.normalizedLabels);
-                        $('#slideshow-similar').prop('href', '/Home?tags=' + json.normalizedLabels.join(','));
+                        $('#slideshow-similar').prop('title', 'This work features ' + json.labels);
+                        $('#slideshow-similar').prop('href', '/Home?tags=' + json.labels.join(','));
                     }
                 })
                 .catch(function (error) {

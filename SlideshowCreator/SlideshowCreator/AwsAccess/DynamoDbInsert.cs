@@ -9,11 +9,6 @@ namespace SlideshowCreator.AwsAccess
     {
         public const int BATCH_SIZE = 25;
 
-        public static List<List<T>> Batch<T>(List<T> classifications)
-        {
-            return Batcher.Batch(BATCH_SIZE, classifications);
-        }
-
         public static Dictionary<string, List<WriteRequest>> GetBatchInserts<T>(List<T> pocoModels) where T : IModel, new()
         {
             var batchWrite = new Dictionary<string, List<WriteRequest>> { [new T().GetTable()] = new List<WriteRequest>() };

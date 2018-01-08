@@ -29,7 +29,7 @@ namespace GalleryBackend
         public GalleryUser GetUserAndUpdateSaltIfNecessary(string usernamePasswordHash)
         {
             Dictionary<string, AttributeValue> userHashIndexKey = Conversion<GalleryUser>.ConvertToDynamoDb(new GalleryUser {Hash = usernamePasswordHash});
-            var user = AwsToolsClient.Get(GalleryUser.USER_HASH_INDEX, userHashIndexKey).Result.FirstOrDefault();
+            var user = AwsToolsClient.Get(GalleryUser.USER_HASH_INDEX, userHashIndexKey).Result;
 
             if (user == null)
             {

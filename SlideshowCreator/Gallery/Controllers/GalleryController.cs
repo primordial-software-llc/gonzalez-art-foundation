@@ -94,15 +94,27 @@ namespace MVC5App.Controllers
         }
 
         [Route("searchLabel")]
-        public List<ImageLabel> GetSearchByLabel(string label, string source = null)
+        public List<ClassificationModelJson> GetSearchByLabel(string label, string source = null)
         {
-            return new DynamoDbClientFactory().SearchByLabel(label, source);
+            var labels = new DynamoDbClientFactory().SearchByLabel(label, source);
+            
+            var client = new DynamoDbClient<ClassificationModelJson>(GalleryAwsCredentialsFactory.DbClient, new ConsoleLogging());
+            
+            var json = client.Get(labels.Select(x => new ClassificationModelJson{Source = x.Source, PageId = x.PageId}).ToList()).Result;
+            var labelDictionary = labels.ToDictionary(x => x.S3Path);
+            foreach (var model in json)
+            {
+                model.Labels = labelDictionary[model.S3Path].NormalizedLabels;
+            }
+
+            return json;
         }
 
         [Route("{pageId}/label")]
-        public ImageLabel GetLabels(int pageId)
+        public ImageLabel GetLabel(int pageId)
         {
-            return new DynamoDbClientFactory().GetLabel(pageId);
+            var label = new DynamoDbClientFactory().GetLabel(pageId);
+            return label;
         }
         
         [Route("scan")]
