@@ -93,6 +93,17 @@ namespace MVC5App.Controllers
             return new DynamoDbClientFactory().SearchByExactArtist(artist, source);
         }
 
+        public decimal GetConfidence(string labelAndConfidence)
+        {
+            var delimeter = labelAndConfidence.IndexOf(":", StringComparison.Ordinal);
+            Decimal confidence = 0;
+            if (delimeter > -1)
+            {
+                decimal.TryParse(labelAndConfidence.Replace(":", string.Empty).Substring(delimeter).Trim(), out confidence);
+            }
+            return confidence;
+        }
+
         [Route("searchLabel")]
         public List<ClassificationModelJson> GetSearchByLabel(string label, string source = null)
         {
@@ -104,13 +115,15 @@ namespace MVC5App.Controllers
             var labelDictionary = labels.ToDictionary(x => x.S3Path);
             foreach (var model in json)
             {
-                model.Labels = labelDictionary[model.S3Path].NormalizedLabels;
+                model.Labels = labelDictionary[model.S3Path].LabelsAndConfidence;
             }
+
+            json = json.OrderBy(image => image.Labels.OrderBy(GetConfidence).FirstOrDefault()).ToList();
 
             return json;
         }
 
-        [Route("{pageId}/label")]
+        [Route("{pageId}/label")] // I'm not sure what this is used for now that the label search results return the labels.
         public ImageLabel GetLabel(int pageId)
         {
             var label = new DynamoDbClientFactory().GetLabel(pageId);

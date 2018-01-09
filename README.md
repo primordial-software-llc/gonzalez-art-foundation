@@ -11,6 +11,8 @@ This is needed in case there is an issue with the network or application securit
 
 [AWS POLICY - 2FA CONDITION](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_sample-policies.html)
 
+https://aws.amazon.com/blogs/security/securing-access-to-aws-using-mfa-part-2/
+
     {
       "Version": "2012-10-17",
       "Statement": [{

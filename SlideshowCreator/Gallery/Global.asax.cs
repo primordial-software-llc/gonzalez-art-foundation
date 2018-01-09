@@ -101,11 +101,17 @@ namespace MVC5App
                 accessIssuesJson.Add("route", routeIssues);
             }
 
-            if (!HttpContext.Current.Request.Url.LocalPath.Equals("/api/Gallery/token", StringComparison.OrdinalIgnoreCase) &&
+            var publicEndpoints = new List<string>();
+            publicEndpoints.Add("/api/gallery/token");
+            publicEndpoints.Add("/api/gallery/twoFactorAuthenticationRedirect");
+
+            var isPublicEndpoint = publicEndpoints.Any(x => HttpContext.Current.Request.Url.LocalPath.Equals(x, StringComparison.OrdinalIgnoreCase));
+            if (!isPublicEndpoint &&
                 HttpContext.Current.Request.Url.LocalPath.StartsWith("/api/Gallery/", StringComparison.OrdinalIgnoreCase) &&
                 !IsAuthenticatedByToken())
             {
                 accessIssuesJson.Add("token", "Invalid");
+                accessIssuesJson.Add("url", HttpContext.Current.Request.Url.AbsoluteUri);
             }
 
             string accessIssues = accessIssuesJson.Properties().Any()
