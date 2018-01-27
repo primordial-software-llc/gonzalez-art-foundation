@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -123,7 +122,7 @@ namespace MVC5App.Controllers
                 data.MessageCount += 1;
                 SaveData(config, data);
 
-                var analysis = AnalyzeImage(parameters["MediaUrl0"]);
+                var analysis = AnalyzeImage(parameters["MediaUrl0"], DetectType(parameters["Body"]));
                 s3Logging.Log(analysis);
 
                 MessageResource.Create(
@@ -170,29 +169,68 @@ namespace MVC5App.Controllers
             });
         }
 
-        public string AnalyzeImage(string imageUrl)
+        public enum AnalysisType
         {
-            var imageData = new HttpClient().GetByteArrayAsync(imageUrl).Result;
-            List<Celebrity> matches;
-            using (MemoryStream memStream = new MemoryStream(imageData))
+            Celebrity,
+            ContentModeration,
+            Labels
+        }
+
+        private AnalysisType DetectType(string body)
+        {
+            if (body.Equals("moderation labels", StringComparison.OrdinalIgnoreCase))
             {
-                var analysisRequest = new RecognizeCelebritiesRequest
-                {
-                    Image = new Image
-                    {
-                        Bytes = memStream
-                    }
-                };
-                var imageAnalysisClient = new AmazonRekognitionClient(RegionEndpoint.USEast1);
-                var result = imageAnalysisClient.RecognizeCelebritiesAsync(analysisRequest).Result;
-                matches = result.CelebrityFaces
-                    .OrderBy(x => x.MatchConfidence)
-                    .ToList();
+                return AnalysisType.ContentModeration;
             }
 
-            string reply = matches.Any()
-                ? string.Join(", ", matches.Select(x => $"{x.MatchConfidence} {x.Name} {string.Join(", ", x.Urls)}"))
-                : "No celebrities found";
+            if (body.Equals("labels", StringComparison.OrdinalIgnoreCase))
+            {
+                return AnalysisType.Labels;
+            }
+
+            return AnalysisType.Celebrity;
+        }
+
+        public string AnalyzeImage(string imageUrl, AnalysisType analysisType)
+        {
+            var imageData = new HttpClient().GetByteArrayAsync(imageUrl).Result;
+            string reply;
+            using (MemoryStream memStream = new MemoryStream(imageData))
+            {
+                var imageAnalysisClient = new AmazonRekognitionClient(RegionEndpoint.USEast1);
+
+                if (analysisType == AnalysisType.Labels)
+                {
+                    var analysisRequest = new DetectLabelsRequest();
+                    analysisRequest.Image = new Image {Bytes = memStream};
+                    var result = imageAnalysisClient.DetectLabelsAsync(analysisRequest).Result;
+                    reply = result.Labels.Any()
+                        ? string.Join(", ", result.Labels.OrderBy(x => x.Confidence).Select(x => $"{x.Confidence} {x.Name}"))
+                        : "No labels found";
+                }
+                else if (analysisType == AnalysisType.ContentModeration)
+                {
+                    var analysisRequest = new DetectModerationLabelsRequest();
+                    analysisRequest.Image = new Image {Bytes = memStream};
+                    var result = imageAnalysisClient.DetectModerationLabels(analysisRequest);
+                    reply = result.ModerationLabels.Any()
+                        ? string.Join(", ", result.ModerationLabels.OrderBy(x => x.Confidence).Select(x => $"{x.Confidence} {x.ParentName} {x.Name}"))
+                        : "No content moderation labels found";
+                }
+                else
+                {
+                    var analysisRequest = new RecognizeCelebritiesRequest();
+                    analysisRequest.Image = new Image {Bytes = memStream};
+                    var result = imageAnalysisClient.RecognizeCelebritiesAsync(analysisRequest).Result;
+                    var matches = result.CelebrityFaces
+                        .OrderBy(x => x.MatchConfidence)
+                        .ToList();
+                    reply = matches.Any()
+                        ? string.Join(", ", matches.Select(x => $"{x.MatchConfidence} {x.Name} {string.Join(", ", x.Urls)}"))
+                        : "No celebrities found";
+                }
+            }
+
 
             return reply;
         }
