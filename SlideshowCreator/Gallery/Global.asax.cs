@@ -104,6 +104,7 @@ namespace MVC5App
             var publicEndpoints = new List<string>();
             publicEndpoints.Add("/api/gallery/token");
             publicEndpoints.Add("/api/gallery/twoFactorAuthenticationRedirect");
+            publicEndpoints.Add("/api/twilio/rekognition/sms-pot");
 
             var isPublicEndpoint = publicEndpoints.Any(x => HttpContext.Current.Request.Url.LocalPath.Equals(x, StringComparison.OrdinalIgnoreCase));
             if (!isPublicEndpoint &&

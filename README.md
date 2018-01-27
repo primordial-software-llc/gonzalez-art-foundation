@@ -123,6 +123,24 @@ Response
     var results = JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
     Assert.AreEqual(7350, results.Count);
 
+### Twilio
+
+Send a text message with an image attached to phone number +14433992288. The phone number will return celebrity matches containing: confidence level, name and potentially a link to additional info if a high confidence level is achieved.
+
+The image analysis phone number will seize to reply within the next 1,000 messages and be released back to Twilio. A new image analysis phone number will be purchased and the service will be automatically migrated. The authorized phone number will receive a text message with the new image analysis phone number. This process is referred to as "hopping". The phone number may be forcefully hopped prior to 1,000 messages by texting "hop" from the authorized phone number: https://github.com/timg456789/TwilioSmsHop. Twilio charges $1 per phone number. It should cost just under $5 for to analyze 1,000 images on-demand by text message and recycle the phone number afterward automatically killing the service, but it rises again like a phoenix.
+
+Send attached image to +14433992288
+
+    [IMAGE]
+
+Reply
+
+    100 Jennifer Aniston http://www.imdb.com/name/nm0000098/
+
+Notification to Authorized Number after 1,000 messages or issuing the "hop" command
+
+    New phone number for Twilio Rekognition [PHONE_NUMBER] - [PHONE_NUMBER_SID]
+
 ## DNS
 
 [DNS Registrar - AWS Route53](https://console.aws.amazon.com/route53/home#resource-record-sets:Z1ZQ15FI8WW9I9)

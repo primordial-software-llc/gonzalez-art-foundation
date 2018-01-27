@@ -40,33 +40,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
         }
 
         //[Test]
-        public void Normalize_Labels()
-        {
-            const int PAGE_SIZE = 25;
-            var scanRequest = new ScanRequest(new ImageLabel().GetTable());
-            var awsToolsClient = new DynamoDbClient<ImageLabel>(client, new ConsoleLogging());
-            ScanResponse scanResponse = null;
-            do
-            {
-                if (scanResponse != null)
-                {
-                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
-                }
-                scanRequest.Limit = PAGE_SIZE;
-                scanResponse = client.Scan(scanRequest);
-                var labels = Conversion<ImageLabel>.ConvertToPoco(scanResponse.Items);
-                while (labels.Any())
-                {
-                    var batch = labels.Take(PAGE_SIZE).ToList();
-                    labels = labels.Skip(PAGE_SIZE).ToList();
-                    var failures = awsToolsClient.Insert(batch).Result;
-                    labels.AddRange(failures);
-                }
-            } while (scanResponse.LastEvaluatedKey.Any());
-
-        }
-
-        //[Test]
         public void Analyze_All()
         {
             const int PAGE_SIZE = 25;

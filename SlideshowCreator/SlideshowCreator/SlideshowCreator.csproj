@@ -104,6 +104,7 @@
     <Compile Include="Scripts\DeployImageTable.cs" />
     <Compile Include="Scripts\DeployLabelTable.cs" />
     <Compile Include="Scripts\ImageLabelTypeDeploy.cs" />
+    <Compile Include="Scripts\PasswordGenerator.cs" />
     <Compile Include="Scripts\PopulateNationalGalleryOfArtMetaData.cs" />
     <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
