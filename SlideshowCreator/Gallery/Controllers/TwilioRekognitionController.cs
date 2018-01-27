@@ -24,8 +24,7 @@ namespace MVC5App.Controllers
     [RoutePrefix("api/twilio/rekognition")]
     public class TwilioRekognitionController : ApiController
     {
-
-
+        
         private TwilioRekognitionDataJson GetVolatileData(TwilioConfig config)
         {
             TwilioRekognitionDataJson data;
@@ -205,7 +204,9 @@ namespace MVC5App.Controllers
                     analysisRequest.Image = new Image {Bytes = memStream};
                     var result = imageAnalysisClient.DetectLabelsAsync(analysisRequest).Result;
                     reply = result.Labels.Any()
-                        ? string.Join(", ", result.Labels.OrderBy(x => x.Confidence).Select(x => $"{x.Confidence} {x.Name}"))
+                        ? string.Join(", ", result.Labels
+                            .OrderByDescending(x => x.Confidence)
+                            .Select(x => $"{x.Confidence} {x.Name}"))
                         : "No labels found";
                 }
                 else if (analysisType == AnalysisType.ContentModeration)
@@ -214,7 +215,9 @@ namespace MVC5App.Controllers
                     analysisRequest.Image = new Image {Bytes = memStream};
                     var result = imageAnalysisClient.DetectModerationLabels(analysisRequest);
                     reply = result.ModerationLabels.Any()
-                        ? string.Join(", ", result.ModerationLabels.OrderBy(x => x.Confidence).Select(x => $"{x.Confidence} {x.ParentName} {x.Name}"))
+                        ? string.Join(", ", result.ModerationLabels
+                            .OrderByDescending(x => x.Confidence)
+                            .Select(x => $"{x.Confidence} {x.ParentName} {x.Name}"))
                         : "No content moderation labels found";
                 }
                 else
@@ -223,15 +226,14 @@ namespace MVC5App.Controllers
                     analysisRequest.Image = new Image {Bytes = memStream};
                     var result = imageAnalysisClient.RecognizeCelebritiesAsync(analysisRequest).Result;
                     var matches = result.CelebrityFaces
-                        .OrderBy(x => x.MatchConfidence)
+                        .OrderByDescending(x => x.MatchConfidence)
                         .ToList();
                     reply = matches.Any()
                         ? string.Join(", ", matches.Select(x => $"{x.MatchConfidence} {x.Name} {string.Join(", ", x.Urls)}"))
                         : "No celebrities found";
                 }
             }
-
-
+            
             return reply;
         }
 
