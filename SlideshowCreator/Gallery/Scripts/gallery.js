@@ -132,6 +132,38 @@
             (window.innerWidth === screen.width && window.innerHeight === screen.height);
     }
 
+    function enableNestIntegration() {
+        setInterval(updateHomeAwayStatus, 1 * 60 * 1000);
+        $('#home-away-status').addClass('home-away-enabled');
+    }
+
+    function updateHomeAwayStatus() {
+        var url = '/api/Gallery/homeStatus';
+        fetch(url, { credentials: "same-origin" }).then(function (response) {
+            response
+                .json()
+                .then(function (json) {
+                    if (assertSuccess(response, json)) {
+                        if (json.away.toLowerCase() === 'away') {
+                            $('#home-away-status').addClass('away');
+                            pauseSlideshow();
+                        }
+
+                        if (json.away.toLowerCase() === 'home' &&
+                            $('#home-away-status.away').length > 0) {
+                            $('#home-away-status').removeClass('away');
+                            $('#home-away-status').addClass('home-away-enabled');
+                            $('#slideshow-play').click();
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    console.log('Failed to get home/away status:');
+                    console.log(error);
+                });
+        });
+    }
+
     this.init = function() {
         $(document).ready(function () {
             showCurrentImage();
@@ -187,6 +219,18 @@
 
             $('#slideshow-pause').click(function () {
                 pauseSlideshow();
+            });
+
+            enableNestIntegration();
+
+            $('#home-away-status').click(function() {
+                if ($('#home-away-status.home-away-enabled').length > 0) {
+                    $('#home-away-status').removeClass('away');
+                    $('#home-away-status').removeClass('home-away-enabled');
+                    clearInterval(updateHomeAwayStatus);
+                } else {
+                    enableNestIntegration();
+                }
             });
         });
     };

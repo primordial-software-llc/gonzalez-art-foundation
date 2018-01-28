@@ -1,4 +1,10 @@
-﻿html, body
+﻿@font-face {
+    font-family: 'Glyphicons Halflings';
+    src: url('/Content/glyphicons-halflings-regular.eot');
+    src: url('/Content/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../Content/glyphicons-halflings-regular.woff2') format('woff2'), url('../Content/glyphicons-halflings-regular.woff') format('woff'), url('../Content/glyphicons-halflings-regular.ttf') format('truetype'), url('../Content/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
+}
+
+html, body
 {
     height: 100%;
 }
@@ -45,4 +51,37 @@ body
 {
     height: 100%;
     max-width: 100%;
+}
+
+#home-away-status{
+    cursor: pointer;
+}
+
+#home-away-status.home-away-enabled {
+    color: green;
+}
+
+#home-away-status.away {
+    color: red;
+}
+
+.glyphicon-signal:before {
+    content: "\E018";
+}
+
+.glyphicon {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#slideshow-player .glyphicon {
+    vertical-align: middle;
+    font-size: 1.3rem;
 }
