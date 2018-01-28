@@ -2,10 +2,11 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using AwsTools;
+using Xunit.Abstractions;
 
 namespace GalleryBackend
 {
-    public class S3Logging : ILogging
+    public class S3Logging : ILogging, ITestOutputHelper
     {
         private readonly string bucket;
         private readonly string prefix;
@@ -41,6 +42,16 @@ namespace GalleryBackend
                 ContentBody = message
             };
             s3Client.PutObject(request);
+        }
+
+        public void WriteLine(string message)
+        {
+            Log(message);
+        }
+
+        public void WriteLine(string format, params object[] args)
+        {
+            Log(string.Format(format, args));
         }
     }
 }

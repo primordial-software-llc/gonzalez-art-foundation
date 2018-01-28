@@ -13,6 +13,8 @@ using AwsTools;
 using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
+using Nest;
+using Nest.Models;
 using Newtonsoft.Json;
 
 namespace MVC5App.Controllers
@@ -145,6 +147,27 @@ namespace MVC5App.Controllers
                 OriginalVisitorIPAddress = HttpContext.Current.Request.Headers["CF-Connecting-IP"]
             };
             return ipAddress;
+        }
+
+        [Route("homeStatus")]
+        public NestStructureJson GetHomeStatus()
+        {
+            var s3Logging = new S3Logging("nest-home-status-logs", GalleryAwsCredentialsFactory.S3Client);
+
+            PrivateConfig config;
+            using (Stream response = GalleryAwsCredentialsFactory.S3Client.GetObjectAsync("tgonzalez-nest", "personal.json").Result.ResponseStream)
+            using (StreamReader reader = new StreamReader(response))
+            {
+                config = JsonConvert.DeserializeObject<PrivateConfig>(reader.ReadToEnd());
+            }
+
+            var nestClient = new NestClient(config.NestDecryptedAccessToken, s3Logging);
+
+            var homeStatus = nestClient
+                .GetStructures()
+                .Single(x => x.Name.Equals("home", StringComparison.OrdinalIgnoreCase));
+
+            return homeStatus;
         }
 
     }
