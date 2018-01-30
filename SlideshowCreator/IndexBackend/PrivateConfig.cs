@@ -48,6 +48,12 @@ namespace IndexBackend
         [JsonProperty("elasticBeanstalkDomain")]
         public string ElasticBeanstalkDomain { get; set; }
 
+        [JsonProperty("tpLinkUsername")]
+        public string TpLinkUsername { get; set; }
+
+        [JsonProperty("tpLinkPassword")]
+        public string TpLinkPassword { get; set; }
+
         public string NestDecryptedProductId => Decrypt(NestEncryptedProductId);
         public string NestDecryptedProductSecret => Decrypt(NestEncryptedProductSecret);
         public string NestDecryptedAuthUrl => Decrypt(NestEncryptedAuthUrl);

@@ -43,9 +43,11 @@ namespace MVC5App.Controllers
         {
             var dbClient = GalleryAwsCredentialsFactory.DbClient;
             var awsToolsClient = new DynamoDbClient<GalleryUser>(dbClient, new ConsoleLogging());
-            var userClient = new GalleryUserAccess(dbClient, new ConsoleLogging(),
+            var userClient = new GalleryUserAccess(
+                dbClient,
+                new ConsoleLogging(),
                 awsToolsClient,
-                new S3Logging("token-salt-cycling", GalleryAwsCredentialsFactory.S3AcceleratedClient));
+                new S3Logging("token-salt-cycling", GalleryAwsCredentialsFactory.S3Client));
             var auth = new Authentication(userClient);
             var token = auth.GetToken(Authentication.Hash($"{username}:{password}"));
             var masterHash = awsToolsClient.Get(new GalleryUser {Id = Authentication.MASTER_USER_ID}).Result.Hash;
