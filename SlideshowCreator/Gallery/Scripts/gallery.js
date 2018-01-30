@@ -4,8 +4,8 @@
 
     function getImageUrl(item) {
         if (item.s3Path) {
-            var url = '/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art/' +
-                item.s3Path.split('/').pop() + '/';
+            var url = '/api/Gallery/image/tgonzalez-image-archive/national-gallery-of-art-alt?s3Name=' +
+                item.s3Path.split('/').pop();
             return url;
         } else {
             return 'https://www.the-athenaeum.org/art/display_image.php?id=' + item.imageId;

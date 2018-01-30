@@ -85,6 +85,21 @@ namespace MVC5App.Controllers
             return result;
         }
 
+        [Route("image/tgonzalez-image-archive/national-gallery-of-art-alt")]
+        public HttpResponseMessage GetImageByQueryString(string s3Name)
+        {
+            var key = "national-gallery-of-art/" + s3Name; // Mvc doesn't allow forward slash "/". I already "relaxed" the pathing to allowing periods.
+            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObject("tgonzalez-image-archive", key);
+            var memoryStream = new MemoryStream();
+            s3Object.ResponseStream.CopyTo(memoryStream);
+
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            result.Content = new ByteArrayContent(memoryStream.ToArray());
+            result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + s3Name.Split('.').Last());
+
+            return result;
+        }
+
         [Route("searchLikeArtist")]
         public List<ClassificationModel> GetLike(string artist, string source = null)
         {
