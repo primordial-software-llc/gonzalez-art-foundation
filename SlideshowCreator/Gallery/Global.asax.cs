@@ -63,12 +63,6 @@ namespace MVC5App
                 .Replace(" ", string.Empty)
                 .Split(',')
                 .ToList();
-            var cfConnectingIp = HttpContext.Current.Request.Headers["CF-Connecting-IP"];
-            if (!forwardedIps.First().Equals(cfConnectingIp))
-            {
-                accessIssues += Environment.NewLine + "Load balancer and CloudFlare have conflicting client origin IP's." +
-                              $" Load balancer forwarded IP's: {string.Join(", ", forwardedIps)}. CloudFlare connecting IP {cfConnectingIp}";
-            }
 
             if (ipValidation == null) // Method level thread safe static init, because http context isn't set until after class init.
             {
