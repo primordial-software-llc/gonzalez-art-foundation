@@ -29,8 +29,15 @@ namespace SlideshowCreator
                 SearchOption.AllDirectories
             ).ToList();
             files.Remove(PrivateConfig.PersonalJson);
-            files.Remove("C:\\Users\\peon\\Desktop\\projects\\Nest\\Nest\\aws-lambda-tools-defaults.json");
             files.Remove("C:\\Users\\peon\\Desktop\\projects\\Memex\\personal.json");
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\AwsTools\.git\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\CloudFlareImUnderAttackMode\.git\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\CloudFlareWorkers\.git\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\CMU_memex\.git\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\Diacritics.NET\.git\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\EtherTransfer\.git\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\EtherTransfer\.idea\"));
+            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\Memex\.git\logs\HEAD\"));
             
             var gitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\.gitignore");
             Assert.IsTrue(gitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
@@ -57,8 +64,8 @@ namespace SlideshowCreator
                         CheckForSecret(sourceCode, file, secretJson.Value.ToString());
                     }
 
-                    CheckForSecret(sourceCode, file, privateConfig.DecryptedIp);
-                    CheckForSecret(sourceCode, file, privateConfig.NestDecryptedProductId);
+                    //CheckForSecret(sourceCode, file, privateConfig.DecryptedIp);
+                    //CheckForSecret(sourceCode, file, privateConfig.NestDecryptedProductId);
                     CheckForSecret(sourceCode, file, privateConfig.NestDecryptedProductSecret);
                     CheckForSecret(sourceCode, file, privateConfig.NestDecryptedAuthUrl);
                     CheckForSecret(sourceCode, file, privateConfig.NestDecryptedAccessToken);
@@ -84,6 +91,10 @@ namespace SlideshowCreator
         private void CheckForSecret(string sourceCode, string sourceCodeFile, string secret)
         {
             secret = secret.ToLower();
+            if (secret.Equals("snapshots", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
             sourceCode = sourceCode.ToLower();
             if (sourceCode.Contains(secret))
             {
