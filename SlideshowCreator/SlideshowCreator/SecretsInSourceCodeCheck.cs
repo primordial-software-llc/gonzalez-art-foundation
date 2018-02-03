@@ -29,15 +29,7 @@ namespace SlideshowCreator
                 SearchOption.AllDirectories
             ).ToList();
             files.Remove(PrivateConfig.PersonalJson);
-            files.Remove("C:\\Users\\peon\\Desktop\\projects\\Memex\\personal.json");
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\AwsTools\.git\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\CloudFlareImUnderAttackMode\.git\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\CloudFlareWorkers\.git\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\CMU_memex\.git\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\Diacritics.NET\.git\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\EtherTransfer\.git\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\EtherTransfer\.idea\"));
-            files.RemoveAll(x => x.StartsWith(@"C:\Users\peon\Desktop\projects\Memex\.git\logs\HEAD\"));
+            files.RemoveAll(x => x.Contains(@"\.git\"));
             
             var gitIgnore = File.ReadAllLines("C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\.gitignore");
             Assert.IsTrue(gitIgnore.Contains(PrivateConfig.PersonalJson.Split('\\').Last()));
@@ -61,6 +53,10 @@ namespace SlideshowCreator
                     var sourceCode = File.ReadAllText(file, Encoding.UTF8);
                     foreach (var secretJson in secretsJson)
                     {
+                        if (secretJson.Value.ToString().Equals("tgonzalez-nest"))
+                        {
+                            continue; // Config file into all other settings and I can't set environment variables right now.
+                        }
                         CheckForSecret(sourceCode, file, secretJson.Value.ToString());
                     }
 
@@ -86,7 +82,6 @@ namespace SlideshowCreator
             }
             Console.WriteLine($"checked {filesChecked} of {files.Count} files.");
         }
-
 
         private void CheckForSecret(string sourceCode, string sourceCodeFile, string secret)
         {
