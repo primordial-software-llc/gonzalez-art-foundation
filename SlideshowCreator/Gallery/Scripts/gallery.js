@@ -45,7 +45,7 @@
             link = currentImage.sourceLink;
         } else {
             linkText = "Courtesy The Athenaeum";
-            link = 'http://www.the-athenaeum.org/art/detail.php?ID=' + currentImage.pageId;
+            link = 'https://www.the-athenaeum.org/art/detail.php?ID=' + currentImage.pageId;
         }
         
         $('#slideshow-image-info').html(currentImage.name + ' (' + currentImage.date + ') by ' + currentImage.originalArtist +
