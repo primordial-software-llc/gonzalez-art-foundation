@@ -53,9 +53,10 @@ namespace SlideshowCreator
                     var sourceCode = File.ReadAllText(file, Encoding.UTF8);
                     foreach (var secretJson in secretsJson)
                     {
-                        if (secretJson.Value.ToString().Equals("tgonzalez-nest"))
+                        if (secretJson.Value.ToString().Equals("tgonzalez-nest", StringComparison.OrdinalIgnoreCase) ||
+                            secretJson.Value.ToString().Equals("twilio-rekognition", StringComparison.OrdinalIgnoreCase))
                         {
-                            continue; // Config file into all other settings and I can't set environment variables right now.
+                            continue; // Config files pointing into all other settings and I can't set environment variables right now.
                         }
                         CheckForSecret(sourceCode, file, secretJson.Value.ToString());
                     }
