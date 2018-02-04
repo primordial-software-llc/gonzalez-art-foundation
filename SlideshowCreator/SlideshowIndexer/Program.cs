@@ -28,15 +28,6 @@ namespace SlideshowIndexer
             }
             Console.WriteLine("VPN is in use with IP: " + vpnInUse);
 
-            Console.WriteLine("Backing up DynamoDb Data to S3");
-            var request = new CreateBackupRequest
-            {
-                TableName = new ClassificationModel().GetTable(),
-                BackupName = "image-classification-backup-" + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ssZ")
-            };
-            var backupResponse = GalleryAwsCredentialsFactory.DbClient.CreateBackup(request);
-            Console.WriteLine("Backup started: " + backupResponse.BackupDetails.BackupStatus + " - " + backupResponse.BackupDetails.BackupArn);
-
             IIndex indexer = GetIndexer(IndexType.NationalGalleryOfArt);
             var fileIdQueueIndexer = new FileIdQueueIndexer();
 

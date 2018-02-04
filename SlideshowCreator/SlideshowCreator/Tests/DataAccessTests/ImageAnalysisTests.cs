@@ -134,7 +134,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var result = dbResponse.Items.Single();
             var sampleWork = Conversion<ClassificationModel>.ConvertToPoco(result);
 
-            var label = GetLabel(sampleWork);
+            var label = GetModerationLabels(sampleWork);
 
             Console.WriteLine(JsonConvert.SerializeObject(label));
 
@@ -154,6 +154,36 @@ namespace SlideshowCreator.Tests.DataAccessTests
                     labels.Add(label);
                 });
             return labels.ToList();
+        }
+
+        private ImageLabel GetModerationLabels(ClassificationModel image)
+        {
+            var request = new DetectModerationLabelsRequest
+            {
+                Image = new Image
+                {
+                    S3Object = new S3Object
+                    {
+                        Bucket = NationalGalleryOfArtIndexer.BUCKET,
+                        Name = image.S3Path.Substring((NationalGalleryOfArtIndexer.BUCKET + "/").Length)
+                    }
+                }
+            };
+
+            var response = rekognitionClient.DetectModerationLabels(request);
+
+            var imageLabel = new ImageLabel
+            {
+                Source = image.Source,
+                PageId = image.PageId,
+                S3Path = image.S3Path,
+                LabelsAndConfidence = response
+                    .ModerationLabels
+                    .Select(x => x.Name + ": " + x.Confidence).ToList(),
+                NormalizedLabels = response.ModerationLabels.Select(x => x.Name.ToLower()).ToList()
+            };
+
+            return imageLabel;
         }
 
         private ImageLabel GetLabel(ClassificationModel image)

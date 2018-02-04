@@ -42,7 +42,7 @@
 
         if (currentImage.source === 'http://images.nga.gov') {
             linkText = 'Courtesy National Gallery of Art, Washington';
-            link = currentImage.sourceLink;
+            link = currentImage.sourceLink.replace('http://', 'https://');
         } else {
             linkText = "Courtesy The Athenaeum";
             link = 'https://www.the-athenaeum.org/art/detail.php?ID=' + currentImage.pageId;
