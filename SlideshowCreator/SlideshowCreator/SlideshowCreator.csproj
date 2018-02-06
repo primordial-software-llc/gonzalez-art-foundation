@@ -109,6 +109,7 @@
     <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
     <Compile Include="SecretsInSourceCodeCheck.cs" />
     <Compile Include="Tests\DataAccessTests\GalleryApiTests.cs" />
+    <Compile Include="Scripts\AlexaArtistNameAndWorksDataGenerator.cs" />
     <Compile Include="Tests\DataAccessTests\ImageAnalysisTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
     <Compile Include="AwsAccess\DynamoDbDelete.cs" />
