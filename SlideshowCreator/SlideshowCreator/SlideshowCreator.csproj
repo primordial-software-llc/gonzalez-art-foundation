@@ -100,7 +100,6 @@
     <Compile Include="HttpHeaders.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageLabel.cs" />
-    <Compile Include="Scripts\DeployArtistNameTable.cs" />
     <Compile Include="Scripts\PasswordGenerator.cs" />
     <Compile Include="Scripts\PopulateNationalGalleryOfArtMetaData.cs" />
     <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
