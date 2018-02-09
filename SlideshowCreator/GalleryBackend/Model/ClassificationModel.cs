@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
+using GalleryBackend.Interface;
 using Newtonsoft.Json;
 
 namespace GalleryBackend.Model
 {
-    public class ClassificationModel : IModel
+    public class ClassificationModel : IHaveArtist, IModel
     {
         public const string SOURCE = "source";
         public const string ID = "pageId";
-        public const string ORIGINAL_ARTIST = "originalArtist";
 
         [JsonProperty(SOURCE)]
         public string Source { get; set; }
@@ -41,7 +41,7 @@ namespace GalleryBackend.Model
         /// <summary>
         /// The original artist has diacritics e.g. Jean-Léon Gérôme
         /// </summary>
-        [JsonProperty(ORIGINAL_ARTIST)]
+        [JsonProperty(Model.ArtistModel.ORIGINAL_ARTIST)]
         public string OriginalArtist { get; set; }
 
         [JsonProperty("date")]
