@@ -101,6 +101,7 @@
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageLabel.cs" />
     <Compile Include="Scripts\BuildListOfArtistsJsonForAlexa.cs" />
+    <Compile Include="Scripts\CleanArtistImageWorkNamesForAlexa.cs" />
     <Compile Include="Scripts\DeployArtistNameTable.cs" />
     <Compile Include="Scripts\PasswordGenerator.cs" />
     <Compile Include="Scripts\PopulateNationalGalleryOfArtMetaData.cs" />

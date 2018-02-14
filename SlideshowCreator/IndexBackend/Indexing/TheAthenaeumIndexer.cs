@@ -1,6 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
 using AwsTools;
-using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend.NormalDistributionRandom;
 

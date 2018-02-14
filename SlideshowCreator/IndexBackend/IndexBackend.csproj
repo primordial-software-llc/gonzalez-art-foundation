@@ -76,6 +76,7 @@
     <Compile Include="Crawler.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
     <Compile Include="DataAccess\ImageClassificationAccess.cs" />
+    <Compile Include="Indexing\HtmlToText.cs" />
     <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />
     <Compile Include="NationalGalleryOfArt\AssetDetailsParser.cs" />

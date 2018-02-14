@@ -9,6 +9,7 @@ namespace GalleryBackend.Model
 {
     public class ClassificationModel : IHaveArtist, IModel
     {
+        public const string NAME = "name";
         public const string SOURCE = "source";
         public const string ID = "pageId";
 
@@ -35,7 +36,7 @@ namespace GalleryBackend.Model
         [JsonProperty("imageId")]
         public int ImageId { get; set; }
 
-        [JsonProperty("name")]
+        [JsonProperty(NAME)]
         public string Name { get; set; }
 
         /// <summary>
