@@ -1,12 +1,21 @@
-# Slide Show Creator
+# Gonzalez Art Foundation
 
-[Gallery](https://tgonzalez.net)
+The Gonzalez Art Foundation, dedicated to the preservation and proliferation of the visual arts. The  Gonzalez Art Foundation will be referred to as "the foundation" in this document. The foundation has two primary functions. The first is to preserve through existing images in the public domain through crawling existing images in the event the existing source is lost. The second is to maximise the viewing experience by providing the most visually aesthetic and most efficient viewing experience.
 
-This repository is dedicated to documenting my journey to systematically discover fine art paintings.
+### Why are redundant images archives required?
 
-### Data Sources
+Unfortunately most websites don't last long so the foundation eagerly backs up the material in the event the content is lost. There exists content that while technically in the public domain could be lost, because it's hidden away in private collections. If the digital copies of works locked away in private collections were lost then the works themselves would forever be lost and the public would lose their ability to exercise their rights. For example visual art becomes part of the public domain and loses copyright claims for fair use after the artist has been deceased for 100 years, but if that piece of art is in a private collection the public has no ability to exercise their right of viewership. This is a tragedy to the artist and those who wish to view their work.
+
+### Why is a digital image viewer required to view works already available and accessible to the public?
+Unfortunately access to digital images is severly inefficient even if the images are extremely accessible at times. If you want to see a collection of art work you have to go to a museum which is extremely inefficient. Art online isn't organized and viewing it is currently physically limiting generally requiring a person to physically browse a site on a computer to view artwork. Art lives with you, it sits in your peripheral vision, you glance at it as you walk by, you don't click through it like you are playing a video game. A quality slide show art gallery is required for a normal person to view the vast amount of fine art in existence. Manually clicking through this art would be physically limiting. The other reason for a digital gallery to proliferate the preserved images is an aesthetic viewer available on a standard computer browser that is extremely minimalist and focuses on the art first and foremost and no more imposing than a picture frame.
+
+### Sources
 
 #### The Athenaeum
+
+https://www.the-athenaeum.org/
+
+The athenaeum has been lost and its owner can't be reached. The Athenaeum is a prime example of the importance of creating redundant archives, because some of its works now sit in private collections even though they are over 200 years old and in the public domain.
 
     {
         "artist": "dante gabriel rossetti",
@@ -19,6 +28,8 @@ This repository is dedicated to documenting my journey to systematically discove
     }
 
 #### National Gallery of Art
+
+The national gallery of art is a prime example of images being accessible, but so physically inefficient that viewing the entire collection isn't possible. The high quality images I have preserved need to be downloaded in zip files then unzipped to crete a terrible experience. The process for viewing high quality images for the National Gallery of Art isn't how art was meant to be experienced and destroys the experience. My technical expertise and this foundations precise mission make viewing the high quality images a pleasurable and efficient experience.
 
     {
         "pageId": 18392,
