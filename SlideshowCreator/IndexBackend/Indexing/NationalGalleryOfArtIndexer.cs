@@ -18,7 +18,7 @@ namespace IndexBackend.Indexing
         public static readonly string S3_Path = "national-gallery-of-art";
         public string S3Bucket => BUCKET + "/" + S3_Path;
         public string Source => "http://images.nga.gov";
-        public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
+        public string IdFileQueuePath => "G:\\Users\\random\\Desktop\\projects\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
         public int GetNextThrottleInMilliseconds => 0;
 
         protected IAmazonS3 S3Client { get; }

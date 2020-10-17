@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Image Viewer - Digital Art Gallery</title>
+    <link rel="stylesheet" type="text/css" href="/content/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/content/site.css">
+    <script src="/scripts/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/content/image-viewer.css">
+    <script src="/scripts/gallery.js"></script>
+</head>
+<body>
+<div id="slideshow-image-container">
+    <img id="slideshow-image" />
+</div>
+<div id="slideshow-player">
+    <div id="slideshow-image-info"></div>
+    <img id="slideshow-previous" alt="Previous" title="Previous" src="/Images/Glyphicons/glyphicons-173-rewind.png">
+    <img id="slideshow-pause" alt="Pause" title="Pause" src="/Images/Glyphicons/glyphicons-175-pause.png">
+    <img id="slideshow-play" alt="Play" title="Play" src="/Images/Glyphicons/glyphicons-174-play.png">
+    <img id="slideshow-next" alt="Next" title="Next" src="/Images/Glyphicons/glyphicons-177-forward.png">
+    <label>Interval in Seconds: <input id="slideshow-interval" /></label>
+    Viewing Image <span id="slideshow-index"></span> of <span id="slideshow-count"></span>
+    <a id="slideshow-similar" title="" href="#">View Similar</a>
+    <img id="slideshow-return-home" alt="Return Home" title="Return Home" src="/Images/Glyphicons/glyphicons-21-home.png">
+    <img id="slideshow-fullscreen" alt="Fullscreen" title="Fullscreen" src="/Images/Glyphicons/glyphicons-350-fullscreen.png">
+    <!-- <span id="home-away-status" title="Home/Away Status - Nest Integration" class="glyphicon glyphicon-signal"></span> -->
+</div>
+</body>
+</html>

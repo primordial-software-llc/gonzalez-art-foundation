@@ -221,7 +221,7 @@
                 pauseSlideshow();
             });
 
-            enableNestIntegration();
+            //enableNestIntegration();
 
             $('#home-away-status').click(function() {
                 if ($('#home-away-status.home-away-enabled').length > 0) {
