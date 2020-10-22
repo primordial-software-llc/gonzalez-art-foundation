@@ -13,17 +13,24 @@ namespace ArtApi.Routes.Unauthenticated
 
         public void Run(APIGatewayProxyRequest request, APIGatewayProxyResponse response)
         {
-            var path = request.QueryStringParameters["path"];
-            if (path.Contains(".."))
+            var path = request.QueryStringParameters != null && request.QueryStringParameters.ContainsKey("path")
+                ? request.QueryStringParameters["path"]
+                : string.Empty;
+            if (string.IsNullOrWhiteSpace(path))
             {
-                response.Body = new JObject().ToString();
+                response.Body = new JObject { { "error", "path is required" } }.ToString();
+                response.StatusCode = 400;
+                return;
+            }
+            else if (path.Contains("..") || !path.StartsWith("collections/", StringComparison.OrdinalIgnoreCase))
+            {
+                response.Body = new JObject { { "error", "path is invalid" } }.ToString();
                 response.StatusCode = 400;
                 return;
             }
             var s3 = new AmazonS3Client();
             var bucket = "gonzalez-art-foundation";
-            var basePath = "collections";
-            var objectImage = s3.GetObjectAsync(bucket, $"{basePath}/{path}").Result;
+            var objectImage = s3.GetObjectAsync(bucket, $"{path}").Result;
             byte[] bytes;
             using (var stream = objectImage.ResponseStream)
             using (var memoryStream = new MemoryStream())

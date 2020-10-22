@@ -13,21 +13,23 @@ namespace ArtApi
     {
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            var clientDomain = "http://www.gonzalez-art-foundation.org";
+            Console.WriteLine($"{request.HttpMethod} - {request.Path}");
+            var clientDomain = "https://www.gonzalez-art-foundation.org";
             var response = new APIGatewayProxyResponse
             {
                 Headers = new Dictionary<string, string>
                 {
-                    {"access-control-allow-origin", clientDomain}
+                    {"access-control-allow-origin", clientDomain},
+                    {"Access-Control-Allow-Credentials", "true" }
                 },
                 StatusCode = 200
             };
-            Console.WriteLine(request.Path);
             try
             {
                 List<IRoute> routes = new List<IRoute>
                 {
-                    new Routes.Unauthenticated.GetImage()
+                    new Routes.Unauthenticated.GetImage(),
+                    new Routes.Unauthenticated.GetScan()
                 };
                 
                 var matchedRoute = routes.FirstOrDefault(route => string.Equals(request.HttpMethod, route.HttpMethod, StringComparison.OrdinalIgnoreCase) &&

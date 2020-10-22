@@ -149,11 +149,7 @@ namespace MVC5App.Controllers
             return label;
         }
         
-        [Route("scan")]
-        public List<ClassificationModel> GetScanByPage(int? lastPageId, string source = null)
-        {
-            return new DynamoDbClientFactory().ScanByPage(lastPageId, source);
-        }
+
 
         [Route("ip")]
         public RequestIPAddress GetIPAddress()
