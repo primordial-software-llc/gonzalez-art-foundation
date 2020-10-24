@@ -1,13 +1,11 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
-using GalleryBackend.Interface;
 using Newtonsoft.Json;
 
 namespace GalleryBackend.Model
 {
-    public class ClassificationModel : IHaveArtist, IModel
+    public class ClassificationModel : IModel
     {
         public const string NAME = "name";
         public const string SOURCE = "source";

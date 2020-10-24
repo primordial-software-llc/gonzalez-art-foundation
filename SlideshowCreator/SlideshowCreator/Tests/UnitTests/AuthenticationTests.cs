@@ -19,14 +19,6 @@ namespace SlideshowCreator.Tests.UnitTests
             Assert.AreEqual("/api/Gallery/token", uri.LocalPath);
         }
 
-        [Test]
-        public void VPC_IP()
-        {
-            var sampleIpFromProductionWebServer = "172.31.41.248";
-            var loadBalancersCiderIpRange = "172.31.0.0/16";
-            Assert.IsTrue(IPValidation.IsInSubnet(sampleIpFromProductionWebServer, loadBalancersCiderIpRange));
-        }
-
         private string Username => "username";
         private string Password => "password";
         private string AuthoritativeSecrethash => Authentication.Hash("username:password");

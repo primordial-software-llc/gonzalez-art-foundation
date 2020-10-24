@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
 using Newtonsoft.Json;
@@ -9,6 +7,7 @@ namespace ArtApi
 {
     public class ClassificationModel : IModel
     {
+        public const string ARTIST_NAME_INDEX = "artistNameIndex";
         public const string NAME = "name";
         public const string SOURCE = "source";
         public const string ID = "pageId";

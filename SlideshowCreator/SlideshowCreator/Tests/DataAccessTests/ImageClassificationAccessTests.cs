@@ -22,29 +22,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
 
         private readonly IAmazonDynamoDB client = GalleryAwsCredentialsFactory.DbClient;
 
-        [Test]
-        public void Test_Find_All_For_Exact_Artist()
-        {
-            var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForExactArtist("Jean-Leon Gerome", new TheAthenaeumIndexer().Source);
-            Assert.AreEqual(244, results.Count);
-        }
-
-        [Test]
-        public void Test_Find_All_For_Like_Artist()
-        {
-            var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForLikeArtist("Jean-Leon Gerome", new TheAthenaeumIndexer().Source);
-            Assert.AreEqual(249, results.Count);
-        }
-
-        [Test]
-        public void Test_Find_All_For_Like_Monet()
-        {
-            var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindAllForLikeArtist("monet", new TheAthenaeumIndexer().Source);
-            Assert.AreEqual(1366, results.Count);
-        }
 
         [Test]
         public void Test_Find_By_Label()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -60,6 +61,34 @@ namespace SlideshowCreator.Tests
                 }
             } while (scanResponse.LastEvaluatedKey.Any());
             return items;
+        }
+
+        [Test]
+        public void DeleteInvalid()
+        {
+            var prodClient = new AmazonDynamoDBClient(
+                CreateCredentials(),
+                RegionEndpoint.USEast1);
+            ScanResponse scanResponse = null;
+            do
+            {
+                var scanRequest = new ScanRequest(new ClassificationModelNew().GetTable()) {Limit = 1000};
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanResponse = prodClient.ScanAsync(scanRequest).Result;
+                var deletes = new List<Task<DeleteItemResponse>>();
+                foreach (var item in scanResponse.Items)
+                {
+                    var itemParsed = JsonConvert.DeserializeObject<ClassificationModelNew>(Document.FromAttributeMap(item).ToJson());
+                    if (itemParsed.Source.StartsWith("collection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        deletes.Add(prodClient.DeleteItemAsync(new ClassificationModelNew().GetTable(), itemParsed.GetKey()));
+                    }
+                }
+                Task.WaitAll(deletes.ToArray());
+            } while (scanResponse.LastEvaluatedKey.Any());
         }
 
         [Test]

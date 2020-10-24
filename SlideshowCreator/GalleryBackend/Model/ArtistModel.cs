@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
-using GalleryBackend.Interface;
 using Newtonsoft.Json;
 
 namespace GalleryBackend.Model
 {
-    public class ArtistModel : IHaveArtist, IModel
+    public class ArtistModel : IModel
     {
         public const string ARTIST = "artist";
         public const string ORIGINAL_ARTIST = "originalArtist";

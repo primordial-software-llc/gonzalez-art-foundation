@@ -100,18 +100,6 @@ namespace MVC5App.Controllers
             return result;
         }
 
-        [Route("searchLikeArtist")]
-        public List<ClassificationModel> GetLike(string artist, string source = null)
-        {
-            return new DynamoDbClientFactory().SearchByLikeArtist(artist, source);
-        }
-
-        [Route("searchExactArtist")]
-        public List<ClassificationModel> GetExact(string artist, string source = null)
-        {
-            return new DynamoDbClientFactory().SearchByExactArtist(artist, source);
-        }
-
         public decimal GetConfidence(string labelAndConfidence)
         {
             var delimeter = labelAndConfidence.IndexOf(":", StringComparison.Ordinal);
