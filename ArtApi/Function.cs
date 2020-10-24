@@ -11,9 +11,11 @@ namespace ArtApi
 {
     public class Function
     {
+        private static readonly object IP_VALIDATION_LOCK = new object();
+        private static CloudFlareIpValidation ipValidation;
+
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            Console.WriteLine($"{request.HttpMethod} - {request.Path}");
             var clientDomain = "https://www.gonzalez-art-foundation.org";
             var response = new APIGatewayProxyResponse
             {
@@ -24,6 +26,31 @@ namespace ArtApi
                 },
                 StatusCode = 200
             };
+            if (ipValidation == null) // Method level thread safe static init, because http context isn't set until after class init.
+            {
+                lock (IP_VALIDATION_LOCK)
+                {
+                    if (ipValidation == null)
+                    {
+                        ipValidation = new CloudFlareIpValidation(CloudFlareIpValidation.CLOUDFLARE_IP_WHITELIST, new Logger());
+                    }
+                }
+            }
+            string accessIssues = string.Empty;
+            var ip = request.RequestContext.Identity.SourceIp;
+            if (!ipValidation.IsInSubnet(ip))
+            {
+                accessIssues += Environment.NewLine + "Didn't receive request from CloudFlare." +
+                                $" Source IP: {ip}. CloudFlare IP source list {CloudFlareIpValidation.CLOUDFLARE_IP_WHITELIST}." +
+                                $"IP whitelist in memory: {string.Join(", ", ipValidation.IpWhitelist)}";
+            }
+            if (!string.IsNullOrWhiteSpace(accessIssues))
+            {
+                response.Body = new JObject { { "error", accessIssues }}.ToString();
+                response.StatusCode = 500;
+                return response;
+            }
+            Console.WriteLine($"{request.HttpMethod} - {request.Path}");
             try
             {
                 List<IRoute> routes = new List<IRoute>
@@ -31,7 +58,6 @@ namespace ArtApi
                     new Routes.Unauthenticated.GetImage(),
                     new Routes.Unauthenticated.GetScan()
                 };
-                
                 var matchedRoute = routes.FirstOrDefault(route => string.Equals(request.HttpMethod, route.HttpMethod, StringComparison.OrdinalIgnoreCase) &&
                                                                   string.Equals(request.Path, route.Path, StringComparison.OrdinalIgnoreCase));
                 if (matchedRoute != null)
