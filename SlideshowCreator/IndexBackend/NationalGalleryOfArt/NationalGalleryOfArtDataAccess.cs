@@ -2,34 +2,18 @@
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using CloudFlareImUnderAttackMode;
 
 namespace IndexBackend.NationalGalleryOfArt
 {
     public class NationalGalleryOfArtDataAccess
     {
-        protected virtual HttpClient Client { get; set; }
+        protected HttpClient Client { get; set; }
         protected Uri Uri { get; }
 
         public NationalGalleryOfArtDataAccess(Uri uri)
         {
             Uri = uri;
-        }
-
-        public void Init()
-        {
-            Client?.Dispose();
-
-            var factory = new CloudFlareImUnderAttackModeHttpClientFactory();
-            Client = factory.Create(Uri);
-        }
-
-        public void SetSearchResultsTo75PerPage()
-        {
-            Task<string> response =
-                Client.GetStringAsync(
-                    "http://images.nga.gov/?service=user&action=do_store_grid_layout&layout=3&grid_thumb=7");
-            var finalResponse = response.Result;
+            Client = new HttpClient();
         }
 
         public string GetSearchResults(int pageNumber)
@@ -47,9 +31,10 @@ namespace IndexBackend.NationalGalleryOfArt
         public byte[] GetHighResImageZipFile(int assetId)
         {
             var encodedReference = HighResImageEncoding.CreateReferenceUrlData(assetId);
-            var imageDownloadUrl =
-                $"http://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";
-            Task<byte[]> asyncImageResponse = Client.GetByteArrayAsync(imageDownloadUrl);
+            var imageDownloadUrl = $"https://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";
+            Console.WriteLine(imageDownloadUrl);
+            var response = new HttpClient().GetAsync(imageDownloadUrl).Result;
+            Task<byte[]> asyncImageResponse = response.Content.ReadAsByteArrayAsync();
             byte[] imageZipFile = asyncImageResponse.Result;
             
             string imageResponseText = Encoding.UTF8.GetString(imageZipFile);

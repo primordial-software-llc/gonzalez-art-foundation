@@ -52,7 +52,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileIdQueueIndexer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -68,6 +67,10 @@
     <ProjectReference Include="..\IndexBackend\IndexBackend.csproj">
       <Project>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</Project>
       <Name>IndexBackend</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SlideshowCreator\SlideshowCreator.csproj">
+      <Project>{2A6CFD13-3FE8-4E24-8335-74460093D7CF}</Project>
+      <Name>SlideshowCreator</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

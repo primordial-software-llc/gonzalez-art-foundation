@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
-using Amazon.DynamoDBv2.Model;
-using GalleryBackend;
-using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;
 using IndexBackend.NationalGalleryOfArt;
+using SlideshowCreator;
 
 namespace SlideshowIndexer
 {
@@ -14,21 +11,6 @@ namespace SlideshowIndexer
 
         static void Main(string[] args)
         {
-            /*
-            var galleryClient = new GalleryClient(
-                "tgonzalez.net",
-                PrivateConfig.GalleryUsername,
-                PrivateConfig.GalleryPassword);
-            var vpnCheck = new VpnCheck(galleryClient);
-            var vpnInUse = vpnCheck.IsVpnInUse(PrivateConfig.DecryptedIp);
-
-            if (!string.IsNullOrWhiteSpace(vpnInUse))
-            {
-                Console.WriteLine(vpnInUse);
-                return;
-            }
-            Console.WriteLine("VPN is in use with IP: " + vpnInUse);
-            */
             IIndex indexer = GetIndexer(IndexType.NationalGalleryOfArt);
             var fileIdQueueIndexer = new FileIdQueueIndexer();
 
@@ -52,17 +34,15 @@ namespace SlideshowIndexer
         {
             if (indexType == IndexType.NationalGalleryOfArt)
             {
-                Debugger.Launch();
                 var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-                ngaDataAccess.Init();
-                var indexer = new NationalGalleryOfArtIndexer(GalleryAwsCredentialsFactory.S3AcceleratedClient, GalleryAwsCredentialsFactory.DbClient, ngaDataAccess);
+                var indexer = new NationalGalleryOfArtIndexer(GalleryAwsCredentialsFactory.S3AcceleratedClient, GalleryAwsCredentialsFactory.ProductionDbClient, ngaDataAccess);
                 return indexer;
             }
             else if (indexType == IndexType.TheAthenaeum)
             {
                 return new TheAthenaeumIndexer(
                     "PrivateConfig.PageNotFoundIndicatorText", //         private static readonly PrivateConfig PrivateConfig = PrivateConfig.CreateFromPersonalJson();
-                    GalleryAwsCredentialsFactory.DbClient,
+                    GalleryAwsCredentialsFactory.ProductionDbClient,
                     PublicConfig.TheAthenaeumArt);
             }
             else

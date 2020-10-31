@@ -4,12 +4,12 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.S3;
 using Newtonsoft.Json.Linq;
 
-namespace ArtApi.Routes.Unauthenticated
+namespace ArtApi.Routes.Unauthenticated.CacheEverything
 {
     class GetImage : IRoute
     {
         public string HttpMethod => "GET";
-        public string Path => "/unauthenticated/image";
+        public string Path => "/unauthenticated/cache-everything/image";
 
         public void Run(APIGatewayProxyRequest request, APIGatewayProxyResponse response)
         {
@@ -39,10 +39,9 @@ namespace ArtApi.Routes.Unauthenticated
                 bytes = memoryStream.ToArray();
             }
             var contentType = objectImage.Headers["Content-Type"];
-            response.Body = new JObject
-            {
-                {"base64Image", $"data:{contentType};base64,{Convert.ToBase64String(bytes)}" }
-            }.ToString();
+            response.Headers["Content-Type"] = contentType;
+            response.Body = Convert.ToBase64String(bytes);
+            response.IsBase64Encoded = true;
         }
     }
 }

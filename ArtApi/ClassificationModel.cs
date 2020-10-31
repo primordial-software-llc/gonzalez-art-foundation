@@ -50,6 +50,9 @@ namespace ArtApi
         [JsonProperty("s3Path")]
         public string S3Path { get; set; }
 
+        [JsonProperty("s3ThumbnailPath")]
+        public string S3ThumbnailPath { get; set; }
+
         public Dictionary<string, AttributeValue> GetKey()
         {
             return new Dictionary<string, AttributeValue>

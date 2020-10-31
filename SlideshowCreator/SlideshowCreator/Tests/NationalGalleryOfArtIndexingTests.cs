@@ -18,7 +18,7 @@ namespace SlideshowCreator.Tests
     {
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private readonly IAmazonS3 s3Client = GalleryAwsCredentialsFactory.S3AcceleratedClient;
-        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.DbClient;
+        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
 
         private NationalGalleryOfArtDataAccess ngaDataAccess;
         private NationalGalleryOfArtIndexer indexer;
@@ -29,7 +29,6 @@ namespace SlideshowCreator.Tests
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-            ngaDataAccess.Init();
             indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
 
             var galleryClient = new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword);
@@ -41,7 +40,6 @@ namespace SlideshowCreator.Tests
         public void Get_Search_Results()
         {
             int expectedPages = 648;
-            ngaDataAccess.SetSearchResultsTo75PerPage();
             
             System.Threading.Thread.Sleep(new NationalGalleryOfArtIndexer().GetNextThrottleInMilliseconds);
 

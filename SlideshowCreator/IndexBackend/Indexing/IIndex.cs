@@ -10,7 +10,6 @@ namespace IndexBackend.Indexing
         string IdFileQueuePath { get; }
         int GetNextThrottleInMilliseconds { get; }
 
-        ClassificationModel Index(int id);
-        void RefreshConnection();
+        ClassificationModelNew Index(int id);
     }
 }

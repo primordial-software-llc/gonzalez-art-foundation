@@ -37,9 +37,9 @@ namespace IndexBackend.Indexing
             Url = url;
         }
 
-        public ClassificationModel Index(int id)
+        public ClassificationModelNew Index(int id)
         {
-            ClassificationModel classification = null;
+            ClassificationModelNew classification = null;
 
             var html = Crawler.GetDetailsPageHtml(Url, id, PageNotFoundIndicatorText);
 
@@ -47,7 +47,7 @@ namespace IndexBackend.Indexing
             {
                 var classifier = new Classifier();
                 classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
-                var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
+                var dynamoDbClassification = Conversion<ClassificationModelNew>.ConvertToDynamoDb(classification);
                 Client.PutItem(new ClassificationModel().GetTable(), dynamoDbClassification);
             }
 

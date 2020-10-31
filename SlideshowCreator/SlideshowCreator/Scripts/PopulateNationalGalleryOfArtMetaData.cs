@@ -18,7 +18,7 @@ namespace SlideshowCreator.Scripts
     class PopulateNationalGalleryOfArtMetaData
     {
         private readonly IAmazonS3 s3Client = GalleryAwsCredentialsFactory.S3AcceleratedClient;
-        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.DbClient;
+        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
 
         [Test]
         public void Asset_Details_From_Html_To_New_Model()
@@ -441,95 +441,5 @@ namespace SlideshowCreator.Scripts
             Assert.AreEqual("http://www.nga.gov/purl/collection/artobject.html/46688", parsed.SourceLink);
         }
 
-        [Test]
-        public void Asset_Details_From_Site()
-        {
-            var model = new ClassificationModel {PageId = 46482, S3Path = "a", Source = "b"};
-            var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-            ngaDataAccess.Init();
-            var indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
-            indexer.SetMetaData(model);
-            Assert.AreEqual("Henri Rousseau", model.OriginalArtist);
-            Assert.AreEqual("henri rousseau", model.Artist);
-            Assert.AreEqual("The Equatorial Jungle", model.Name);
-            Assert.AreEqual("1909", model.Date);
-            Assert.AreEqual("http://www.nga.gov/purl/collection/artobject.html/46688", model.SourceLink);
-            Assert.AreEqual(46482, model.PageId);
-            Assert.AreEqual("a", model.S3Path);
-            Assert.AreEqual("b", model.Source);
-            Console.WriteLine(JsonConvert.SerializeObject(model));
-        }
-
-        /// <summary>
-        /// This is kind of troublesome, because what happened to these images?
-        /// I'm not sure why the images can no longer be found.
-        ///  - Image could have been moved
-        ///  - Image could no longer be availble for open access
-        /// 
-        /// I don't have the name of the images that are missing now only the image itself.
-        /// I'll have to wait until it happens again with an image that I have details for,
-        /// in order to figure out what happened. It would be disturbing to find the image gone entirely.
-        /// </summary>
-        [Test]
-        public void Asset_Details_From_Site_For_Record_With_Html_But_No_Data_Populated_At_Source()
-        {
-            var model = new ClassificationModel {PageId = 19783, S3Path = "a", Source = "b"};
-            var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-            ngaDataAccess.Init();
-            var indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
-            indexer.SetMetaData(model);
-            Assert.AreEqual(19783, model.PageId);
-            Assert.AreEqual("a", model.S3Path);
-            Assert.AreEqual("b", model.Source);
-            Assert.IsNull(model.Artist);
-        }
-
-        //[Test]
-        public void Append_Meta_Data_To_All_Nationl_Gallery_Of_Art_Images_Idempotently()
-        {
-            const int PAGE_SIZE = 25;
-            var reqest = new QueryRequest(new ClassificationModel().GetTable());
-            var awsToolsClient = new DynamoDbClient<ClassificationModel>(dynamoDbClient, new ConsoleLogging());
-            var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-            ngaDataAccess.Init();
-            var indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
-            QueryResponse response = null;
-            do
-            {
-                if (response != null)
-                {
-                    reqest.ExclusiveStartKey = response.LastEvaluatedKey;
-                }
-                reqest.Limit = PAGE_SIZE;
-                reqest.ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {":source", new AttributeValue {S = "http://images.nga.gov"}}
-                };
-                reqest.ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    {"#source", "source"}
-                };
-                reqest.KeyConditionExpression = "#source = :source";
-                response = dynamoDbClient.Query(reqest);
-                var models = Conversion<ClassificationModel>.ConvertToPoco(response.Items)
-                    .Where(x => string.IsNullOrWhiteSpace(x.SourceLink)) // Skip over anything that's already been updated.
-                    .ToList();
-
-                foreach (var model in models)
-                {
-                    indexer.SetMetaData(model);    
-                }
-                
-                while (models.Any())
-                {
-                    var batch = models.Take(PAGE_SIZE).ToList();
-                    models = models.Skip(PAGE_SIZE).ToList();
-                    var failures = awsToolsClient.Insert(batch).Result;
-                    models.AddRange(failures);
-                }
-                
-            } while (response.LastEvaluatedKey.Any());
-            
-        }
     }
 }

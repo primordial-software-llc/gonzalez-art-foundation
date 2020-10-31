@@ -7,12 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using IndexBackend.Indexing;
 
-namespace SlideshowIndexer
+namespace SlideshowCreator
 {
-    class FileIdQueueIndexer
+    public class FileIdQueueIndexer
     {
-        private readonly Object dataLock = new Object();
-        private readonly int maxLevelOfParallelism = 5;
+        private readonly Object DataLock = new Object();
+        private readonly int maxLevelOfParallelism = 1;
 
         public void Index(IIndex indexer)
         {
@@ -50,7 +50,6 @@ namespace SlideshowIndexer
                         Console.WriteLine($"BACKING OFF: {backOff.TotalMilliseconds}ms");
                         Thread.Sleep(backOff);
                         Console.WriteLine("BACKOFF COMPLETE - REFRESHING CONNECTION");
-                        indexer.RefreshConnection();
                     }
                     else
                     {
@@ -77,10 +76,10 @@ namespace SlideshowIndexer
         private void Index(IIndex indexer, int id, List<int> idQueue)
         {
             Console.WriteLine("Classifying: " + id);
-            indexer.Index(id);
+            var classification = indexer.Index(id);
 
             Console.WriteLine("Updating queue: " + id);
-            lock (dataLock)
+            lock (DataLock)
             {
                 idQueue.Remove(id);
                 File.WriteAllLines(indexer.IdFileQueuePath, idQueue.Select(x => x.ToString()));

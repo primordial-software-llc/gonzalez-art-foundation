@@ -20,7 +20,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
     class ImageClassificationAccessTests
     {
 
-        private readonly IAmazonDynamoDB client = GalleryAwsCredentialsFactory.DbClient;
+        private readonly IAmazonDynamoDB client = GalleryAwsCredentialsFactory.ProductionDbClient;
 
 
         [Test]
