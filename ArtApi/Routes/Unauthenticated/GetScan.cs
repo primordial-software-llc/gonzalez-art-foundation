@@ -16,6 +16,9 @@ namespace ArtApi.Routes.Unauthenticated
         {
             var lastPageId = request.QueryStringParameters["lastPageId"];
             var source = request.QueryStringParameters["source"];
+            var maxResults = request.QueryStringParameters.ContainsKey("maxResults")
+                ? int.Parse(request.QueryStringParameters["maxResults"])
+                : 0;
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ScanIndexForward = true,
@@ -32,8 +35,12 @@ namespace ArtApi.Routes.Unauthenticated
                 {
                     {"source", new AttributeValue {S = source}},
                     {"pageId", new AttributeValue {N = lastPageId}}
-                },
+                }
             };
+            if (maxResults > 0)
+            {
+                queryRequest.Limit = maxResults;
+            }
             var client = new AmazonDynamoDBClient();
             var queryResponse = client.QueryAsync(queryRequest).Result;
             var items = new List<ClassificationModel>();

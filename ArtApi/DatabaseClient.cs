@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -20,7 +18,7 @@ namespace ArtApi
             Client = client;
         }
 
-        public List<T> QueryAll(QueryRequest queryRequest)
+        public List<T> QueryAll(QueryRequest queryRequest, int limit = 0)
         {
             QueryResponse queryResponse = null;
             var items = new List<T>();
@@ -33,13 +31,17 @@ namespace ArtApi
                 queryResponse = Client.QueryAsync(queryRequest).Result;
                 foreach (var item in queryResponse.Items)
                 {
+                    if (limit > 0 && items.Count >= limit)
+                    {
+                        return items;
+                    }
                     items.Add(JsonConvert.DeserializeObject<T>(Document.FromAttributeMap(item).ToJson()));
                 }
             } while (queryResponse.LastEvaluatedKey.Any());
             return items;
         }
 
-        public List<T> ScanAll(ScanRequest scanRequest)
+        public List<T> ScanAll(ScanRequest scanRequest, int limit = 0)
         {
             ScanResponse scanResponse = null;
             var items = new List<T>();
@@ -52,6 +54,10 @@ namespace ArtApi
                 scanResponse = Client.ScanAsync(scanRequest).Result;
                 foreach (var item in scanResponse.Items)
                 {
+                    if (limit > 0 && items.Count >= limit)
+                    {
+                        return items;
+                    }
                     items.Add(JsonConvert.DeserializeObject<T>(Document.FromAttributeMap(item).ToJson()));
                 }
             } while (scanResponse.LastEvaluatedKey.Any());

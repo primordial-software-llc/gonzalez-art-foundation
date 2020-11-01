@@ -15,12 +15,10 @@ namespace ArtApi.Routes.Unauthenticated
         {
             var artist = request.QueryStringParameters["artist"];
             var source = request.QueryStringParameters["source"];
-            var items = FindAllForExactArtist(new DatabaseClient<ClassificationModel>(new AmazonDynamoDBClient()), artist, source);
-            response.Body = JsonConvert.SerializeObject(items);
-        }
+            var maxResults = request.QueryStringParameters.ContainsKey("maxResults")
+                ? int.Parse(request.QueryStringParameters["maxResults"])
+                : 0;
 
-        public List<ClassificationModel> FindAllForExactArtist(DatabaseClient<ClassificationModel> client, string artist, string source)
-        {
             artist = artist.ToLower();
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
@@ -37,7 +35,11 @@ namespace ArtApi.Routes.Unauthenticated
                 IndexName = ClassificationModel.ARTIST_NAME_INDEX,
                 FilterExpression = "#source = :source"
             };
-            return client.QueryAll(queryRequest);
+            var client = new DatabaseClient<ClassificationModel>(new AmazonDynamoDBClient());
+            var items= client.QueryAll(queryRequest, maxResults);
+
+            response.Body = JsonConvert.SerializeObject(items);
         }
+
     }
 }
