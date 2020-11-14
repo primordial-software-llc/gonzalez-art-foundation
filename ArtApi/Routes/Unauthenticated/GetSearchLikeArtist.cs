@@ -41,7 +41,7 @@ namespace ArtApi.Routes.Unauthenticated
                 .OrderBy(x => x.Artist)
                 .ThenBy(x => x.Source)
                 .ToList();
-            while (results.Count > maxResults)
+            while (maxResults > 0 && results.Count > maxResults)
             {
                 results.RemoveAt(results.Count - 1);
             }
