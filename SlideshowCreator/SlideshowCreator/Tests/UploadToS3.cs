@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.Rekognition.Model;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
-using Amazon.S3;
 using Amazon.S3.Model;
 using GalleryBackend.Model;
 using IndexBackend;
@@ -20,7 +19,9 @@ using IndexBackend.NationalGalleryOfArt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using SlideshowCreator.AwsAccess;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 
 namespace SlideshowCreator.Tests
 {
@@ -40,11 +41,131 @@ namespace SlideshowCreator.Tests
             return awsCredentials;
         }
 
+        [Test]
+        public void CompressImage()
+        {
+            var source = "http://images.nga.gov";
+            var pageId = 18393;
+            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
+            {
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source",
+                ExclusiveStartKey = new Dictionary<string, AttributeValue>
+                {
+                    {"source", new AttributeValue {S = source}},
+                    {"pageId", new AttributeValue {N = pageId.ToString()}}
+                },
+                Limit = 1
+            };
+            var client = GalleryAwsCredentialsFactory.ProductionDbClient;
+            var queryResponse = client.Query(queryRequest);
+            var imageItem = queryResponse
+                .Items
+                .Select(item =>
+                    JsonConvert.DeserializeObject<ClassificationModelNew>(Document.FromAttributeMap(item).ToJson()))
+                .ToList()
+                .First();
+
+            var s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObjectAsync(BUCKET, imageItem.S3Path)
+                .Result;
+
+            byte[] bytes;
+            using (var stream = s3Object.ResponseStream)
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                bytes = memoryStream.ToArray();
+
+                const double maxMb = 5.5;
+                var mb = ConvertBytesToMegabytes(bytes.Length);
+                if (mb > maxMb)
+                {
+                    var image = Image.Load(bytes);
+                    var encoder = new JpegEncoder
+                    {
+                        Quality = 90
+                    };
+                    image.Save("C:\\Users\\peon\\Desktop\\thumbnails\\test.jpg", encoder);
+                }
+            }
+        }
+
+        [Test]
+        public void MakeThumbnail()
+        {
+            var source = "http://images.nga.gov";
+            var pageId = 18393;
+            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
+            {
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source",
+                ExclusiveStartKey = new Dictionary<string, AttributeValue>
+                {
+                    {"source", new AttributeValue {S = source}},
+                    {"pageId", new AttributeValue {N = pageId.ToString()}}
+                },
+                Limit = 1
+            };
+            var client = GalleryAwsCredentialsFactory.ProductionDbClient;
+            var queryResponse = client.Query(queryRequest);
+            var imageItem = queryResponse
+                .Items
+                .Select(item =>
+                    JsonConvert.DeserializeObject<ClassificationModelNew>(Document.FromAttributeMap(item).ToJson()))
+                .ToList()
+                .First();
+
+            var s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObjectAsync(BUCKET, imageItem.S3Path)
+                .Result;
+
+            byte[] bytes;
+            using (var stream = s3Object.ResponseStream)
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                bytes = memoryStream.ToArray();
+
+                var image = Image.Load(bytes);
+                var newSize = ResizeKeepAspect(image.Size(), 200, 200);
+                image.Mutate(x => x.Resize(newSize));
+                image.Save("C:\\Users\\peon\\Desktop\\thumbnails\\test-thumbnail.jpg");
+
+            }
+        }
+
+        static double ConvertBytesToMegabytes(long bytes)
+        {
+            return (bytes / 1024f) / 1024f;
+        }
+
+        private static Size ResizeKeepAspect(Size src, int maxWidth, int maxHeight)
+        {
+            maxWidth = Math.Min(maxWidth, src.Width);
+            maxHeight = Math.Min(maxHeight, src.Height);
+
+            decimal rnd = Math.Min(maxWidth / (decimal)src.Width, maxHeight / (decimal)src.Height);
+            return new Size((int)Math.Round(src.Width * rnd), (int)Math.Round(src.Height * rnd));
+        }
 
         [Test]
         public void CreateThumbnails()
         {
-            var source = "http://www.the-athenaeum.org";
+            //var source = "http://www.the-athenaeum.org";
+            var source = "http://images.nga.gov";
             var startPageId = 0;
             var client = GalleryAwsCredentialsFactory.ProductionDbClient;
             QueryResponse queryResponse = null;
@@ -75,176 +196,156 @@ namespace SlideshowCreator.Tests
                     queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
                 }
                 queryResponse = client.Query(queryRequest);
-
                 if (queryResponse.Items.Any())
                 {
                     var responseItems = queryResponse
                         .Items
                         .Select(item => JsonConvert.DeserializeObject<ClassificationModelNew>(Document.FromAttributeMap(item).ToJson()))
                         .ToList();
-
                     while (responseItems.Any())
                     {
-                        var updateBatchSize = 10;
+                        var updateBatchSize = 3;
                         var batch = responseItems.Take(updateBatchSize).ToList();
                         responseItems = responseItems.Skip(updateBatchSize).ToList();
-
                         var updates = new List<Task>();
                         foreach (var item in batch)
                         {
                             Console.WriteLine(JsonConvert.SerializeObject(item, Formatting.Indented));
-                            updates.Add(Send(item));
+                            updates.Add(new ThumbnailCreator().CreateThumbnail(
+                                GalleryAwsCredentialsFactory.ProductionDbClient,
+                                GalleryAwsCredentialsFactory.S3AcceleratedClient,
+                                BUCKET,
+                                "collections/national-gallery-of-art/thumbnails/",
+                                item,
+                                item.S3Path == "http://images.nga.gov"));
                         }
-
-                        Task.WaitAll(updates.ToArray());
+                        try
+                        {
+                            Task.WaitAll(updates.ToArray());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Failed to update {updates.Count} items: {e}");
+                        }
                     }
                 }
-
             } while (queryResponse.LastEvaluatedKey.Any());
-
         }
 
-        private async Task Send(ClassificationModelNew itemParsed)
+        [Test]
+        public void FixS3PathContainsBucket()
         {
-            var client = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var s3Client = GalleryAwsCredentialsFactory.S3AcceleratedClient;
-            GetObjectResponse s3File;
-            try
+            var source = "http://images.nga.gov";
+            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
             {
-                s3File = await s3Client.GetObjectAsync(BUCKET, itemParsed.S3Path);
-            }
-            catch (Exception e)
-            {
-                if (e.Message == "The specified key does not exist.")
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    var deleted = await client.DeleteItemAsync(itemParsed.GetTable(), itemParsed.GetKey());
-                    return;
-                }
-                else
+                    {":source", new AttributeValue {S = source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
                 {
-                    throw;
-                }
-            }
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source"
+            };
 
-            using (var stream = s3File.ResponseStream)
+            var results = QueryAll<ClassificationModelNew>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
+                .Where(x => x.S3Path.StartsWith("gonzalez-art-foundation", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            Console.WriteLine($"Found {results.Count} records that need images.");
+
+            Parallel.ForEach(results, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async result =>
             {
-                var image = System.Drawing.Image.FromStream(stream);
-                var thumbnailSize = ResizeKeepAspect(image.Size, 200, 200);
-                var thumbnail = image.GetThumbnailImage(
-                    thumbnailSize.Width,
-                    thumbnailSize.Height,
-                    () => false,
-                    IntPtr.Zero);
-                var path = $"C:\\Users\\peon\\Desktop\\thumbnails\\{Guid.NewGuid()}.jpg";
-                thumbnail.Save(path);
-                itemParsed.S3ThumbnailPath = $"collections/the-athenaeum/thumbnails/page-id-{itemParsed.PageId}.jpg";
-                using (var fs = File.OpenRead(path))
+                var updateJson = new JObject
                 {
-                    await s3Client.PutObjectAsync(new PutObjectRequest
-                    {
-                        BucketName = "gonzalez-art-foundation",
-                        Key = itemParsed.S3ThumbnailPath,
-                        InputStream = fs
-                    });
-                }
-                Dictionary<string, AttributeValue> key = itemParsed.GetKey();
-                var updateJson = JObject.FromObject(itemParsed, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
-                foreach (var keyPart in key.Keys)
-                {
-                    updateJson.Remove(keyPart);
-                }
+                    { "s3Path", result.S3Path.Replace("gonzalez-art-foundation/collections/", "collections/") }
+                };
+
                 var updates = Document.FromJson(updateJson.ToString()).ToAttributeUpdateMap(false);
-                await client.UpdateItemAsync(
-                    itemParsed.GetTable(),
-                    key,
+                var update = await GalleryAwsCredentialsFactory.ProductionDbClient.UpdateItemAsync(
+                    result.GetTable(),
+                    result.GetKey(),
                     updates);
-            }
+                if (update.HttpStatusCode != HttpStatusCode.OK)
+                {
+                    throw new Exception("Failed to update: " + result.PageId);
+                }
+                Console.WriteLine("updated " + result.PageId);
+            });
         }
 
-        public static Size ResizeKeepAspect(Size src, int maxWidth, int maxHeight)
-        {
-            maxWidth = Math.Min(maxWidth, src.Width);
-            maxHeight = Math.Min(maxHeight, src.Height);
-
-            decimal rnd = Math.Min(maxWidth / (decimal)src.Width, maxHeight / (decimal)src.Height);
-            return new Size((int)Math.Round(src.Width * rnd), (int)Math.Round(src.Height * rnd));
-        }
-
-        /// <summary>
-        /// From 34478 image id
-        /// </summary>
         [Test]
         public void IndexNga()
         {
-            var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-            var indexer = new NationalGalleryOfArtIndexer(GalleryAwsCredentialsFactory.S3AcceleratedClient, GalleryAwsCredentialsFactory.ProductionDbClient, ngaDataAccess);
-            var fileIdQueueIndexer = new FileIdQueueIndexer();
-            try
+            var source = "http://images.nga.gov";
+            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
             {
-                fileIdQueueIndexer.Index(indexer);
-            }
-            catch (Exception e)
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source"
+            };
+
+            var results = QueryAll<ClassificationModelNew>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
+                .Where(x => x.S3Path.StartsWith("gonzalez-art-foundation"))
+                .ToList();
+            Console.WriteLine($"Found {results.Count} records that need images.");
+
+            Parallel.ForEach(results, new ParallelOptions {MaxDegreeOfParallelism = 2}, result =>
             {
-                Console.WriteLine(e.ToString());
-            }
+                try
+                {
+                    var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
+                    var indexer = new NationalGalleryOfArtIndexer(GalleryAwsCredentialsFactory.S3AcceleratedClient, GalleryAwsCredentialsFactory.ProductionDbClient, ngaDataAccess);
+                    var classification = indexer.Index(result.PageId);
+                    if (classification == null)
+                    {
+                        Console.WriteLine($"No image found for page id {result.PageId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Uploaded image for page id {result.PageId}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Thread.Sleep(1000);
+                }
+            });
         }
 
-
-        [Test]
-        public void Move()
+        public List<T> QueryAll<T>(QueryRequest queryRequest, IAmazonDynamoDB client, int limit = 0)
         {
-            var devClient = new AmazonDynamoDBClient(
-                CreateCredentialsTest(),
-                RegionEndpoint.USEast1);
-
-            var prodClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-
-
-
-            ScanResponse scanResponse = null;
+            QueryResponse queryResponse = null;
+            var items = new List<T>();
             do
             {
-                var scanRequest = new ScanRequest(new ClassificationModel().GetTable()) {Limit = 25};
-                if (scanResponse != null)
+                if (queryResponse != null)
                 {
-                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
                 }
-                scanResponse = devClient.ScanAsync(scanRequest).Result;
-                var items = new List<ClassificationModel>();
-                foreach (var item in scanResponse.Items)
+                queryResponse = client.QueryAsync(queryRequest).Result;
+                foreach (var item in queryResponse.Items)
                 {
-                    var itemParsed = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-
-                    if (string.Equals(itemParsed.Artist, "unknown", StringComparison.OrdinalIgnoreCase))
+                    if (limit > 0 && items.Count >= limit)
                     {
-                        itemParsed.Artist = null;
+                        return items;
                     }
-
-                    if (string.Equals(itemParsed.Source, "http://images.nga.gov", StringComparison.OrdinalIgnoreCase))
-                    {
-                        itemParsed.S3Path = itemParsed.Source.Replace(
-                            "tgonzalez-image-archive/national-gallery-of-art/",
-                            "gonzalez-art-foundation/collections/national-gallery-of-art/");
-                    }
-                    else if (string.Equals(itemParsed.Source, "http://www.the-athenaeum.org", StringComparison.OrdinalIgnoreCase))
-                    {
-                        itemParsed.S3Path = $"collections/the-athenaeum/page-id-{itemParsed.PageId}.jpg";
-                    }
-                    items.Add(itemParsed);
+                    items.Add(JsonConvert.DeserializeObject<T>(Document.FromAttributeMap(item).ToJson()));
                 }
-
-                var inserts = DynamoDbInsert.GetBatchInserts(items);
-                var insertResults = prodClient.BatchWriteItem(inserts);
-
-                if (insertResults.UnprocessedItems.Any())
-                {
-                    throw new Exception("Failed to process items");
-                }
-
-            } while (scanResponse.LastEvaluatedKey.Any());
+            } while (queryResponse.LastEvaluatedKey.Any());
+            return items;
         }
 
-        [Test]
+        //[Test]
         public void SendToS3()
         {
             var files = Directory.GetFiles("G:\\Data\\ImageArchive")

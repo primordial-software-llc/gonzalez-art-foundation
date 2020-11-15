@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,7 +35,12 @@ namespace IndexBackend.NationalGalleryOfArt
             var encodedReference = HighResImageEncoding.CreateReferenceUrlData(assetId);
             var imageDownloadUrl = $"https://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";
             Console.WriteLine(imageDownloadUrl);
-            var response = new HttpClient().GetAsync(imageDownloadUrl).Result;
+            var cookieContainer = new CookieContainer();
+            var client = new HttpClient(new HttpClientHandler
+            {
+                CookieContainer = cookieContainer
+            });
+            var response = client.GetAsync(imageDownloadUrl).Result;
             Task<byte[]> asyncImageResponse = response.Content.ReadAsByteArrayAsync();
             byte[] imageZipFile = asyncImageResponse.Result;
             

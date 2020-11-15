@@ -8,6 +8,6 @@ namespace IndexBackend.NationalGalleryOfArt
         public string ProjectTitle => "Personal Digital Gallery";
 
         [JsonProperty("usage")]
-        public string Usage => 5.ToString();
+        public string Usage => 3.ToString();
     }
 }

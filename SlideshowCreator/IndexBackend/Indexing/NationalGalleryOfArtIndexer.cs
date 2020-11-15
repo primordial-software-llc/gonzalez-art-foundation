@@ -19,7 +19,7 @@ namespace IndexBackend.Indexing
         public string S3Bucket => BUCKET + "/" + S3_Path;
         public string Source => "http://images.nga.gov";
         public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\gonzalez-art-foundation-api\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
-        public int GetNextThrottleInMilliseconds => 4000;
+        public int GetNextThrottleInMilliseconds => 0;
 
         protected IAmazonS3 S3Client { get; }
         protected IAmazonDynamoDB DynamoDbClient { get; }
@@ -62,7 +62,7 @@ namespace IndexBackend.Indexing
                 {
                     Source = Source,
                     PageId = id,
-                    S3Path = S3Bucket + "/" + key
+                    S3Path = key
                 };
                 SetMetaData(classification);
 
@@ -89,7 +89,8 @@ namespace IndexBackend.Indexing
                     {
                         BucketName = S3Bucket,
                         Key = key,
-                        InputStream = imgStream
+                        InputStream = imgStream,
+                        
                     };
                     S3Client.PutObject(request);
                 }
