@@ -16,28 +16,28 @@ namespace SlideshowCreator
         private readonly int batchSize = 2;
         private readonly int maxParallelism = 1;
 
-        public void Index(IIndex indexer)
+        public void Index(IIndex indexer, string idFileQueuePath)
         {
-            if (!File.Exists(indexer.IdFileQueuePath))
+            if (!File.Exists(idFileQueuePath))
             {
-                Console.WriteLine("Id Queue File is Required: " + indexer.IdFileQueuePath);
+                Console.WriteLine("Id Queue File is Required: " + idFileQueuePath);
                 return;
             }
 
-            List<int> idQueue = File.ReadAllLines(indexer.IdFileQueuePath)
+            List<int> idQueue = File.ReadAllLines(idFileQueuePath)
                 .Select(int.Parse)
                 .ToList();
             
             while (idQueue.Any())
             {
                 List<int> nextBatch = idQueue.Take(batchSize).ToList();
-                IndexBatch(indexer, nextBatch, idQueue);
+                IndexBatch(indexer, nextBatch, idQueue, idFileQueuePath);
             }
             
             Console.WriteLine("Indexing complete");
         }
         
-        private void IndexBatch(IIndex indexer, List<int> batch, List<int> idQueue)
+        private void IndexBatch(IIndex indexer, List<int> batch, List<int> idQueue, string idFileQueuePath)
         {
             SemaphoreSlim maxThread = new SemaphoreSlim(maxParallelism, maxParallelism);
             var tasks = new ConcurrentDictionary<int, Task>();
@@ -47,7 +47,7 @@ namespace SlideshowCreator
                 maxThread.Wait();
                 var added = tasks.TryAdd(
                     id,
-                    Index(indexer, id, idQueue)
+                    Index(indexer, id, idQueue, idFileQueuePath)
                     .ContinueWith(task => maxThread.Release())
                     .ContinueWith(task => tasks.TryRemove(id, out Task removedTask)) // I don't care if the task can't be removed it's just removed to prevent a memory issue with a large batch.
                 );
@@ -60,7 +60,7 @@ namespace SlideshowCreator
             Task.WaitAll(tasks.Select(x => x.Value).ToArray());
         }
 
-        private async Task Index(IIndex indexer, int id, List<int> idQueue)
+        private async Task Index(IIndex indexer, int id, List<int> idQueue, string idFileQueuePath)
         {
             Console.WriteLine("Classifying: " + id);
 
@@ -74,7 +74,7 @@ namespace SlideshowCreator
             lock (DataLock)
             {
                 idQueue.Remove(id);
-                File.WriteAllLines(indexer.IdFileQueuePath, idQueue.Select(x => x.ToString()));
+                File.WriteAllLines(idFileQueuePath, idQueue.Select(x => x.ToString()));
             }
             Console.WriteLine("Done indexing: " + id);
 

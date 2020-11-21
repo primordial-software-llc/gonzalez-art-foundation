@@ -74,6 +74,7 @@
     <Compile Include="GalleryClient.cs" />
     <Compile Include="GalleryUserAccess.cs" />
     <Compile Include="Model\ArtistModel.cs" />
+    <Compile Include="Model\ClassificationModelStringId.cs" />
     <Compile Include="Model\ClassificationModelNew.cs" />
     <Compile Include="Model\ImageLabel.cs" />
     <Compile Include="Model\ImageLabelType.cs" />

@@ -108,6 +108,7 @@
     <Compile Include="LambdaSymphony\LambdaEntrypointDefinition.cs" />
     <Compile Include="LambdaSymphony\LambdaFunctionExists.cs" />
     <Compile Include="LambdaSymphony\LambdaSymphonyComposure.cs" />
+    <Compile Include="MinistereDeLaCulture\MinistereDeLaCultureIndexer.cs" />
     <Compile Include="MuseeOrsay\MuseeOrsayAssetDetailsParser.cs" />
     <Compile Include="MuseeOrsay\MuseeOrsayIndexer.cs" />
     <Compile Include="MuseeOrsay\PageHarvester.cs" />
@@ -146,8 +147,6 @@
     <Analyzer Include="..\packages\AWSSDK.Rekognition.3.5.0\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
     <Analyzer Include="..\packages\AWSSDK.S3.3.5.0\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="MinistereDeLaCulture\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

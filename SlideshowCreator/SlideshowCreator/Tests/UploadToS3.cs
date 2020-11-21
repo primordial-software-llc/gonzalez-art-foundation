@@ -18,6 +18,7 @@ using Amazon.S3.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using AwsTools;
+using GalleryBackend;
 using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -196,9 +197,10 @@ namespace SlideshowCreator.Tests
         }
 
         [Test]
-        public void CountSource()
+        public void MoveToNewDb()
         {
-            string source = new MuseeOrsayIndexer(null, null).Source;
+            string source = new TheAthenaeumIndexer().Source;
+            var dbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
             var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
             {
                 ScanIndexForward = true,
@@ -214,9 +216,24 @@ namespace SlideshowCreator.Tests
             };
             var results = QueryAll<ClassificationModelNew>(
                 queryRequest,
-                GalleryAwsCredentialsFactory.ProductionDbClient
+                dbClient
             );
+
             Console.WriteLine(results.Count.ToString());
+
+            var typedClient = new DynamoDbClient<ClassificationModelStringId>(dbClient, new ConsoleLogging());
+            var batches = Batcher.Batch(25, results);
+            foreach (var batch in batches)
+            {
+                var batchCopy = batch
+                    .Select(x => JsonConvert.DeserializeObject<ClassificationModelStringId>(JsonConvert.SerializeObject(x)))
+                    .ToList();
+                while (batchCopy.Any())
+                {
+                    batchCopy = typedClient.Insert(batchCopy).Result;
+                }
+            }
+
         }
 
         public List<T> QueryAll<T>(QueryRequest queryRequest, IAmazonDynamoDB client, int limit = 0)

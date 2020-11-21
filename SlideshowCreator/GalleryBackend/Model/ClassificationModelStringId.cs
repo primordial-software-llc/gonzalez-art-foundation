@@ -3,16 +3,11 @@ using Amazon.DynamoDBv2.Model;
 using AwsTools;
 using Newtonsoft.Json;
 
-namespace ArtApi
+namespace GalleryBackend.Model
 {
-    public class ClassificationModel : IModel
+    public class ClassificationModelStringId : IModel
     {
-        public const string ARTIST_NAME_INDEX = "artistNameIndex";
-        public const string NAME = "name";
-        public const string SOURCE = "source";
-        public const string ID = "pageId";
-
-        [JsonProperty(SOURCE)]
+        [JsonProperty("source")]
         public string Source { get; set; }
 
         /// <summary>
@@ -22,8 +17,8 @@ namespace ArtApi
         /// </summary>
         [JsonProperty("sourceLink")]
         public string SourceLink { get; set; }
-
-        [JsonProperty(ID)]
+        
+        [JsonProperty("pageId")]
         public string PageId { get; set; }
 
         /// <summary>
@@ -32,13 +27,13 @@ namespace ArtApi
         [JsonProperty("artist")]
         public string Artist { get; set; }
 
-        [JsonProperty(NAME)]
+        [JsonProperty("name")]
         public string Name { get; set; }
 
         /// <summary>
         /// The original artist has diacritics e.g. Jean-Léon Gérôme
         /// </summary>
-        [JsonProperty("originalArtist")]
+        [JsonProperty(ArtistModel.ORIGINAL_ARTIST)]
         public string OriginalArtist { get; set; }
 
         [JsonProperty("date")]
@@ -52,13 +47,13 @@ namespace ArtApi
             return new Dictionary<string, AttributeValue>
             {
                 {"source", new AttributeValue {S = Source}},
-                {"pageId", new AttributeValue {N = PageId}}
+                {"pageId", new AttributeValue {S = PageId}}
             };
         }
 
         public string GetTable()
         {
-            return "gonzalez-art-foundation-image-classification";
+            return "gonzalez-art-foundation-image-classification-string-id";
         }
 
     }

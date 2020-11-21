@@ -8,9 +8,7 @@ namespace IndexBackend.Indexing
     {
         string S3Bucket { get; }
         string Source { get; }
-        string IdFileQueuePath { get; }
         int GetNextThrottleInMilliseconds { get; }
-
         Task<ClassificationModelNew> Index(int id);
     }
 }

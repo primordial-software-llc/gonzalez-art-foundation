@@ -12,6 +12,7 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMuseeOrsayPageIds&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.CountSource&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.IndexMuseeDorsay&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.MoveToNewDb&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Musee/@EntryIndexedValue">True</s:Boolean>
