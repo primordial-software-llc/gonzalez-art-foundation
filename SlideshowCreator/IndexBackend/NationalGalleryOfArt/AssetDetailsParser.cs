@@ -33,7 +33,7 @@ namespace IndexBackend.NationalGalleryOfArt
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
-        public static ClassificationModel ParseHtmlToNewModel(string html)
+        public static ClassificationModelNew ParseHtmlToNewModel(string html)
         {
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -44,7 +44,7 @@ namespace IndexBackend.NationalGalleryOfArt
                                    .SelectNodes("//div[@id='info']/a")
                                    ?.FirstOrDefault()?.Attributes["href"].Value ?? string.Empty;
             
-            var model = new ClassificationModel();
+            var model = new ClassificationModelNew();
             if (infoDetails.Count > 0)
             {
                 model.OriginalArtist = Classifier.GetReplacementForEmptyArtist(infoDetails[0]);

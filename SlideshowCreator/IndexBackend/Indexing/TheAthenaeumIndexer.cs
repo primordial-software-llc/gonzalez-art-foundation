@@ -1,4 +1,5 @@
-﻿using Amazon.DynamoDBv2;
+﻿using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
 using AwsTools;
 using GalleryBackend.Model;
 using IndexBackend.NormalDistributionRandom;
@@ -37,7 +38,7 @@ namespace IndexBackend.Indexing
             Url = url;
         }
 
-        public ClassificationModelNew Index(int id)
+        public async Task<ClassificationModelNew> Index(int id)
         {
             ClassificationModelNew classification = null;
 
@@ -48,7 +49,7 @@ namespace IndexBackend.Indexing
                 var classifier = new Classifier();
                 classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
                 var dynamoDbClassification = Conversion<ClassificationModelNew>.ConvertToDynamoDb(classification);
-                Client.PutItem(new ClassificationModel().GetTable(), dynamoDbClassification);
+                await Client.PutItemAsync(new ClassificationModelNew().GetTable(), dynamoDbClassification);
             }
 
             return classification;

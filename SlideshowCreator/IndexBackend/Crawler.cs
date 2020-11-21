@@ -55,20 +55,5 @@ namespace IndexBackend
             return dataBetween;
         }
 
-        /// <remarks>
-        /// Some images simply don't exist and have a link with no id.
-        /// </remarks>
-        public static int GetImageId(string data)
-        {
-            string rawImageId = GetBetween(data, IMAGE_RELATIVE_URL_TEMPLATE, "\"");
-
-            if (string.IsNullOrWhiteSpace(rawImageId))
-            {
-                return 0;
-            }
-
-            int imageId = int.Parse(rawImageId);
-            return imageId;
-        }
     }
 }

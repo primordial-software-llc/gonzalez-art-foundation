@@ -1,18 +1,20 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using IndexBackend.Indexing;
+using Polly;
 
 namespace SlideshowCreator
 {
     public class FileIdQueueIndexer
     {
         private readonly Object DataLock = new Object();
-        private readonly int maxLevelOfParallelism = 1;
+        private readonly int batchSize = 2;
+        private readonly int maxParallelism = 1;
 
         public void Index(IIndex indexer)
         {
@@ -28,34 +30,8 @@ namespace SlideshowCreator
             
             while (idQueue.Any())
             {
-                List<int> nextBatch = idQueue.Take(maxLevelOfParallelism).ToList();
-
-                try
-                {
-                    IndexBatch(indexer, nextBatch, idQueue);
-                }
-                catch (AggregateException aggregateException)
-                {
-                    AggregateException flattenedException = aggregateException.Flatten();
-                    if (flattenedException.InnerExceptions.Any(ex => ex is HttpRequestException))
-                    {
-                        var exMsg = "HTTP EXCEPTION ENCOUNTERED:" +
-                                    aggregateException;
-                        Console.WriteLine(exMsg);
-                        // I'm getting 503 response after backing off rapidly from the CloudFlare auth.
-                        // My guess is that it's not the intermittent 503's I've been getting when testing
-                        // (or perhaps it is and this is the cause of those).
-                        // I backoff for a few minutes to let the DDOS protection cool-down.
-                        var backOff = TimeSpan.FromMinutes(3);
-                        Console.WriteLine($"BACKING OFF: {backOff.TotalMilliseconds}ms");
-                        Thread.Sleep(backOff);
-                        Console.WriteLine("BACKOFF COMPLETE - REFRESHING CONNECTION");
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                List<int> nextBatch = idQueue.Take(batchSize).ToList();
+                IndexBatch(indexer, nextBatch, idQueue);
             }
             
             Console.WriteLine("Indexing complete");
@@ -63,22 +39,38 @@ namespace SlideshowCreator
         
         private void IndexBatch(IIndex indexer, List<int> batch, List<int> idQueue)
         {
-            var parallelOptions = new ParallelOptions
+            SemaphoreSlim maxThread = new SemaphoreSlim(maxParallelism, maxParallelism);
+            var tasks = new ConcurrentDictionary<int, Task>();
+
+            foreach (var id in batch)
             {
-                MaxDegreeOfParallelism = maxLevelOfParallelism
-            };
-            Parallel.ForEach(batch, parallelOptions, id =>
-            {
-                Index(indexer, id, idQueue);
-            });
+                maxThread.Wait();
+                var added = tasks.TryAdd(
+                    id,
+                    Index(indexer, id, idQueue)
+                    .ContinueWith(task => maxThread.Release())
+                    .ContinueWith(task => tasks.TryRemove(id, out Task removedTask)) // I don't care if the task can't be removed it's just removed to prevent a memory issue with a large batch.
+                );
+                if (!added)
+                {
+                    throw new Exception("Failed to add task to concurrent dictionary");
+                }
+            }
+
+            Task.WaitAll(tasks.Select(x => x.Value).ToArray());
         }
 
-        private void Index(IIndex indexer, int id, List<int> idQueue)
+        private async Task Index(IIndex indexer, int id, List<int> idQueue)
         {
             Console.WriteLine("Classifying: " + id);
-            var classification = indexer.Index(id);
 
-            Console.WriteLine("Updating queue: " + id);
+            var retryPolicy = Policy
+                .Handle<AggregateException>(ex => ex.InnerExceptions.First() is TaskCanceledException)
+                .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(15));
+
+            await retryPolicy.ExecuteAsync(async () => await indexer.Index(id));
+
+            Console.WriteLine("Updating file id queue: " + id);
             lock (DataLock)
             {
                 idQueue.Remove(id);

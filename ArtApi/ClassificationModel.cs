@@ -32,9 +32,6 @@ namespace ArtApi
         [JsonProperty("artist")]
         public string Artist { get; set; }
 
-        [JsonProperty("imageId")]
-        public int ImageId { get; set; }
-
         [JsonProperty(NAME)]
         public string Name { get; set; }
 
@@ -49,9 +46,6 @@ namespace ArtApi
 
         [JsonProperty("s3Path")]
         public string S3Path { get; set; }
-
-        [JsonProperty("s3ThumbnailPath")]
-        public string S3ThumbnailPath { get; set; }
 
         public Dictionary<string, AttributeValue> GetKey()
         {

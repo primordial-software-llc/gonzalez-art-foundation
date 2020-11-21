@@ -1,4 +1,5 @@
 ﻿
+using System.Threading.Tasks;
 using GalleryBackend.Model;
 
 namespace IndexBackend.Indexing
@@ -10,6 +11,6 @@ namespace IndexBackend.Indexing
         string IdFileQueuePath { get; }
         int GetNextThrottleInMilliseconds { get; }
 
-        ClassificationModelNew Index(int id);
+        Task<ClassificationModelNew> Index(int id);
     }
 }

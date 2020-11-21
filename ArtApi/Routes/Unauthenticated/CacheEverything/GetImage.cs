@@ -63,7 +63,7 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
 
         private byte[] GetCompressed(byte[] bytes)
         {
-            var image = Image.Load(bytes);
+            using var image = Image.Load(bytes);
             var encoder = new JpegEncoder
             {
                 Quality = 90
@@ -75,7 +75,7 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
 
         private static byte[] CreateThumbnail(byte[] bytes)
         {
-            var image = Image.Load(bytes);
+            using var image = Image.Load(bytes);
             var thumbnailSize = ResizeKeepAspect(image.Size(), 200, 200);
             image.Mutate(x => x.Resize(thumbnailSize));
             using var compressedMemoryStream = new MemoryStream();

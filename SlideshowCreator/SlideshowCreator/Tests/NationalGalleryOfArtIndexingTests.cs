@@ -95,7 +95,7 @@ namespace SlideshowCreator.Tests
 
         private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {
-            var asset1Index = indexer.Index(id);
+            var asset1Index = indexer.Index(id).Result;
             Assert.AreEqual("http://images.nga.gov", asset1Index.Source);
             Assert.AreEqual(id, asset1Index.PageId);
             Assert.AreEqual(indexer.S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.S3Path);

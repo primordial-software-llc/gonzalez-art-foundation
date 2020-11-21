@@ -54,11 +54,10 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Reclassify_Jean_Leon_Gerome_Sample()
         {
-            var classification = transientClassifier.Index(15886);
+            var classification = transientClassifier.Index(15886).Result;
 
             Assert.AreEqual("http://www.the-athenaeum.org", classification.Source);
             Assert.AreEqual(15886, classification.PageId);
-            Assert.AreEqual(153045, classification.ImageId);
             Assert.AreEqual("The Slave Market", classification.Name); 
             Assert.AreEqual("jean-leon gerome", classification.Artist);
             Assert.AreEqual("Jean-Léon Gérôme", classification.OriginalArtist);
@@ -69,56 +68,51 @@ namespace SlideshowCreator.Tests
         public void B_Check_Sample1()
         {
             var pageId = 2594;
-            var classification = transientClassifier.Index(pageId);
+            var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual(pageId, classification.PageId);
             Assert.AreEqual("The Banks of the River", classification.Name);
             Assert.AreEqual("charles-francois daubigny", classification.Artist);
             Assert.AreEqual("Date unknown", classification.Date);
-            Assert.AreEqual(5154, classification.ImageId);
         }
 
         [Test]
         public void B_Check_Sample2()
         {
             var pageId = 33;
-            var classification = transientClassifier.Index(pageId);
+            var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("The Mandolin Player", classification.Name);
             Assert.AreEqual("dante gabriel rossetti", classification.Artist);
             Assert.AreEqual("1869", classification.Date);
-            Assert.AreEqual(736170, classification.ImageId);
         }
 
         [Test]
         public void B_Check_Sample_With_Alternbate_Title()
         {
             var pageId = 10005;
-            var classification = transientClassifier.Index(pageId);
+            var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("Rotterdam", classification.Name);
             Assert.AreEqual("johan barthold jongkind", classification.Artist);
             Assert.AreEqual("circa 1871", classification.Date);
-            Assert.AreEqual(20117, classification.ImageId);
         }
 
         [Test]
         public void B_Check_Sample_With_Alternbate_Title2()
         {
             var pageId = 10163;
-            var classification = transientClassifier.Index(pageId);
+            var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("photo of balla in futurist outfit", classification.Name);
-            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.Artist);
+            Assert.AreEqual(string.Empty, classification.Artist);
             Assert.AreEqual(string.Empty, classification.Date);
-            Assert.AreEqual(20441, classification.ImageId);
         }
 
         [Test]
         public void B_Check_Sample_With_Alternbate_Title3()
         {
             var pageId = 48407;
-            var classification = transientClassifier.Index(pageId);
+            var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("Man", classification.Name);
-            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.Artist);
+            Assert.AreEqual(string.Empty, classification.Artist);
             Assert.AreEqual(string.Empty, classification.Date);
-            Assert.AreEqual(0, classification.ImageId);
         }
 
         [Test]
@@ -133,9 +127,9 @@ namespace SlideshowCreator.Tests
         public void B_Check_Dynamo_Db_Required_Field_Failure()
         {
             var pageId = 127930;
-            var classification = transientClassifier.Index(pageId);
-            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.Artist);
-            Assert.AreEqual(Classifier.UNKNOWN_ARTIST, classification.OriginalArtist);
+            var classification = transientClassifier.Index(pageId).Result;
+            Assert.AreEqual(string.Empty, classification.Artist);
+            Assert.AreEqual(string.Empty, classification.OriginalArtist);
         }
 
         //[Test]

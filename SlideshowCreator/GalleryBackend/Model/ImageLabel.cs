@@ -10,10 +10,10 @@ namespace GalleryBackend.Model
         [JsonProperty("s3Path")]
         public string S3Path { get; set; }
 
-        [JsonProperty(ClassificationModel.SOURCE)]
+        [JsonProperty(ClassificationModelNew.SOURCE)]
         public string Source { get; set; }
 
-        [JsonProperty(ClassificationModel.ID)]
+        [JsonProperty(ClassificationModelNew.ID)]
         public int PageId { get; set; }
 
         [JsonProperty("labels")]

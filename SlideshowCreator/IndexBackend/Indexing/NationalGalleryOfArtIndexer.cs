@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -49,7 +50,7 @@ namespace IndexBackend.Indexing
             model.SourceLink = details.SourceLink;
         }
 
-        public ClassificationModelNew Index(int id)
+        public async Task<ClassificationModelNew> Index(int id)
         {
             var zipFile = NgaDataAccess.GetHighResImageZipFile(id);
             ClassificationModelNew classification = null;
@@ -67,7 +68,7 @@ namespace IndexBackend.Indexing
                 SetMetaData(classification);
 
                 var dynamoDbClassification = Conversion<ClassificationModelNew>.ConvertToDynamoDb(classification);
-                DynamoDbClient.PutItem(new ClassificationModelNew().GetTable(), dynamoDbClassification);
+                await DynamoDbClient.PutItemAsync(new ClassificationModelNew().GetTable(), dynamoDbClassification);
             }
 
             return classification;

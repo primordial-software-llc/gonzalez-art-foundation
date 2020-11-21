@@ -35,32 +35,32 @@ namespace GalleryBackend
             return JsonConvert.DeserializeObject<RequestIPAddress>(response);
         }
 
-        public List<ClassificationModel> SearchExactArtist(string artist, string source)
+        public List<ClassificationModelNew> SearchExactArtist(string artist, string source)
         {
             var url = $"https://{Domain}/api/Gallery/searchExactArtist" +
                       $"?artist={HttpUtility.UrlEncode(artist)}" +
                       $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
-            return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+            return JsonConvert.DeserializeObject<List<ClassificationModelNew>>(response);
         }
 
-        public List<ClassificationModel> SearchLikeArtist(string artist, string source)
+        public List<ClassificationModelNew> SearchLikeArtist(string artist, string source)
         {
             var url = $"https://{Domain}/api/Gallery/searchLikeArtist" +
                       $"?artist={HttpUtility.UrlEncode(artist)}"+
                       $"&source={HttpUtility.UrlEncode(source)}";
             var response = Client.GetStringAsync(url).Result;
-            return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+            return JsonConvert.DeserializeObject<List<ClassificationModelNew>>(response);
         }
 
-        public List<ClassificationModel> Scan(int? lastPageId, string source)
+        public List<ClassificationModelNew> Scan(int? lastPageId, string source)
         {
             var url = $"https://{Domain}/api/Gallery/scan" +
                       $"?lastPageId={lastPageId.GetValueOrDefault()}" +
                       $"&source={HttpUtility.UrlEncode(source)}";
 
             var response = Client.GetStringAsync(url).Result;
-            return JsonConvert.DeserializeObject<List<ClassificationModel>>(response);
+            return JsonConvert.DeserializeObject<List<ClassificationModelNew>>(response);
         }
 
         public List<ImageLabel> SearchLabel(string label, string source)

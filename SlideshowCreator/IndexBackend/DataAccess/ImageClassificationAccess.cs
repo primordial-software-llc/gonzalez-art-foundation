@@ -22,9 +22,9 @@ namespace IndexBackend.DataAccess
             Client = client;
         }
 
-        public List<ClassificationModel> Scan(int? lastPageId, string source, int? limit = null)
+        public List<ClassificationModelNew> Scan(int? lastPageId, string source, int? limit = null)
         {
-            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
+            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
@@ -47,7 +47,7 @@ namespace IndexBackend.DataAccess
                 queryRequest.Limit = limit.GetValueOrDefault();
             }
             var response = Client.Query(queryRequest);
-            return Conversion<ClassificationModel>.ConvertToPoco(response.Items);
+            return Conversion<ClassificationModelNew>.ConvertToPoco(response.Items);
         }
 
 

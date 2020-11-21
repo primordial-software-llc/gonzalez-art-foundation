@@ -74,8 +74,8 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Get_By_Key()
         {
 
-            var awsToolsClient = new DynamoDbClient<ClassificationModel>(client, new ConsoleLogging());
-            var image = awsToolsClient.Get(new ClassificationModel
+            var awsToolsClient = new DynamoDbClient<ClassificationModelNew>(client, new ConsoleLogging());
+            var image = awsToolsClient.Get(new ClassificationModelNew
             {
                 Source = new NationalGalleryOfArtIndexer().Source,
                 PageId = 18392
