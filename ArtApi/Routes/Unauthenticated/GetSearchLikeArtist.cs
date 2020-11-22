@@ -1,7 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.APIGatewayEvents;
@@ -22,42 +19,8 @@ namespace ArtApi.Routes.Unauthenticated
                 ? int.Parse(request.QueryStringParameters["maxResults"])
                 : 0;
             var client = new DatabaseClient<ClassificationModel>(new AmazonDynamoDBClient());
-            var items = FindAllForLikeArtist(client, artist, source, maxResults);
-            response.Body = JsonConvert.SerializeObject(items);
-        }
-
-        public List<ClassificationModel> FindAllForLikeArtist(DatabaseClient<ClassificationModel> client, string artist, string source, int maxResults)
-        {
-            var allMatches = new ConcurrentBag<ClassificationModel>();
-            var concurrency = 32;
-            Parallel.For(0, concurrency, new ParallelOptions { MaxDegreeOfParallelism = concurrency }, threadCt =>
-            {
-                foreach (var match in FindAllForLikeArtistSingleThreaded(client, artist, source, threadCt, concurrency, maxResults))
-                {
-                    allMatches.Add(match);
-                }
-            });
-            var results = allMatches
-                .OrderBy(x => x.Artist)
-                .ThenBy(x => x.Source)
-                .ToList();
-            while (maxResults > 0 && results.Count > maxResults)
-            {
-                results.RemoveAt(results.Count - 1);
-            }
-            return results;
-        }
-
-        public List<ClassificationModel> FindAllForLikeArtistSingleThreaded(
-            DatabaseClient<ClassificationModel> client,
-            string artist,
-            string source,
-            int segment,
-            int totalSegments,
-            int limit)
-        {
             artist = artist.ToLower();
-            var scanRequest = new ScanRequest(new ClassificationModel().GetTable())
+            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
@@ -68,12 +31,12 @@ namespace ArtApi.Routes.Unauthenticated
                 {
                     { "#source", "source" }
                 },
-                FilterExpression = "contains(artist, :artist) AND #source = :source",
-                IndexName = ClassificationModel.ARTIST_NAME_INDEX,
-                Segment = segment,
-                TotalSegments = totalSegments
+                KeyConditionExpression = "#source = :source",
+                FilterExpression = "contains(artist, :artist)"
             };
-            return client.ScanAll(scanRequest, limit);
+            var items = client.QueryAll(queryRequest, maxResults);
+            response.Body = JsonConvert.SerializeObject(items);
         }
+
     }
 }

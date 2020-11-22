@@ -113,15 +113,72 @@ namespace SlideshowCreator.Tests
         [Test]
         public void HarvestMuseeDeLouvrePageIds()
         {
-            
+
+
+
+            var artist = "vinci";
+            var artistQueryRequest = new QueryRequest(new ClassificationModel().GetTable())
+            {
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":artist", new AttributeValue {S = artist}},
+                    {":source", new AttributeValue {S = MinistereDeLaCultureIndexer.Source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#source", "source" }
+                },
+                KeyConditionExpression = "#source = :source",
+                FilterExpression = "contains(artist, :artist)"
+            };
+            var artistResults = QueryAll<ClassificationModel>(
+                artistQueryRequest,
+                GalleryAwsCredentialsFactory.ProductionDbClient);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            return;
+            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
+            {
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = MinistereDeLaCultureIndexer.Source}},
+                    {":date", new AttributeValue {S = "&#"}},
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"},
+                    {"#date", "date"}
+                },
+                KeyConditionExpression = "#source = :source",
+                FilterExpression = "contains(#date, :date)"
+            };
+
+            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient);
+            Console.WriteLine(results.Count.ToString());
+
             var indexer = new MinistereDeLaCultureIndexer(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3AcceleratedClient,
                 new HttpClient(),
                 new ConsoleLogging());
-            var model = indexer.Index("50350213938").Result;
 
-
+            Parallel.ForEach(results, new ParallelOptions { MaxDegreeOfParallelism = 5 }, result =>
+            {
+                var model = indexer.Index(result.PageId).Result;
+            });
 
 
             return;
