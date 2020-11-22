@@ -1,96 +1,109 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.S3;
 using Amazon.S3.Model;
+using AwsTools;
 using GalleryBackend.Model;
 using HtmlAgilityPack;
 using IndexBackend.Indexing;
-using IndexBackend.MuseeOrsay;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace IndexBackend.MinistereDeLaCulture
 {
     public class MinistereDeLaCultureIndexer : IIndex
     {
-        public string Source => "http://www.musee-orsay.fr";
-        public static readonly string S3_Path = "collections/ministere-de-la-culture";
-        public string S3Bucket => NationalGalleryOfArtIndexer.BUCKET + "/" + S3_Path;
+        public static string Source => "https://www.pop.culture.gouv.fr/notice/museo/M5031";
+        public static readonly string S3_Path = "collections/ministere-de-la-culture/louvre";
+        public static string S3Bucket => NationalGalleryOfArtIndexer.BUCKET + "/" + S3_Path;
         public int GetNextThrottleInMilliseconds => 0;
 
         private IAmazonDynamoDB DbClient { get; }
         private IAmazonS3 S3Client { get; }
         private HttpClient HttpClient { get; }
+        private ILogging Logging { get; }
 
-        public MinistereDeLaCultureIndexer(IAmazonDynamoDB dbClient, IAmazonS3 s3Client)
+        public MinistereDeLaCultureIndexer(
+            IAmazonDynamoDB dbClient,
+            IAmazonS3 s3Client,
+            HttpClient httpClient,
+            ILogging logging)
         {
             DbClient = dbClient;
             S3Client = s3Client;
-            HttpClient = new HttpClient();
+            HttpClient = httpClient;
+            Logging = logging;
         }
 
-        public async Task<ClassificationModelNew> Index(int id)
+        public async Task<ClassificationModel> Index(string id)
         {
-            var sourceLink = $"https://www.musee-orsay.fr/en/collections/index-of-works/notice.html?no_cache=1&nnumid={id}";
-            var pageHtml = await HttpClient.GetStringAsync(sourceLink);
-            var pageHasContent = pageHtml.Contains("corps_notice");
-
-            if (!pageHasContent)
+            var sourceLink = $"https://www.pop.culture.gouv.fr/notice/joconde/{id}";
+            var pageResponse = await HttpClient.GetAsync(sourceLink);
+            string pageResponseBody = pageResponse.Content == null ? string.Empty : await pageResponse.Content.ReadAsStringAsync();
+            if (!pageResponse.IsSuccessStatusCode)
             {
-                return null;
+                Logging.Log($"Failed to GET {sourceLink}. Received {pageResponse.StatusCode}: {pageResponseBody}");
+                if (pageResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
             }
-
-            ClassificationModelNew model = new ClassificationModelNew();
-            model.Source = Source;
-            model.SourceLink = sourceLink;
-            model.PageId = id;
-            MuseeOrsayAssetDetailsParser.ParseHtmlToNewModel(pageHtml, model);
+            pageResponse.EnsureSuccessStatusCode();
 
             var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(pageHtml);
-            var imageLink = htmlDoc.DocumentNode
-                .SelectNodes("//div[@class='unTiers']/a")
-                ?.FirstOrDefault()?.Attributes["href"].Value ?? string.Empty;
+            htmlDoc.LoadHtml(pageResponseBody);
 
-            var imagePage = "https://www.musee-orsay.fr/" + imageLink;
-            imagePage = imagePage.Replace("amp;", string.Empty);
-            var imagePageHtml = await HttpClient.GetStringAsync(imagePage);
+            var model = DetailsParser.ParseHtmlToNewModel(Source, id, sourceLink, htmlDoc);
 
-            var imagePageHtmlDoc = new HtmlDocument();
-            imagePageHtmlDoc.LoadHtml(imagePageHtml);
-            var highResImageLinkDiv = imagePageHtmlDoc
-                .DocumentNode
-                .SelectNodes("//div[@class='tx-damzoom-pi1']")
-                .ToList()
-                .First();
-            if (highResImageLinkDiv.ChildNodes.Count < 3)
+            var imageLinkNodes = htmlDoc.DocumentNode
+                .SelectNodes("//div[@class='jsx-241519627 fieldImages']//img");
+
+            if (imageLinkNodes == null)
             {
                 return null;
             }
-            var highResImageLinkOuterContainer = highResImageLinkDiv
-                .ChildNodes
-                .ToList()[2];
 
-            byte[] imageBytes;
-            if (string.Equals(highResImageLinkOuterContainer.Name, "#text"))
+            var imageLink = imageLinkNodes.First().Attributes["src"].Value;
+
+            var imageResponse = await HttpClient.GetAsync(imageLink);
+
+            if (!imageResponse.IsSuccessStatusCode)
             {
-                imageBytes = await MuseeOrsayAssetDetailsParser.GetSmallImage(HttpClient, imagePageHtmlDoc);
+                var imageResponseBody = imageResponse.Content == null ? string.Empty : await imageResponse.Content.ReadAsStringAsync();
+                Logging.Log($"Failed to GET {imageLink}. Received {imageResponse.StatusCode}: {imageResponseBody}");
+                if (imageResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
             }
-            else
+            imageResponse.EnsureSuccessStatusCode();
+            var contentType = imageResponse.Content.Headers.ContentType.MediaType;
+            byte[] imageBytes = await imageResponse.Content.ReadAsByteArrayAsync();
+
+            if (!string.Equals(contentType, "image/jpeg", StringComparison.OrdinalIgnoreCase)) // Multiple possible file extensions for a mime type and no guarantee the url has a file extension.
             {
-                var highResImageLink = highResImageLinkOuterContainer
-                    .ChildNodes[0]
-                    .Attributes["href"].Value
-                    .Replace("amp;", string.Empty);
-
-                var highResImageFqdn = "https://www.musee-orsay.fr/" + highResImageLink;
-                imageBytes = await MuseeOrsayAssetDetailsParser.GetLargeZoomedInImage(HttpClient, highResImageFqdn);
+                using (var image = Image.Load(imageBytes))
+                {
+                    var encoder = new JpegEncoder
+                    {
+                        Quality = 100,
+                        Subsample = JpegSubsample.Ratio444
+                    };
+                    using (var imageStream = new MemoryStream())
+                    {
+                        await image.SaveAsync(imageStream, encoder);
+                        imageBytes = imageStream.ToArray();
+                    }
+                }
             }
-
 
             using (var imageStream = new MemoryStream(imageBytes))
             {
@@ -104,9 +117,10 @@ namespace IndexBackend.MinistereDeLaCulture
             }
 
             model.S3Path = S3_Path + "/" + $"page-id-{id}.jpg";
+
             var json = JObject.FromObject(model, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
             await DbClient.PutItemAsync(
-                new ClassificationModelNew().GetTable(),
+                new ClassificationModel().GetTable(),
                 Document.FromJson(json.ToString()).ToAttributeMap()
             );
 

@@ -8,12 +8,12 @@
 	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f6c288b1_002D8f0b_002D4b2c_002D9624_002D1930746f03aa/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CreateThumbnails" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMuseeDeLouvrePageIds&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeployArtIndexerInEachRegion&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMuseeOrsayPageIds&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.CountSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.IndexMuseeDorsay&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.MoveToNewDb&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.Test&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.RetryQueue&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Ministere/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Musee/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Orsay/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

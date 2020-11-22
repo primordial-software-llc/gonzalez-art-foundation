@@ -9,12 +9,12 @@ namespace IndexBackend
         public const string FILE_IDENTITY_TEMPLATE = "page-id-";
         public const string IMAGE_RELATIVE_URL_TEMPLATE = "display_image.php?id=";
 
-        public static string GetDetailsPageUrl(string targetUrl, int pageId)
+        public static string GetDetailsPageUrl(string targetUrl, string pageId)
         {
             return targetUrl + "full.php?ID=" + pageId;
         }
 
-        public static string GetDetailsPageHtml(string targetUrl, int pageId, string pageNotFoundIndicatorText)
+        public static string GetDetailsPageHtml(string targetUrl, string pageId, string pageNotFoundIndicatorText)
         {
             string url = GetDetailsPageUrl(targetUrl, pageId);
             string html;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -17,24 +16,23 @@ namespace IndexBackend.MuseeOrsay
 {
     public class MuseeOrsayIndexer : IIndex
     {
-        public string Source => "http://www.musee-orsay.fr";
+        public static string Source => "http://www.musee-orsay.fr";
         public static readonly string S3_Path = "collections/musee-orsay";
         public string S3Bucket => NationalGalleryOfArtIndexer.BUCKET + "/" + S3_Path;
-        public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\gonzalez-art-foundation-api\\musee-orsay-page-ids.txt";
         public int GetNextThrottleInMilliseconds => 0;
 
         private IAmazonDynamoDB DbClient { get; }
         private IAmazonS3 S3Client { get; }
         private HttpClient HttpClient { get; }
 
-        public MuseeOrsayIndexer(IAmazonDynamoDB dbClient, IAmazonS3 s3Client)
+        public MuseeOrsayIndexer(IAmazonDynamoDB dbClient, IAmazonS3 s3Client, HttpClient httpClient)
         {
             DbClient = dbClient;
             S3Client = s3Client;
-            HttpClient = new HttpClient();
+            HttpClient = httpClient;
         }
 
-        public async Task<ClassificationModelNew> Index(int id)
+        public async Task<ClassificationModel> Index(string id)
         {
             var sourceLink = $"https://www.musee-orsay.fr/en/collections/index-of-works/notice.html?no_cache=1&nnumid={id}";
             var pageHtml = await HttpClient.GetStringAsync(sourceLink);
@@ -45,7 +43,7 @@ namespace IndexBackend.MuseeOrsay
                 return null;
             }
 
-            ClassificationModelNew model = new ClassificationModelNew();
+            var model = new ClassificationModel();
             model.Source = Source;
             model.SourceLink = sourceLink;
             model.PageId = id;
@@ -107,7 +105,7 @@ namespace IndexBackend.MuseeOrsay
             model.S3Path = S3_Path + "/" + $"page-id-{id}.jpg";
             var json = JObject.FromObject(model, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
             await DbClient.PutItemAsync(
-                new ClassificationModelNew().GetTable(),
+                new ClassificationModel().GetTable(),
                 Document.FromJson(json.ToString()).ToAttributeMap()
             );
 

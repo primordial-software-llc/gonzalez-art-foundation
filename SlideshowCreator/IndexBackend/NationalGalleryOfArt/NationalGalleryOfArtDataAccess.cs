@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,13 +23,13 @@ namespace IndexBackend.NationalGalleryOfArt
             return Client.GetStringAsync(search).Result;
         }
 
-        public string GetAssetDetails(int assetId)
+        public string GetAssetDetails(string assetId)
         {
             string url = $"https://images.nga.gov/?service=asset&action=show_zoom_window_popup&language=en&asset={assetId}&location=grid&asset_list=46482&basket_item_id=undefined";
             return Client.GetStringAsync(url).Result;
         }
 
-        public byte[] GetHighResImageZipFile(int assetId)
+        public byte[] GetHighResImageZipFile(string assetId)
         {
             var encodedReference = HighResImageEncoding.CreateReferenceUrlData(assetId);
             var imageDownloadUrl = $"https://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";

@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -9,7 +9,11 @@ using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using GalleryBackend;
+using IndexBackend.Indexing;
+using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.MuseeOrsay;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -21,6 +25,7 @@ namespace ArtIndexer
     {
         private IAmazonSQS QueueClient { get; }
         private IAmazonDynamoDB DbClient { get; }
+        private HttpClient HttpClient { get; }
         private IAmazonS3 S3Client { get; }
         private const string QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler";
         private const int SQS_MAX_BATCH = 10;
@@ -29,61 +34,82 @@ namespace ArtIndexer
             : this(
                 new AmazonSQSClient(new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 }),
                 new AmazonDynamoDBClient(new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.USEast1}),
-                new AmazonS3Client()
+                new AmazonS3Client(),
+                new HttpClient()
             )
         {
 
         }
 
-        public Function(IAmazonSQS queueClient, IAmazonDynamoDB dbClient, IAmazonS3 s3Client)
+        public Function(IAmazonSQS queueClient, IAmazonDynamoDB dbClient, IAmazonS3 s3Client, HttpClient httpClient)
         {
             QueueClient = queueClient;
             DbClient = dbClient;
             S3Client = s3Client;
+            HttpClient = httpClient;
         }
 
         public string FunctionHandler(ILambdaContext context)
         {
-            ReceiveMessageResponse sectionBatch;
+            ReceiveMessageResponse batch;
             do
             {
-                sectionBatch = QueueClient.ReceiveMessageAsync(new ReceiveMessageRequest
+                batch = QueueClient.ReceiveMessageAsync(new ReceiveMessageRequest
                 {
                     MaxNumberOfMessages = SQS_MAX_BATCH,
                     QueueUrl = QUEUE_URL
                 }).Result;
-                if (!sectionBatch.Messages.Any())
+                if (!batch.Messages.Any())
                 {
                     break;
                 }
-                Console.WriteLine($"Processing {sectionBatch.Messages.Count} messages in an SQS batch.");
-                var indexer = new MuseeOrsayIndexer(DbClient, S3Client);
-                SemaphoreSlim maxThread = new SemaphoreSlim(SQS_MAX_BATCH, SQS_MAX_BATCH);
-                var tasks = new ConcurrentDictionary<int, Task>();
-
-                foreach (var message in sectionBatch.Messages)
+                Console.WriteLine($"Processing {batch.Messages.Count} messages in an SQS batch.");
+                var tasks = new List<Task>();
+                foreach (var message in batch.Messages)
                 {
-                    var messageJson = JObject.Parse(message.Body);
-                    var id = messageJson["id"].Value<int>();
-                    maxThread.Wait();
-                    var added = tasks.TryAdd(
-                        id,
-                        indexer.Index(id)
-                            .ContinueWith(task =>
-                            {
-                                maxThread.Release();
-                                tasks.TryRemove(id, out Task removedTask); // I don't care if the task can't be removed it's just removed to prevent a memory issue with a large batch.
-                                QueueClient.DeleteMessageAsync(QUEUE_URL, message.ReceiptHandle).Wait();
-                            }));
-                    if (!added)
-                    {
-                        throw new Exception("Failed to add task to concurrent dictionary"); // I do care if it's not removed, because then the message will be unnecessarily retried and could back up the queue.
-                    }
+                    tasks.Add(IndexAndMarkComplete(message));
                 }
-                Task.WaitAll(tasks.Select(x => x.Value).ToArray());
-            } while (sectionBatch.Messages.Any());
-
+                Task.WaitAll(tasks.ToArray());
+            } while (batch.Messages.Any());
             return $"No additional SQS messages found in {QUEUE_URL}";
+        }
+
+        private async Task IndexAndMarkComplete(Message message)
+        {
+            var messageJson = JObject.Parse(message.Body);
+            Console.WriteLine("Processing: " + messageJson.ToString(Formatting.None));
+            var id = (messageJson["id"] ?? string.Empty).Value<string>();
+            var source = (messageJson["source"] ?? string.Empty).Value<string>();
+            var indexer = GetIndexer(source);
+            if (indexer == null)
+            {
+                Console.WriteLine($"Failed to process message due to unknown source {source} for message: {messageJson.ToString(Formatting.None)}");
+                return;
+            }
+            try
+            {
+                await indexer.Index(id);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to process message due to error {e.Message} for message: {messageJson.ToString(Formatting.None)}. Error: " + e);
+                return;
+            }
+            await QueueClient.DeleteMessageAsync(QUEUE_URL, message.ReceiptHandle);
+            Console.WriteLine("Successfully processed: " + messageJson.ToString(Formatting.None));
+        }
+
+        private IIndex GetIndexer(string source)
+        {
+            if (string.Equals(source, MuseeOrsayIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            {
+                return new MuseeOrsayIndexer(DbClient, S3Client, HttpClient);
+            }
+            if (string.Equals(source, MinistereDeLaCultureIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            {
+                return new MinistereDeLaCultureIndexer(DbClient, S3Client, HttpClient, new ConsoleLogging());
+            }
+            return null;
         }
 
     }

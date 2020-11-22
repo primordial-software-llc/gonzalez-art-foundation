@@ -22,7 +22,7 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {":source", new AttributeValue {S = source}},
-                    {":pageId", new AttributeValue {N = pageId}}
+                    {":pageId", new AttributeValue {S = pageId}}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {

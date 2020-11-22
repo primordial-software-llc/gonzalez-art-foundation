@@ -108,6 +108,7 @@
     <Compile Include="LambdaSymphony\LambdaEntrypointDefinition.cs" />
     <Compile Include="LambdaSymphony\LambdaFunctionExists.cs" />
     <Compile Include="LambdaSymphony\LambdaSymphonyComposure.cs" />
+    <Compile Include="MinistereDeLaCulture\DetailsParser.cs" />
     <Compile Include="MinistereDeLaCulture\MinistereDeLaCultureIndexer.cs" />
     <Compile Include="MuseeOrsay\MuseeOrsayAssetDetailsParser.cs" />
     <Compile Include="MuseeOrsay\MuseeOrsayIndexer.cs" />

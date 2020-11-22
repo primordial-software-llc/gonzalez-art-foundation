@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.WebSockets;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -14,7 +15,7 @@ using Amazon.Internal;
 using Amazon.Lambda;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
-using Amazon.S3.Model;
+using Amazon.S3.Model.Internal.MarshallTransformations;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using AwsTools;
@@ -23,15 +24,12 @@ using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.Indexing;
 using IndexBackend.LambdaSymphony;
+using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.MuseeOrsay;
 using IndexBackend.NationalGalleryOfArt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using Polly;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Processing;
 
 namespace SlideshowCreator.Tests
 {
@@ -73,7 +71,7 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 Regions,
                 environmentVariables,
-                5,
+                60,
                 FUNCTION_INDEX_AD_HOME,
                 @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\SlideshowCreator\ArtIndexer\ArtIndexer.csproj",
                 new LambdaEntrypointDefinition
@@ -84,10 +82,84 @@ namespace SlideshowCreator.Tests
                     FunctionName = "FunctionHandler"
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
-                runtime: Runtime.Dotnetcore31);
+                runtime: Runtime.Dotnetcore31,
+                256);
         }
 
         [Test]
+        public void RetryQueue()
+        {
+            var sqsClient = new AmazonSQSClient(
+                GalleryAwsCredentialsFactory.CreateCredentials(),
+                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
+
+            ReceiveMessageResponse messages;
+            do
+            {
+                messages = sqsClient.ReceiveMessage("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure");
+
+                foreach (var message in messages.Messages)
+                {
+                    sqsClient.SendMessage("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler", message.Body);
+                    sqsClient.DeleteMessage("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure", message.ReceiptHandle);
+                }
+
+            } while (messages.Messages.Any());
+        }
+
+        /*            
+         */
+
+        [Test]
+        public void HarvestMuseeDeLouvrePageIds()
+        {
+            
+            var indexer = new MinistereDeLaCultureIndexer(
+                GalleryAwsCredentialsFactory.ProductionDbClient,
+                GalleryAwsCredentialsFactory.S3AcceleratedClient,
+                new HttpClient(),
+                new ConsoleLogging());
+            var model = indexer.Index("50350213938").Result;
+
+
+
+
+            return;
+            var sqsClient = new AmazonSQSClient(
+                GalleryAwsCredentialsFactory.CreateCredentials(),
+                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
+
+            var lines = File.ReadAllText(@"C:\Users\peon\Downloads\base-joconde-extrait.json");
+            var json = JsonConvert.DeserializeObject<List<MonaLisaDatabaseModel>>(lines)
+                .Where(x =>
+                    x.Fields != null &&
+                    string.Equals(x.Fields.Museo, "m5031", StringComparison.OrdinalIgnoreCase))
+                .Select(x =>
+                        new JObject
+                        {
+                            { "source", MinistereDeLaCultureIndexer.Source },
+                            { "id", x.Fields.Ref }
+                        })
+                .ToList();
+
+            Console.WriteLine($"{json.Count} art id's");
+            var crawlerJsonBatches = Batcher.Batch(10, json);
+            Console.WriteLine($"{crawlerJsonBatches.Count} batches");
+
+            Parallel.ForEach(crawlerJsonBatches, crawlerJsonBatch =>
+            {
+                Console.WriteLine($"Sending {crawlerJsonBatch.Count} messages");
+                SendBatch(
+                    sqsClient,
+                    "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
+                    crawlerJsonBatch
+                        .Select(crawlerJson => new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), crawlerJson.ToString()))
+                        .ToList()
+                );
+            });
+        }
+
+        //[Test]
         public void HarvestMuseeOrsayPageIds()
         {
             var sqsClient = new AmazonSQSClient(
@@ -146,19 +218,19 @@ namespace SlideshowCreator.Tests
         //[Test]
         public void IndexMuseeDorsay()
         {
-            var indexer = new MuseeOrsayIndexer(GalleryAwsCredentialsFactory.ProductionDbClient, GalleryAwsCredentialsFactory.S3AcceleratedClient);
-            indexer.Index(7222).Wait();
+            var indexer = new MuseeOrsayIndexer(GalleryAwsCredentialsFactory.ProductionDbClient, GalleryAwsCredentialsFactory.S3AcceleratedClient, new HttpClient());
+            indexer.Index(7222.ToString()).Wait();
         }
 
         //[Test]
         public void IndexNga()
         {
-            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
+            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = new NationalGalleryOfArtIndexer().Source}}
+                    {":source", new AttributeValue {S = NationalGalleryOfArtIndexer.Source}}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
@@ -167,7 +239,7 @@ namespace SlideshowCreator.Tests
                 KeyConditionExpression = "#source = :source"
             };
 
-            var results = QueryAll<ClassificationModelNew>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
+            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
                 .Where(x => x.S3Path.StartsWith("gonzalez-art-foundation"))
                 .ToList();
             Console.WriteLine($"Found {results.Count} records that need images.");
@@ -194,46 +266,6 @@ namespace SlideshowCreator.Tests
                     Thread.Sleep(1000);
                 }
             });
-        }
-
-        [Test]
-        public void MoveToNewDb()
-        {
-            string source = new TheAthenaeumIndexer().Source;
-            var dbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
-            {
-                ScanIndexForward = true,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {":source", new AttributeValue {S = source }}
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    {"#source", "source"}
-                },
-                KeyConditionExpression = "#source = :source"
-            };
-            var results = QueryAll<ClassificationModelNew>(
-                queryRequest,
-                dbClient
-            );
-
-            Console.WriteLine(results.Count.ToString());
-
-            var typedClient = new DynamoDbClient<ClassificationModelStringId>(dbClient, new ConsoleLogging());
-            var batches = Batcher.Batch(25, results);
-            foreach (var batch in batches)
-            {
-                var batchCopy = batch
-                    .Select(x => JsonConvert.DeserializeObject<ClassificationModelStringId>(JsonConvert.SerializeObject(x)))
-                    .ToList();
-                while (batchCopy.Any())
-                {
-                    batchCopy = typedClient.Insert(batchCopy).Result;
-                }
-            }
-
         }
 
         public List<T> QueryAll<T>(QueryRequest queryRequest, IAmazonDynamoDB client, int limit = 0)

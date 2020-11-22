@@ -27,7 +27,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Find_By_Label()
         {
             var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.FindByLabel("Ancient Egypt", new NationalGalleryOfArtIndexer().Source);
+            var results = dataAccess.FindByLabel("Ancient Egypt", NationalGalleryOfArtIndexer.Source);
             Assert.AreEqual(2871, results.Count);
             results = results
                 .Where(
@@ -62,11 +62,11 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Scan()
         {
             var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.Scan(0, new TheAthenaeumIndexer().Source, 10);
+            var results = dataAccess.Scan(0.ToString(), TheAthenaeumIndexer.Source, 10);
             Assert.AreEqual(10, results.Count);
             Assert.AreEqual(33, results.First().PageId);
             Assert.AreEqual(42, results.Last().PageId);
-            var results2 = dataAccess.Scan(results.Last().PageId, new TheAthenaeumIndexer().Source, 10);
+            var results2 = dataAccess.Scan(results.Last().PageId, TheAthenaeumIndexer.Source, 10);
             Assert.AreEqual(43, results2.First().PageId);
         }
 
@@ -74,13 +74,13 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Get_By_Key()
         {
 
-            var awsToolsClient = new DynamoDbClient<ClassificationModelNew>(client, new ConsoleLogging());
-            var image = awsToolsClient.Get(new ClassificationModelNew
+            var awsToolsClient = new DynamoDbClient<ClassificationModel>(client, new ConsoleLogging());
+            var image = awsToolsClient.Get(new ClassificationModel
             {
-                Source = new NationalGalleryOfArtIndexer().Source,
-                PageId = 18392
+                Source = NationalGalleryOfArtIndexer.Source,
+                PageId = 18392.ToString()
             }).Result;
-            Assert.AreEqual(18392, image.PageId);
+            Assert.AreEqual(18392.ToString(), image.PageId);
             Assert.IsNotNull(image.S3Path);
             Assert.IsNotEmpty(image.S3Path);
         }

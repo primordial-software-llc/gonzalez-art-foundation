@@ -16,9 +16,8 @@ namespace IndexBackend.Indexing
     /// </remarks>
     public class TheAthenaeumIndexer : IIndex
     {
-        public string S3Bucket => "tgonzalez-image-archive/the-athenaeum";
-        public string Source => "http://www.the-athenaeum.org";
-        public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\SlideshowCreator\\PageIdQueue.txt";
+        public static string S3Bucket => "tgonzalez-image-archive/the-athenaeum";
+        public static string Source => "http://www.the-athenaeum.org";
         public int GetNextThrottleInMilliseconds => normalizedRandom.Next();
 
         private readonly NormalRandomGenerator normalizedRandom = new NormalRandomGenerator(1, 1000);
@@ -38,19 +37,18 @@ namespace IndexBackend.Indexing
             Url = url;
         }
 
-        public async Task<ClassificationModelNew> Index(int id)
+        public async Task<ClassificationModel> Index(string id)
         {
-            ClassificationModelNew classification = null;
-
             var html = Crawler.GetDetailsPageHtml(Url, id, PageNotFoundIndicatorText);
-
-            if (!string.IsNullOrWhiteSpace(html))
+            if (string.IsNullOrWhiteSpace(html))
             {
-                var classifier = new Classifier();
-                classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
-                var dynamoDbClassification = Conversion<ClassificationModelNew>.ConvertToDynamoDb(classification);
-                await Client.PutItemAsync(new ClassificationModelNew().GetTable(), dynamoDbClassification);
+                return null;
             }
+
+            var classifier = new Classifier();
+            var classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
+            var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
+            await Client.PutItemAsync(new ClassificationModel().GetTable(), dynamoDbClassification);
 
             return classification;
         }

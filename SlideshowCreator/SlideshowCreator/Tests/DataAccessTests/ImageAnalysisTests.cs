@@ -44,7 +44,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         {
             const int PAGE_SIZE = 25;
             var path = @"C:\Users\peon\Desktop\projects\SlideshowCreator\SlideshowCreator\image-analysis-progress.json";
-            var scanRequest = new QueryRequest(new ClassificationModelNew().GetTable());
+            var scanRequest = new QueryRequest(new ClassificationModel().GetTable());
             var awsToolsClient = new DynamoDbClient<ImageLabel>(client, new ConsoleLogging());
             QueryResponse scanResponse = null;
 
@@ -52,7 +52,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             {
                 var keyText = File.ReadAllText(path);
                 var keyParsed = JsonConvert.DeserializeObject<Dictionary<string, AttributeValue>>(keyText);
-                scanRequest.ExclusiveStartKey = Conversion<ClassificationModelNew>.ConvertToPoco(keyParsed).GetKey(); // Use a new objects for the key or the lookup will fail 
+                scanRequest.ExclusiveStartKey = Conversion<ClassificationModel>.ConvertToPoco(keyParsed).GetKey(); // Use a new objects for the key or the lookup will fail 
             }
             do
             {
@@ -69,14 +69,14 @@ namespace SlideshowCreator.Tests.DataAccessTests
                             ComparisonOperator = "EQ",
                             AttributeValueList = new List<AttributeValue>
                             {
-                                new AttributeValue {S = new NationalGalleryOfArtIndexer().Source}
+                                new AttributeValue {S = NationalGalleryOfArtIndexer.Source}
                             }
                         }
                     }
                 };
                 scanRequest.Limit = PAGE_SIZE;
                 scanResponse = client.Query(scanRequest);
-                var images = Conversion<ClassificationModelNew>.ConvertToPoco(scanResponse.Items)
+                var images = Conversion<ClassificationModel>.ConvertToPoco(scanResponse.Items)
                     .Where(x =>
                         x.S3Path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
                         x.S3Path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
@@ -103,7 +103,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Test_Image_Analysis_From_Over_5MB_File()
         {
             var sampleWorkId = 100444;
-            var dbRequest = new QueryRequest(new ClassificationModelNew().GetTable())
+            var dbRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 KeyConditions = new Dictionary<string, Condition>
                 {
@@ -114,7 +114,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
                             ComparisonOperator = "EQ",
                             AttributeValueList = new List<AttributeValue>
                             {
-                                new AttributeValue {S = new NationalGalleryOfArtIndexer().Source}
+                                new AttributeValue {S = NationalGalleryOfArtIndexer.Source}
                             }
                         }
                     },
@@ -132,7 +132,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             };
             var dbResponse = client.Query(dbRequest);
             var result = dbResponse.Items.Single();
-            var sampleWork = Conversion<ClassificationModelNew>.ConvertToPoco(result);
+            var sampleWork = Conversion<ClassificationModel>.ConvertToPoco(result);
 
             var label = GetModerationLabels(sampleWork);
 
@@ -142,7 +142,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             Assert.IsTrue(label.LabelsAndConfidence.Any(x => x.StartsWith("Flower Arrangement: 5")));
         }
 
-        private List<ImageLabel> GetLabels(List<ClassificationModelNew> images)
+        private List<ImageLabel> GetLabels(List<ClassificationModel> images)
         {
             var labels = new ConcurrentBag<ImageLabel>();
             Parallel.ForEach(
@@ -156,7 +156,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             return labels.ToList();
         }
 
-        private ImageLabel GetModerationLabels(ClassificationModelNew image)
+        private ImageLabel GetModerationLabels(ClassificationModel image)
         {
             var request = new DetectModerationLabelsRequest
             {
@@ -175,7 +175,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var imageLabel = new ImageLabel
             {
                 Source = image.Source,
-                PageId = image.PageId,
+                PageId = int.Parse(image.PageId),
                 S3Path = image.S3Path,
                 LabelsAndConfidence = response
                     .ModerationLabels
@@ -186,7 +186,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             return imageLabel;
         }
 
-        private ImageLabel GetLabel(ClassificationModelNew image)
+        private ImageLabel GetLabel(ClassificationModel image)
         {
             var request = new DetectLabelsRequest
             {
@@ -205,7 +205,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
             var imageLabel = new ImageLabel
             {
                 Source = image.Source,
-                PageId = image.PageId,
+                PageId = int.Parse(image.PageId),
                 S3Path = image.S3Path,
                 LabelsAndConfidence = response
                     .Labels

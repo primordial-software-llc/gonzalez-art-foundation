@@ -25,7 +25,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Exact_Artist()
         {
             var artist = "Jean-Leon Gerome";
-            var results = client.SearchExactArtist(artist, new TheAthenaeumIndexer().Source);
+            var results = client.SearchExactArtist(artist, TheAthenaeumIndexer.Source);
             Assert.AreEqual(244, results.Count);
         }
 
@@ -33,14 +33,14 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Like_Artist()
         {
             var artist = "Jean-Leon Gerome";
-            var results = client.SearchLikeArtist(artist, new TheAthenaeumIndexer().Source);
+            var results = client.SearchLikeArtist(artist, TheAthenaeumIndexer.Source);
             Assert.AreEqual(249, results.Count);
         }
         
         [Test]
         public void Scan()
         {
-            var results = client.Scan(null, new TheAthenaeumIndexer().Source);
+            var results = client.Scan(null, TheAthenaeumIndexer.Source);
             Assert.AreEqual(7332, results.Count);
         }
 
@@ -56,7 +56,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         [Test]
         public void Search_Labels()
         {
-            var results = client.SearchLabel("arabesque pattern", new NationalGalleryOfArtIndexer().Source);
+            var results = client.SearchLabel("arabesque pattern", NationalGalleryOfArtIndexer.Source);
             Assert.AreEqual(2871, results.Count);
             results = results
                 .Where(

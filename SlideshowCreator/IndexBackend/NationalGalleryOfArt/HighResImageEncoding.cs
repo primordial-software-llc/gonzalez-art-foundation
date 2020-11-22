@@ -23,7 +23,7 @@ namespace IndexBackend.NationalGalleryOfArt
             return base64UrlEncodedText;
         }
 
-        public static string CreateReferenceUrlData(int assetId)
+        public static string CreateReferenceUrlData(string assetId)
         {
             var reference = CreateReference(assetId);
             var jsonReference = JsonConvert.SerializeObject(reference);
@@ -31,14 +31,14 @@ namespace IndexBackend.NationalGalleryOfArt
             return encoded;
         }
 
-        private static HighResImageReference CreateReference(int assetId)
+        private static HighResImageReference CreateReference(string assetId)
         {
             var reference = new HighResImageReference
             {
                 MainForm = new HighResImageReferenceMainForm(),
                 Assets = new HighResImageReferenceAssets
                 {
-                    Asset0 = new HighResImageReferenceAsset {AssetId = assetId.ToString()}
+                    Asset0 = new HighResImageReferenceAsset {AssetId = assetId}
                 }
             };
             return reference;

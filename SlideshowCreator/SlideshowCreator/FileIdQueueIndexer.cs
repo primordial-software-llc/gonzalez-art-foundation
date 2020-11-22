@@ -24,23 +24,21 @@ namespace SlideshowCreator
                 return;
             }
 
-            List<int> idQueue = File.ReadAllLines(idFileQueuePath)
-                .Select(int.Parse)
-                .ToList();
+            List<string> idQueue = File.ReadAllLines(idFileQueuePath).ToList();
             
             while (idQueue.Any())
             {
-                List<int> nextBatch = idQueue.Take(batchSize).ToList();
+                List<string> nextBatch = idQueue.Take(batchSize).ToList();
                 IndexBatch(indexer, nextBatch, idQueue, idFileQueuePath);
             }
             
             Console.WriteLine("Indexing complete");
         }
         
-        private void IndexBatch(IIndex indexer, List<int> batch, List<int> idQueue, string idFileQueuePath)
+        private void IndexBatch(IIndex indexer, List<string> batch, List<string> idQueue, string idFileQueuePath)
         {
             SemaphoreSlim maxThread = new SemaphoreSlim(maxParallelism, maxParallelism);
-            var tasks = new ConcurrentDictionary<int, Task>();
+            var tasks = new ConcurrentDictionary<string, Task>();
 
             foreach (var id in batch)
             {
@@ -60,7 +58,7 @@ namespace SlideshowCreator
             Task.WaitAll(tasks.Select(x => x.Value).ToArray());
         }
 
-        private async Task Index(IIndex indexer, int id, List<int> idQueue, string idFileQueuePath)
+        private async Task Index(IIndex indexer, string id, List<string> idQueue, string idFileQueuePath)
         {
             Console.WriteLine("Classifying: " + id);
 

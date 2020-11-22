@@ -17,9 +17,8 @@ namespace IndexBackend.Indexing
     {
         public static readonly string BUCKET = "gonzalez-art-foundation";
         public static readonly string S3_Path = "collections/national-gallery-of-art";
-        public string S3Bucket => BUCKET + "/" + S3_Path;
-        public string Source => "http://images.nga.gov";
-        public string IdFileQueuePath => "C:\\Users\\peon\\Desktop\\projects\\gonzalez-art-foundation-api\\SlideshowCreator\\NationalGalleryOfArtImageIds.txt";
+        public static string S3Bucket => BUCKET + "/" + S3_Path;
+        public static string Source => "http://images.nga.gov";
         public int GetNextThrottleInMilliseconds => 0;
 
         protected IAmazonS3 S3Client { get; }
@@ -38,7 +37,7 @@ namespace IndexBackend.Indexing
             NgaDataAccess = ngaDataAccess;
         }
 
-        public void SetMetaData(ClassificationModelNew model)
+        public void SetMetaData(ClassificationModel model)
         {
             Console.WriteLine("Getting metadata for page id " + model.PageId);
             var html = NgaDataAccess.GetAssetDetails(model.PageId);
@@ -50,31 +49,32 @@ namespace IndexBackend.Indexing
             model.SourceLink = details.SourceLink;
         }
 
-        public async Task<ClassificationModelNew> Index(int id)
+        public async Task<ClassificationModel> Index(string id)
         {
             var zipFile = NgaDataAccess.GetHighResImageZipFile(id);
-            ClassificationModelNew classification = null;
 
-            if (zipFile != null)
+            if (zipFile == null)
             {
-                var key = SendToS3(zipFile, id);
-
-                classification = new ClassificationModelNew
-                {
-                    Source = Source,
-                    PageId = id,
-                    S3Path = key
-                };
-                SetMetaData(classification);
-
-                var dynamoDbClassification = Conversion<ClassificationModelNew>.ConvertToDynamoDb(classification);
-                await DynamoDbClient.PutItemAsync(new ClassificationModelNew().GetTable(), dynamoDbClassification);
+                return null;
             }
+
+            var key = SendToS3(zipFile, id);
+
+            var classification = new ClassificationModel
+            {
+                Source = Source,
+                PageId = id,
+                S3Path = key
+            };
+            SetMetaData(classification);
+
+            var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
+            await DynamoDbClient.PutItemAsync(new ClassificationModel().GetTable(), dynamoDbClassification);
 
             return classification;
         }
 
-        public string SendToS3(byte[] zipFile, int id)
+        public string SendToS3(byte[] zipFile, string id)
         {
             string key = "image-" + id;
             using (MemoryStream zipFileStream = new MemoryStream(zipFile))

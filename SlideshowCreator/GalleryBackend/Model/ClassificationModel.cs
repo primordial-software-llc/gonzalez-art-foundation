@@ -5,13 +5,9 @@ using Newtonsoft.Json;
 
 namespace GalleryBackend.Model
 {
-    public class ClassificationModelNew : IModel
+    public class ClassificationModel : IModel
     {
-        public const string NAME = "name";
-        public const string SOURCE = "source";
-        public const string ID = "pageId";
-
-        [JsonProperty(SOURCE)]
+        [JsonProperty("source")]
         public string Source { get; set; }
 
         /// <summary>
@@ -22,8 +18,8 @@ namespace GalleryBackend.Model
         [JsonProperty("sourceLink")]
         public string SourceLink { get; set; }
         
-        [JsonProperty(ID)]
-        public int PageId { get; set; }
+        [JsonProperty("pageId")]
+        public string PageId { get; set; }
 
         /// <summary>
         /// The artist is stripped of diacritics e.g. Jean-Leon Gerome
@@ -31,7 +27,7 @@ namespace GalleryBackend.Model
         [JsonProperty("artist")]
         public string Artist { get; set; }
 
-        [JsonProperty(NAME)]
+        [JsonProperty("name")]
         public string Name { get; set; }
 
         /// <summary>
@@ -51,7 +47,7 @@ namespace GalleryBackend.Model
             return new Dictionary<string, AttributeValue>
             {
                 {"source", new AttributeValue {S = Source}},
-                {"pageId", new AttributeValue {N = PageId.ToString()}}
+                {"pageId", new AttributeValue {S = PageId}}
             };
         }
 

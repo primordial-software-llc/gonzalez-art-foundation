@@ -20,7 +20,8 @@ namespace IndexBackend.LambdaSymphony
             string projectPath,
             LambdaEntrypointDefinition entrypoint,
             string roleArn,
-            Runtime runtime)
+            Runtime runtime,
+            int memorySizeMb)
         {
             var outputPath = LambdaSymphonyComposure.GetOutputPath(projectPath);
 
@@ -39,7 +40,8 @@ namespace IndexBackend.LambdaSymphony
                     Handler = entrypoint.GetEntryPointHandler(),
                     Role = roleArn,
                     Code = new FunctionCode { ZipFile = zipArchiveBuildStream },
-                    Timeout = 60 * 5
+                    Timeout = 60 * 5,
+                    MemorySize = memorySizeMb
                 };
 
                 fs.CopyTo(zipArchiveBuildStream);

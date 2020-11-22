@@ -34,7 +34,7 @@ namespace ArtApi.Routes.Unauthenticated
                 ExclusiveStartKey = new Dictionary<string, AttributeValue>
                 {
                     {"source", new AttributeValue {S = source}},
-                    {"pageId", new AttributeValue {N = lastPageId}}
+                    {"pageId", new AttributeValue {S = lastPageId}}
                 }
             };
             if (maxResults > 0)

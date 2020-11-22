@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using GalleryBackend.Model;
 using HtmlAgilityPack;
+using IndexBackend.Indexing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
@@ -14,7 +15,7 @@ namespace IndexBackend.MuseeOrsay
 {
     public class MuseeOrsayAssetDetailsParser
     {
-        public static ClassificationModelNew ParseHtmlToNewModel(string html, ClassificationModelNew model)
+        public static ClassificationModel ParseHtmlToNewModel(string html, ClassificationModel model)
         {
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);

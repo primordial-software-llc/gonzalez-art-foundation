@@ -16,7 +16,7 @@ namespace SlideshowIndexer
 
             try
             {
-                fileIdQueueIndexer.Index(indexer);
+                fileIdQueueIndexer.Index(indexer, "file path goes here if you use this again instead of sqs");
             }
             catch (Exception e)
             {

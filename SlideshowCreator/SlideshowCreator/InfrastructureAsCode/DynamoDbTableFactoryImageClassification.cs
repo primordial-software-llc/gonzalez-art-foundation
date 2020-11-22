@@ -21,7 +21,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         {
             var request = new CreateTableRequest
             {
-                TableName = new ClassificationModelNew().GetTable(),
+                TableName = new ClassificationModel().GetTable(),
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement
@@ -45,7 +45,7 @@ namespace SlideshowCreator.InfrastructureAsCode
                     new AttributeDefinition
                     {
                         AttributeName = "pageId",
-                        AttributeType = "N"
+                        AttributeType = "S"
                     }
                 },
                 ProvisionedThroughput = new ProvisionedThroughput
@@ -62,7 +62,7 @@ namespace SlideshowCreator.InfrastructureAsCode
         {
             var request = GetTableDefinition();
             TableFactory.CreateTable(request);
-            AddArtistNameGlobalSecondaryIndex(new ClassificationModelNew().GetTable());
+            AddArtistNameGlobalSecondaryIndex(new ClassificationModel().GetTable());
         }
         
         private void AddArtistNameGlobalSecondaryIndex(string tableName)

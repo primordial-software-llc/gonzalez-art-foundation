@@ -18,9 +18,9 @@ namespace SlideshowCreator.Scripts
         {
             var path = @"C:\Users\peon\Desktop\projects\SlideshowCreator\SlideshowCreator\dynamodb-backup.json";
             var json = File.ReadAllText(path);
-            var models = JsonConvert.DeserializeObject<List<ClassificationModelNew>>(json);
+            var models = JsonConvert.DeserializeObject<List<ClassificationModel>>(json);
 
-            var client = new DynamoDbClient<ClassificationModelNew>(GalleryAwsCredentialsFactory.ProductionDbClient, new ConsoleLogging());
+            var client = new DynamoDbClient<ClassificationModel>(GalleryAwsCredentialsFactory.ProductionDbClient, new ConsoleLogging());
 
             // This batching should go into the client. 25 is the max allowed.
             while (models.Any())

@@ -2,11 +2,11 @@
 using Diacritics.Extensions;
 using GalleryBackend.Model;
 
-namespace IndexBackend
+namespace IndexBackend.Indexing
 {
     public class Classifier
     {
-        public ClassificationModelNew ClassifyForTheAthenaeum(string page, int pageId, string source)
+        public ClassificationModel ClassifyForTheAthenaeum(string page, string pageId, string source)
         {
             var name = Crawler.GetBetween(page, "<h1>", "</h1>");
             if (name.Contains("<div"))
@@ -20,7 +20,7 @@ namespace IndexBackend
                 date = date.Substring(2, date.Length - 2);
             }
             
-            var classification = new ClassificationModelNew
+            var classification = new ClassificationModel
             {
                 Source = source,
                 PageId = pageId,

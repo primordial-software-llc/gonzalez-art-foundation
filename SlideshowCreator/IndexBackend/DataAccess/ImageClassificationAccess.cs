@@ -22,9 +22,9 @@ namespace IndexBackend.DataAccess
             Client = client;
         }
 
-        public List<ClassificationModelNew> Scan(int? lastPageId, string source, int? limit = null)
+        public List<ClassificationModel> Scan(string lastPageId, string source, int? limit = null)
         {
-            var queryRequest = new QueryRequest(new ClassificationModelNew().GetTable())
+            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
@@ -39,7 +39,7 @@ namespace IndexBackend.DataAccess
                 ExclusiveStartKey = new Dictionary<string, AttributeValue>
                 {
                     {"source", new AttributeValue {S = source}},
-                    {"pageId", new AttributeValue {N = lastPageId.GetValueOrDefault().ToString()}}
+                    {"pageId", new AttributeValue {S = lastPageId}}
                 },
             };
             if (limit.HasValue)
@@ -47,10 +47,8 @@ namespace IndexBackend.DataAccess
                 queryRequest.Limit = limit.GetValueOrDefault();
             }
             var response = Client.Query(queryRequest);
-            return Conversion<ClassificationModelNew>.ConvertToPoco(response.Items);
+            return Conversion<ClassificationModel>.ConvertToPoco(response.Items);
         }
-
-
 
         public List<ImageLabel> FindByLabel(
             string label, string source)
@@ -109,7 +107,7 @@ namespace IndexBackend.DataAccess
             {
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = new NationalGalleryOfArtIndexer().Source}},
+                    {":source", new AttributeValue {S = NationalGalleryOfArtIndexer.Source}},
                     {":pageId", new AttributeValue {N = pageId.ToString()}}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>

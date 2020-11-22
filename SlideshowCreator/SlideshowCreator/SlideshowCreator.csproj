@@ -128,13 +128,14 @@
     <Compile Include="FileIdQueueIndexer.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageLabel.cs" />
+    <Compile Include="MonaLisaDatabaseFieldsModel.cs" />
+    <Compile Include="MonaLisaDatabaseModel.cs" />
     <Compile Include="Scripts\PasswordGenerator.cs" />
     <Compile Include="Scripts\PopulateNationalGalleryOfArtMetaData.cs" />
     <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
     <Compile Include="Tests\DataAccessTests\GalleryApiTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageAnalysisTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
-    <Compile Include="AwsAccess\DynamoDbInsert.cs" />
     <Compile Include="Tests\DataAccessTests\TpLinkTests.cs" />
     <Compile Include="Tests\UnitTests\AuthenticationTests.cs" />
     <Compile Include="Tests\NationalGalleryOfArtIndexingTests.cs" />

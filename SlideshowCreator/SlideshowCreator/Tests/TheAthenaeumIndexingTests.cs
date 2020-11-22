@@ -54,7 +54,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Reclassify_Jean_Leon_Gerome_Sample()
         {
-            var classification = transientClassifier.Index(15886).Result;
+            var classification = transientClassifier.Index(15886.ToString()).Result;
 
             Assert.AreEqual("http://www.the-athenaeum.org", classification.Source);
             Assert.AreEqual(15886, classification.PageId);
@@ -67,7 +67,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Sample1()
         {
-            var pageId = 2594;
+            var pageId = 2594.ToString();
             var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual(pageId, classification.PageId);
             Assert.AreEqual("The Banks of the River", classification.Name);
@@ -78,7 +78,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Sample2()
         {
-            var pageId = 33;
+            var pageId = 33.ToString();
             var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("The Mandolin Player", classification.Name);
             Assert.AreEqual("dante gabriel rossetti", classification.Artist);
@@ -88,7 +88,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Sample_With_Alternbate_Title()
         {
-            var pageId = 10005;
+            var pageId = 10005.ToString();
             var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("Rotterdam", classification.Name);
             Assert.AreEqual("johan barthold jongkind", classification.Artist);
@@ -98,7 +98,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Sample_With_Alternbate_Title2()
         {
-            var pageId = 10163;
+            var pageId = 10163.ToString();
             var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("photo of balla in futurist outfit", classification.Name);
             Assert.AreEqual(string.Empty, classification.Artist);
@@ -108,7 +108,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Sample_With_Alternbate_Title3()
         {
-            var pageId = 48407;
+            var pageId = 48407.ToString();
             var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual("Man", classification.Name);
             Assert.AreEqual(string.Empty, classification.Artist);
@@ -118,7 +118,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Sample_With_Null_Reference_Exception()
         {
-            var pageId = 137;
+            var pageId = 137.ToString();
             var classification = transientClassifier.Index(pageId);
             Assert.IsNull(classification);
         }
@@ -126,7 +126,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void B_Check_Dynamo_Db_Required_Field_Failure()
         {
-            var pageId = 127930;
+            var pageId = 127930.ToString();
             var classification = transientClassifier.Index(pageId).Result;
             Assert.AreEqual(string.Empty, classification.Artist);
             Assert.AreEqual(string.Empty, classification.OriginalArtist);
