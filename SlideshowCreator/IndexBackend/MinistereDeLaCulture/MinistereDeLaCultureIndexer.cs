@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.S3;
@@ -21,26 +22,33 @@ namespace IndexBackend.MinistereDeLaCulture
 {
     public class MinistereDeLaCultureIndexer : IIndex
     {
-        public static string Source => "https://www.pop.culture.gouv.fr/notice/museo/M5031";
-        public static readonly string S3_Path = "collections/ministere-de-la-culture/louvre";
-        public static string S3Bucket => NationalGalleryOfArtIndexer.BUCKET + "/" + S3_Path;
+        public static string SourceMuseeDuLouvre => "https://www.pop.culture.gouv.fr/notice/museo/M5031";
+        public static string SourceMinistereDeLaCulture => "https://www.pop.culture.gouv.fr";
+        public static string S3PathLouvre => "collections/ministere-de-la-culture/louvre";
+        public static string S3PathMinistereDeLaCulture => "collections/ministere-de-la-culture";
         public int GetNextThrottleInMilliseconds => 0;
 
         private IAmazonDynamoDB DbClient { get; }
         private IAmazonS3 S3Client { get; }
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
+        private string Source { get; }
+        private string S3Path { get; }
 
         public MinistereDeLaCultureIndexer(
             IAmazonDynamoDB dbClient,
             IAmazonS3 s3Client,
             HttpClient httpClient,
-            ILogging logging)
+            ILogging logging,
+            string source,
+            string s3Path)
         {
             DbClient = dbClient;
             S3Client = s3Client;
             HttpClient = httpClient;
             Logging = logging;
+            Source = source;
+            S3Path = s3Path;
         }
 
         public async Task<ClassificationModel> Index(string id)
@@ -71,7 +79,7 @@ namespace IndexBackend.MinistereDeLaCulture
                 return null;
             }
 
-            var imageLink = imageLinkNodes.First().Attributes["src"].Value;
+            var imageLink = HttpUtility.HtmlDecode(imageLinkNodes.First().Attributes["src"].Value);
 
             var imageResponse = await HttpClient.GetAsync(imageLink);
 
@@ -109,14 +117,14 @@ namespace IndexBackend.MinistereDeLaCulture
             {
                 PutObjectRequest request = new PutObjectRequest
                 {
-                    BucketName = S3Bucket,
+                    BucketName = NationalGalleryOfArtIndexer.BUCKET + "/" + S3Path,
                     Key = $"page-id-{id}.jpg",
                     InputStream = imageStream
                 };
                 await S3Client.PutObjectAsync(request);
             }
 
-            model.S3Path = S3_Path + "/" + $"page-id-{id}.jpg";
+            model.S3Path = S3Path + "/" + $"page-id-{id}.jpg";
 
             var json = JObject.FromObject(model, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
             await DbClient.PutItemAsync(

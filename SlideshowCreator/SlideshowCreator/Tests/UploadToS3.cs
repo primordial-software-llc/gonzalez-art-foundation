@@ -65,13 +65,24 @@ namespace SlideshowCreator.Tests
         private const string FUNCTION_INDEX_AD_HOME = "gonzalez-art-foundation-crawler";
 
         [Test]
+        public void DeleteFunctions()
+        {
+            new LambdaDeploy().Delete(
+                GalleryAwsCredentialsFactory.CreateCredentials(),
+                Regions,
+                FUNCTION_INDEX_AD_HOME,
+                10
+            );
+        }
+
+        [Test]
         public void DeployArtIndexerInEachRegion()
         {
             new LambdaDeploy().Deploy(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
-                Regions,
+                new List<RegionEndpoint> { RegionEndpoint.USEast1 }, // Some regions can't access the image url which happens to be an aws bucket.
                 environmentVariables,
-                60,
+                5,
                 FUNCTION_INDEX_AD_HOME,
                 @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\SlideshowCreator\ArtIndexer\ArtIndexer.csproj",
                 new LambdaEntrypointDefinition
@@ -83,7 +94,8 @@ namespace SlideshowCreator.Tests
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
-                256);
+                256,
+                5);
         }
 
         [Test]
@@ -96,116 +108,92 @@ namespace SlideshowCreator.Tests
             ReceiveMessageResponse messages;
             do
             {
-                messages = sqsClient.ReceiveMessage("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure");
+                var receiveRequest = new ReceiveMessageRequest("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure");
+                receiveRequest.MaxNumberOfMessages = 10;
+                messages = sqsClient.ReceiveMessage(receiveRequest);
 
+                var sendMessages = new List<SendMessageBatchRequestEntry>();
                 foreach (var message in messages.Messages)
                 {
-                    sqsClient.SendMessage("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler", message.Body);
-                    sqsClient.DeleteMessage("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure", message.ReceiptHandle);
+                    sendMessages.Add(new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), message.Body));
                 }
 
+                var result = sqsClient.SendMessageBatch("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler", sendMessages);
+                if (result.Failed.Any())
+                {
+                    throw new Exception("Failed to retry sqs message.");
+                }
+
+                var deleteMessages = new List<DeleteMessageBatchRequestEntry>();
+                foreach (var message in messages.Messages)
+                {
+                    deleteMessages.Add(new DeleteMessageBatchRequestEntry(Guid.NewGuid().ToString(), message.ReceiptHandle));
+                }
+                sqsClient.DeleteMessageBatch("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure", deleteMessages);
             } while (messages.Messages.Any());
         }
 
-        /*            
-         */
+        [Test]
+        public void TestIndex()
+        {
+            var indexer = new MinistereDeLaCultureIndexer(
+                GalleryAwsCredentialsFactory.ProductionDbClient,
+                GalleryAwsCredentialsFactory.S3AcceleratedClient,
+                new HttpClient(),
+                new ConsoleLogging(),
+                MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture,
+                MinistereDeLaCultureIndexer.S3PathMinistereDeLaCulture
+            );
+            var results = indexer.Index("00000069115").Result;
+        }
 
         [Test]
-        public void HarvestMuseeDeLouvrePageIds()
+        public void HarvestMinisreDeCulturePageIds()
         {
-
-
-
-            var artist = "vinci";
-            var artistQueryRequest = new QueryRequest(new ClassificationModel().GetTable())
-            {
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {":artist", new AttributeValue {S = artist}},
-                    {":source", new AttributeValue {S = MinistereDeLaCultureIndexer.Source}}
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    { "#source", "source" }
-                },
-                KeyConditionExpression = "#source = :source",
-                FilterExpression = "contains(artist, :artist)"
-            };
-            var artistResults = QueryAll<ClassificationModel>(
-                artistQueryRequest,
-                GalleryAwsCredentialsFactory.ProductionDbClient);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            return;
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = MinistereDeLaCultureIndexer.Source}},
-                    {":date", new AttributeValue {S = "&#"}},
+                    {":source", new AttributeValue {S = MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture}}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
-                    {"#source", "source"},
-                    {"#date", "date"}
+                    {"#source", "source"}
                 },
-                KeyConditionExpression = "#source = :source",
-                FilterExpression = "contains(#date, :date)"
+                KeyConditionExpression = "#source = :source"
             };
-
-            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient);
-            Console.WriteLine(results.Count.ToString());
-
-            var indexer = new MinistereDeLaCultureIndexer(
-                GalleryAwsCredentialsFactory.ProductionDbClient,
-                GalleryAwsCredentialsFactory.S3AcceleratedClient,
-                new HttpClient(),
-                new ConsoleLogging());
-
-            Parallel.ForEach(results, new ParallelOptions { MaxDegreeOfParallelism = 5 }, result =>
-            {
-                var model = indexer.Index(result.PageId).Result;
-            });
+            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
+                .ToDictionary(x => x.PageId);
+            Console.WriteLine($"Found {results.Count} records already indexed.");
 
 
             return;
-            var sqsClient = new AmazonSQSClient(
-                GalleryAwsCredentialsFactory.CreateCredentials(),
-                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
-
             var lines = File.ReadAllText(@"C:\Users\peon\Downloads\base-joconde-extrait.json");
             var json = JsonConvert.DeserializeObject<List<MonaLisaDatabaseModel>>(lines)
                 .Where(x =>
                     x.Fields != null &&
-                    string.Equals(x.Fields.Museo, "m5031", StringComparison.OrdinalIgnoreCase))
+                    (x.Fields.Domn ?? string.Empty).ToLower().Contains("peinture") &&
+                    !string.Equals(x.Fields.Museo, "m5031", StringComparison.OrdinalIgnoreCase) &&
+                    !results.ContainsKey(x.Fields.Ref)
+                )
                 .Select(x =>
-                        new JObject
-                        {
-                            { "source", MinistereDeLaCultureIndexer.Source },
-                            { "id", x.Fields.Ref }
-                        })
+                    new JObject
+                    {
+                        {"source", MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture},
+                        {"id", x.Fields.Ref}
+                    })
                 .ToList();
 
-            Console.WriteLine($"{json.Count} art id's");
+            var sqsClient = new AmazonSQSClient(
+                GalleryAwsCredentialsFactory.CreateCredentials(),
+                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
             var crawlerJsonBatches = Batcher.Batch(10, json);
-            Console.WriteLine($"{crawlerJsonBatches.Count} batches");
+            Console.WriteLine($"Sending {crawlerJsonBatches.Count} batches.");
 
             Parallel.ForEach(crawlerJsonBatches, crawlerJsonBatch =>
             {
-                Console.WriteLine($"Sending {crawlerJsonBatch.Count} messages");
+                Console.WriteLine($"Sending {crawlerJsonBatch.Count} messages.");
                 SendBatch(
                     sqsClient,
                     "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",

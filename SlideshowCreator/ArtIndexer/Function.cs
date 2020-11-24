@@ -15,6 +15,7 @@ using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.MuseeOrsay;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Console = System.Console;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -63,7 +64,6 @@ namespace ArtIndexer
                 {
                     break;
                 }
-                Console.WriteLine($"Processing {batch.Messages.Count} messages in an SQS batch.");
                 var tasks = new List<Task>();
                 foreach (var message in batch.Messages)
                 {
@@ -77,7 +77,6 @@ namespace ArtIndexer
         private async Task IndexAndMarkComplete(Message message)
         {
             var messageJson = JObject.Parse(message.Body);
-            Console.WriteLine("Processing: " + messageJson.ToString(Formatting.None));
             var id = (messageJson["id"] ?? string.Empty).Value<string>();
             var source = (messageJson["source"] ?? string.Empty).Value<string>();
             var indexer = GetIndexer(source);
@@ -88,7 +87,11 @@ namespace ArtIndexer
             }
             try
             {
-                await indexer.Index(id);
+                var result = await indexer.Index(id);
+                if (result == null)
+                {
+                    Console.WriteLine($"Skipped {messageJson.ToString(Formatting.None)} due to not finding content.");
+                }
             }
             catch (Exception e)
             {
@@ -96,7 +99,6 @@ namespace ArtIndexer
                 return;
             }
             await QueueClient.DeleteMessageAsync(QUEUE_URL, message.ReceiptHandle);
-            Console.WriteLine("Successfully processed: " + messageJson.ToString(Formatting.None));
         }
 
         private IIndex GetIndexer(string source)
@@ -105,9 +107,13 @@ namespace ArtIndexer
             {
                 return new MuseeOrsayIndexer(DbClient, S3Client, HttpClient);
             }
-            if (string.Equals(source, MinistereDeLaCultureIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, MinistereDeLaCultureIndexer.SourceMuseeDuLouvre) ||
+                string.Equals(source, MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture))
             {
-                return new MinistereDeLaCultureIndexer(DbClient, S3Client, HttpClient, new ConsoleLogging());
+                return new MinistereDeLaCultureIndexer(DbClient, S3Client, HttpClient, new ConsoleLogging(), source,
+                    string.Equals(source, MinistereDeLaCultureIndexer.SourceMuseeDuLouvre)
+                        ? MinistereDeLaCultureIndexer.S3PathLouvre // Not a big deal if new louvre images go into the parent folder, but the existing louvre images are in the louvre folder.
+                        : MinistereDeLaCultureIndexer.S3PathMinistereDeLaCulture);
             }
             return null;
         }

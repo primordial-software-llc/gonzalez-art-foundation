@@ -45,12 +45,10 @@ namespace IndexBackend.LambdaSymphony
             return results;
         }
 
-        public PutRuleResponse RebuildFunctionSchedule(
+        public void DeleteFunctionSchedule(
             AWSCredentials credentials,
-            string functionArn,
-            string scheduleName,
-            int frequencyInMinutes,
-            RegionEndpoint region)
+            RegionEndpoint region,
+            string scheduleName)
         {
             AmazonCloudWatchEventsClient cloudwatchClient = new AmazonCloudWatchEventsClient(
                 credentials,
@@ -66,30 +64,30 @@ namespace IndexBackend.LambdaSymphony
                 }
                 var deleteResult = cloudwatchClient.DeleteRuleAsync(new DeleteRuleRequest { Name = scheduleName }).Result;
             }
+        }
 
-            var increment = frequencyInMinutes == 1 ? "minute" : "minutes";
-            var putRequest = new PutRuleRequest
-            {
-                Name = scheduleName,
-                ScheduleExpression = $"rate({frequencyInMinutes} {increment})",
-                State = RuleState.ENABLED
-            };
-            PutRuleResponse scheduleResponse = cloudwatchClient.PutRuleAsync(putRequest).Result;
-
+        public void AssignFunctionSchedule(
+            AWSCredentials credentials,
+            string functionArn,
+            string scheduleName,
+            string scheduleArn,
+            RegionEndpoint region)
+        {
             var putTargetRequest = new PutTargetsRequest
             {
-                Rule = putRequest.Name,
+                Rule = scheduleName,
                 Targets = new List<Target> { new Target { Id = Guid.NewGuid().ToString(), Arn = functionArn } }
             };
+            AmazonCloudWatchEventsClient cloudwatchClient = new AmazonCloudWatchEventsClient(
+                credentials,
+                region);
             var targetResponse = cloudwatchClient.PutTargetsAsync(putTargetRequest).Result;
             if (targetResponse.FailedEntries.Any())
             {
                 throw new Exception(GetFailureReason(targetResponse.FailedEntries));
             }
 
-            AddPermissionForCloudWatchTriggerInvocation(credentials, region, functionArn, scheduleResponse);
-
-            return scheduleResponse;
+            AddPermissionForCloudWatchTriggerInvocation(credentials, region, functionArn, scheduleArn);
         }
 
         /// <remarks>
@@ -100,7 +98,7 @@ namespace IndexBackend.LambdaSymphony
             AWSCredentials credentials,
             RegionEndpoint region,
             string functionArn,
-            PutRuleResponse putRuleResponse)
+            string scheduleRuleArn)
         {
             AmazonLambdaClient client = new AmazonLambdaClient(credentials, region);
             client.AddPermission(new AddPermissionRequest
@@ -108,7 +106,7 @@ namespace IndexBackend.LambdaSymphony
                 Action = "lambda:InvokeFunction",
                 FunctionName = functionArn,
                 Principal = "events.amazonaws.com",
-                SourceArn = putRuleResponse.RuleArn,
+                SourceArn = scheduleRuleArn,
                 StatementId = "default"
             });
         }
