@@ -1,6 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
-using AwsTools;
 using GalleryBackend.Model;
 using IndexBackend.NormalDistributionRandom;
 
@@ -22,7 +20,6 @@ namespace IndexBackend.Indexing
 
         private readonly NormalRandomGenerator normalizedRandom = new NormalRandomGenerator(1, 1000);
         private string PageNotFoundIndicatorText { get; }
-        private IAmazonDynamoDB Client { get; }
         protected virtual string Url { get; }
 
         public TheAthenaeumIndexer()
@@ -30,14 +27,13 @@ namespace IndexBackend.Indexing
             
         }
 
-        public TheAthenaeumIndexer(string pageNotFoundIndicatorText, IAmazonDynamoDB client, string url)
+        public TheAthenaeumIndexer(string pageNotFoundIndicatorText, string url)
         {
             PageNotFoundIndicatorText = pageNotFoundIndicatorText;
-            Client = client;
             Url = url;
         }
 
-        public async Task<ClassificationModel> Index(string id)
+        public Task<ClassificationModel> Index(string id)
         {
             var html = Crawler.GetDetailsPageHtml(Url, id, PageNotFoundIndicatorText);
             if (string.IsNullOrWhiteSpace(html))
@@ -47,15 +43,9 @@ namespace IndexBackend.Indexing
 
             var classifier = new Classifier();
             var classification = classifier.ClassifyForTheAthenaeum(html, id, Source);
-            var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
-            await Client.PutItemAsync(new ClassificationModel().GetTable(), dynamoDbClassification);
 
-            return classification;
+            return Task.FromResult(classification);
         }
 
-        public void RefreshConnection()
-        {
-            // Nothing to do. No keep-alives. No cookies required for access. Throttle is in use already.
-        }
     }
 }

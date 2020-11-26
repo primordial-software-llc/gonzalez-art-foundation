@@ -29,7 +29,7 @@ namespace IndexBackend.NationalGalleryOfArt
             return Client.GetStringAsync(url).Result;
         }
 
-        public byte[] GetHighResImageZipFile(string assetId)
+        public async Task<byte[]> GetHighResImageZipFile(string assetId)
         {
             var encodedReference = HighResImageEncoding.CreateReferenceUrlData(assetId);
             var imageDownloadUrl = $"https://images.nga.gov/?service=basket&action=do_direct_download&type=dam&data={encodedReference}";
@@ -39,9 +39,8 @@ namespace IndexBackend.NationalGalleryOfArt
             {
                 CookieContainer = cookieContainer
             });
-            var response = client.GetAsync(imageDownloadUrl).Result;
-            Task<byte[]> asyncImageResponse = response.Content.ReadAsByteArrayAsync();
-            byte[] imageZipFile = asyncImageResponse.Result;
+            var response = await client.GetAsync(imageDownloadUrl);
+            byte[] imageZipFile = await response.Content.ReadAsByteArrayAsync();
             
             string imageResponseText = Encoding.UTF8.GetString(imageZipFile);
 

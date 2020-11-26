@@ -5,14 +5,17 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using GalleryBackend;
+using GalleryBackend.Model;
 using IndexBackend.Indexing;
 using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.MuseeOrsay;
+using IndexBackend.MuseumOfModernArt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Console = System.Console;
@@ -87,10 +90,18 @@ namespace ArtIndexer
             }
             try
             {
-                var result = await indexer.Index(id);
-                if (result == null)
+                var classification = await indexer.Index(id);
+                if (classification == null)
                 {
                     Console.WriteLine($"Skipped {messageJson.ToString(Formatting.None)} due to not finding content.");
+                }
+                else
+                {
+                    var json = JObject.FromObject(classification, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
+                    await DbClient.PutItemAsync(
+                        new ClassificationModel().GetTable(),
+                        Document.FromJson(json.ToString()).ToAttributeMap()
+                    );
                 }
             }
             catch (Exception e)
@@ -105,15 +116,29 @@ namespace ArtIndexer
         {
             if (string.Equals(source, MuseeOrsayIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {
-                return new MuseeOrsayIndexer(DbClient, S3Client, HttpClient);
+                return new MuseeOrsayIndexer(S3Client, HttpClient, new ConsoleLogging());
             }
-            if (string.Equals(source, MinistereDeLaCultureIndexer.SourceMuseeDuLouvre) ||
-                string.Equals(source, MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture))
+            if (string.Equals(source, MinistereDeLaCultureIndexer.SourceMuseeDuLouvre, StringComparison.OrdinalIgnoreCase))
             {
-                return new MinistereDeLaCultureIndexer(DbClient, S3Client, HttpClient, new ConsoleLogging(), source,
-                    string.Equals(source, MinistereDeLaCultureIndexer.SourceMuseeDuLouvre)
-                        ? MinistereDeLaCultureIndexer.S3PathLouvre // Not a big deal if new louvre images go into the parent folder, but the existing louvre images are in the louvre folder.
-                        : MinistereDeLaCultureIndexer.S3PathMinistereDeLaCulture);
+                return new MinistereDeLaCultureIndexer(
+                    S3Client,
+                    HttpClient,
+                    new ConsoleLogging(),
+                    MinistereDeLaCultureIndexer.SourceMuseeDuLouvre,
+                    MinistereDeLaCultureIndexer.S3PathLouvre);
+            }
+            if (string.Equals(source, MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture, StringComparison.OrdinalIgnoreCase))
+            {
+                return new MinistereDeLaCultureIndexer(
+                    S3Client,
+                    HttpClient,
+                    new ConsoleLogging(),
+                    MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture,
+                    MinistereDeLaCultureIndexer.S3PathMinistereDeLaCulture);
+            }
+            if (string.Equals(source, MuseumOfModernArtIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            {
+                return new MuseumOfModernArtIndexer(S3Client, HttpClient, new ConsoleLogging());
             }
             return null;
         }

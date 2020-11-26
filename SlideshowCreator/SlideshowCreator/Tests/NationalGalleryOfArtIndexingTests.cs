@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
-using GalleryBackend;
 using HtmlAgilityPack;
 using IndexBackend;
 using IndexBackend.Indexing;
@@ -16,13 +15,11 @@ namespace SlideshowCreator.Tests
 {
     class NationalGalleryOfArtIndexingTests
     {
-        private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private readonly IAmazonS3 s3Client = GalleryAwsCredentialsFactory.S3AcceleratedClient;
         private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
 
         private NationalGalleryOfArtDataAccess ngaDataAccess;
         private NationalGalleryOfArtIndexer indexer;
-        private VpnCheck vpnCheck;
 
         [OneTimeSetUp]
         public void Setup_Tests_Once()
@@ -30,10 +27,6 @@ namespace SlideshowCreator.Tests
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
             indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
-
-            var galleryClient = new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword);
-            vpnCheck = new VpnCheck(galleryClient);
-            vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
         }
 
         //[Test] This really is strictly production code. I have inder's which use id's, but the crawlers I'm working on that process to know what type of "stuff" needs to be indexed. So far crawling is stupid simple and indexing the "stuff" is the meat of the problem.

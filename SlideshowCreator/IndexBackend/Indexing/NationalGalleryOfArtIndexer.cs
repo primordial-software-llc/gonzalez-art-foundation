@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.S3.Model;
-using AwsTools;
 using GalleryBackend.Model;
 using IndexBackend.NationalGalleryOfArt;
 
@@ -51,7 +50,7 @@ namespace IndexBackend.Indexing
 
         public async Task<ClassificationModel> Index(string id)
         {
-            var zipFile = NgaDataAccess.GetHighResImageZipFile(id);
+            var zipFile = await NgaDataAccess.GetHighResImageZipFile(id);
 
             if (zipFile == null)
             {
@@ -67,9 +66,6 @@ namespace IndexBackend.Indexing
                 S3Path = key
             };
             SetMetaData(classification);
-
-            var dynamoDbClassification = Conversion<ClassificationModel>.ConvertToDynamoDb(classification);
-            await DynamoDbClient.PutItemAsync(new ClassificationModel().GetTable(), dynamoDbClassification);
 
             return classification;
         }

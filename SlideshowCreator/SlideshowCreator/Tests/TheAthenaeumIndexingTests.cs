@@ -14,16 +14,12 @@ namespace SlideshowCreator.Tests
         private readonly Throttle throttle = new Throttle();
         private readonly PrivateConfig privateConfig = PrivateConfig.CreateFromPersonalJson();
         private TheAthenaeumIndexer transientClassifier;
-        private VpnCheck vpnCheck;
 
         [OneTimeSetUp]
         public void Setup_All_Tests_Once_And_Only_Once()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, GalleryAwsCredentialsFactory.ProductionDbClient, PublicConfig.TheAthenaeumArt);
-            
-            vpnCheck = new VpnCheck(new GalleryClient("tgonzalez.net", privateConfig.GalleryUsername, privateConfig.GalleryPassword));
-            vpnCheck.AssertVpnInUse(privateConfig.DecryptedIp);
+            transientClassifier = new TheAthenaeumIndexer(privateConfig.PageNotFoundIndicatorText, PublicConfig.TheAthenaeumArt);
         }
 
         [Test]

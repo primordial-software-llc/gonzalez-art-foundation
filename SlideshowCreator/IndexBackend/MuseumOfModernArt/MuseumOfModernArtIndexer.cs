@@ -9,57 +9,63 @@ using AwsTools;
 using GalleryBackend.Model;
 using IndexBackend.Indexing;
 
-namespace IndexBackend.MinistereDeLaCulture
+namespace IndexBackend.MuseumOfModernArt
 {
-    public class MinistereDeLaCultureIndexer : IIndex
+    public class MuseumOfModernArtIndexer : IIndex
     {
-        public static string SourceMuseeDuLouvre => "https://www.pop.culture.gouv.fr/notice/museo/M5031";
-        public static string SourceMinistereDeLaCulture => "https://www.pop.culture.gouv.fr";
-        public static string S3PathLouvre => "collections/ministere-de-la-culture/louvre";
-        public static string S3PathMinistereDeLaCulture => "collections/ministere-de-la-culture";
         public int GetNextThrottleInMilliseconds => 0;
 
         private IAmazonS3 S3Client { get; }
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
-        private string Source { get; }
-        private string S3Path { get; }
+        public static string Source => "https://www.moma.org";
+        public static string S3Path => "collections/museum-of-modern-art";
 
-        public MinistereDeLaCultureIndexer(
+        public MuseumOfModernArtIndexer(
             IAmazonS3 s3Client,
             HttpClient httpClient,
-            ILogging logging,
-            string source,
-            string s3Path)
+            ILogging logging)
         {
             S3Client = s3Client;
             HttpClient = httpClient;
             Logging = logging;
-            Source = source;
-            S3Path = s3Path;
         }
 
         public async Task<ClassificationModel> Index(string id)
         {
-            var sourceLink = $"https://www.pop.culture.gouv.fr/notice/joconde/{id}";
+            var sourceLink = $"https://www.moma.org/collection/works/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
             if (htmlDoc == null)
             {
                 return null;
             }
 
-            var model = DetailsParser.ParseHtmlToNewModel(Source, id, sourceLink, htmlDoc);
+            var model = new ClassificationModel { Source = Source, SourceLink = sourceLink, PageId = id };
+            var infoNodes = htmlDoc.DocumentNode
+                .SelectNodes("//div[@class='work__short-caption']/h1/span");
+            if (infoNodes != null && infoNodes.Count > 0)
+            {
+                var artistName = infoNodes[0].InnerText.Trim();
+                model.OriginalArtist = artistName;
+                model.Artist = Classifier.NormalizeArtist(artistName);
+            }
+            if (infoNodes != null && infoNodes.Count > 1)
+            {
+                model.Name = infoNodes[1].InnerText.Trim();
+            }
+            if (infoNodes != null && infoNodes.Count > 2)
+            {
+                model.Date = infoNodes[2].InnerText.Trim();
+            }
 
             var imageLinkNodes = htmlDoc.DocumentNode
-                .SelectNodes("//div[@class='jsx-241519627 fieldImages']//img");
-
+                .SelectNodes("//img[@class='link/enable link/focus picture/image']");
             if (imageLinkNodes == null)
             {
                 return null;
             }
-
-            var imageLink = HttpUtility.HtmlDecode(imageLinkNodes.First().Attributes["src"].Value);
-            var imageBytes = await new IndexingHttpClient().GetImage(HttpClient, imageLink, Logging);
+            var imageLink = HttpUtility.HtmlDecode(imageLinkNodes.First().Attributes["data-image-overlay-src"].Value);
+            var imageBytes = await new IndexingHttpClient().GetImage(HttpClient, $"https://www.moma.org{imageLink}", Logging);
             if (imageBytes == null)
             {
                 return null;

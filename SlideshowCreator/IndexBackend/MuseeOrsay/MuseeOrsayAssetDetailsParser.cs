@@ -15,10 +15,8 @@ namespace IndexBackend.MuseeOrsay
 {
     public class MuseeOrsayAssetDetailsParser
     {
-        public static ClassificationModel ParseHtmlToNewModel(string html, ClassificationModel model)
+        public static ClassificationModel ParseHtmlToNewModel(HtmlDocument htmlDoc, ClassificationModel model)
         {
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(html);
             var infoDetails = htmlDoc.DocumentNode
                 .SelectNodes("//div[@class='h3_notice']")
                 ?.Select(x => x.InnerText).ToList() ?? new List<string>();

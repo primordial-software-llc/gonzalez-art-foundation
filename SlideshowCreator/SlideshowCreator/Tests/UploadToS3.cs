@@ -26,6 +26,7 @@ using IndexBackend.Indexing;
 using IndexBackend.LambdaSymphony;
 using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.MuseeOrsay;
+using IndexBackend.MuseumOfModernArt;
 using IndexBackend.NationalGalleryOfArt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -71,7 +72,7 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 Regions,
                 FUNCTION_INDEX_AD_HOME,
-                10
+                5
             );
         }
 
@@ -136,15 +137,42 @@ namespace SlideshowCreator.Tests
         [Test]
         public void TestIndex()
         {
-            var indexer = new MinistereDeLaCultureIndexer(
-                GalleryAwsCredentialsFactory.ProductionDbClient,
+            var indexer = new MuseumOfModernArtIndexer(
                 GalleryAwsCredentialsFactory.S3AcceleratedClient,
                 new HttpClient(),
-                new ConsoleLogging(),
-                MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture,
-                MinistereDeLaCultureIndexer.S3PathMinistereDeLaCulture
+                new ConsoleLogging()
             );
-            var results = indexer.Index("00000069115").Result;
+            var results = indexer.Index("79802").Result;
+        }
+
+        [Test]
+        public void HarvestMuseumOfModernArtPageIds()
+        {
+            var sqsClient = new AmazonSQSClient(
+                GalleryAwsCredentialsFactory.CreateCredentials(),
+                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
+
+            var json = new List<QueueCrawlerModel>();
+            for (var ct = 1; ct < 300000; ct++)
+            {
+                json.Add(new QueueCrawlerModel
+                {
+                    Id = ct.ToString(),
+                    Source = MuseumOfModernArtIndexer.Source
+                });
+                if (ct % 10 == 0)
+                {
+                    Console.WriteLine($"Sending {json.Count} messages.");
+                    SendBatch(
+                        sqsClient,
+                        "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
+                        json
+                            .Select(queueCrawlerModel => new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(queueCrawlerModel)))
+                            .ToList()
+                    );
+                    json.Clear();
+                }
+            }
         }
 
         [Test]
@@ -165,10 +193,6 @@ namespace SlideshowCreator.Tests
             };
             var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
                 .ToDictionary(x => x.PageId);
-            Console.WriteLine($"Found {results.Count} records already indexed.");
-
-
-            return;
             var lines = File.ReadAllText(@"C:\Users\peon\Downloads\base-joconde-extrait.json");
             var json = JsonConvert.DeserializeObject<List<MonaLisaDatabaseModel>>(lines)
                 .Where(x =>
@@ -258,13 +282,6 @@ namespace SlideshowCreator.Tests
                 }
             }
             return sqsResult;
-        }
-
-        //[Test]
-        public void IndexMuseeDorsay()
-        {
-            var indexer = new MuseeOrsayIndexer(GalleryAwsCredentialsFactory.ProductionDbClient, GalleryAwsCredentialsFactory.S3AcceleratedClient, new HttpClient());
-            indexer.Index(7222.ToString()).Wait();
         }
 
         //[Test]
