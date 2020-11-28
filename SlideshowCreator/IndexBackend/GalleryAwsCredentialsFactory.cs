@@ -6,6 +6,7 @@ using Amazon.Rekognition;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
+using Amazon.SQS;
 
 namespace IndexBackend
 {
@@ -26,6 +27,10 @@ namespace IndexBackend
             }
             return awsCredentials;
         }
+
+        public static IAmazonSQS SqsClient = new AmazonSQSClient(
+            CreateCredentials(),
+            new AmazonSQSConfig {RegionEndpoint = RegionEndpoint.USEast1});
 
         public static IAmazonS3 S3AcceleratedClient => new AmazonS3Client(
             CreateCredentials(),

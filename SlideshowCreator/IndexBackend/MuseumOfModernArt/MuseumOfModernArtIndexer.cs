@@ -45,9 +45,7 @@ namespace IndexBackend.MuseumOfModernArt
                 .SelectNodes("//div[@class='work__short-caption']/h1/span");
             if (infoNodes != null && infoNodes.Count > 0)
             {
-                var artistName = infoNodes[0].InnerText.Trim();
-                model.OriginalArtist = artistName;
-                model.Artist = Classifier.NormalizeArtist(artistName);
+                model.OriginalArtist = infoNodes[0].InnerText.Trim();
             }
             if (infoNodes != null && infoNodes.Count > 1)
             {

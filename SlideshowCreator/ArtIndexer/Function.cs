@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -97,6 +98,10 @@ namespace ArtIndexer
                 }
                 else
                 {
+                    classification.Name = HttpUtility.HtmlDecode(classification.Name);
+                    classification.Date = HttpUtility.HtmlDecode(classification.Date);
+                    classification.OriginalArtist = HttpUtility.HtmlDecode(classification.OriginalArtist);
+                    classification.Artist = Classifier.NormalizeArtist(HttpUtility.HtmlDecode(classification.OriginalArtist));
                     var json = JObject.FromObject(classification, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
                     await DbClient.PutItemAsync(
                         new ClassificationModel().GetTable(),

@@ -36,9 +36,6 @@ namespace SlideshowCreator.Tests
 {
     class UploadToS3
     {
-
-        public const string BUCKET = "gonzalez-art-foundation";
-
         public static AWSCredentials CreateCredentialsTest()
         {
             var chain = new CredentialProfileStoreChain();
@@ -72,7 +69,7 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 Regions,
                 FUNCTION_INDEX_AD_HOME,
-                5
+                1
             );
         }
 
@@ -81,7 +78,7 @@ namespace SlideshowCreator.Tests
         {
             new LambdaDeploy().Deploy(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
-                new List<RegionEndpoint> { RegionEndpoint.USEast1 }, // Some regions can't access the image url which happens to be an aws bucket.
+                new List<RegionEndpoint> { RegionEndpoint.USEast1, RegionEndpoint.USEast2, RegionEndpoint.USWest1, RegionEndpoint.USWest2 }, // Some regions can't access the image url which happens to be an aws bucket.
                 environmentVariables,
                 5,
                 FUNCTION_INDEX_AD_HOME,
@@ -102,9 +99,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void RetryQueue()
         {
-            var sqsClient = new AmazonSQSClient(
-                GalleryAwsCredentialsFactory.CreateCredentials(),
-                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
+            var sqsClient = GalleryAwsCredentialsFactory.SqsClient;
 
             ReceiveMessageResponse messages;
             do
@@ -112,6 +107,11 @@ namespace SlideshowCreator.Tests
                 var receiveRequest = new ReceiveMessageRequest("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure");
                 receiveRequest.MaxNumberOfMessages = 10;
                 messages = sqsClient.ReceiveMessage(receiveRequest);
+
+                if (!messages.Messages.Any())
+                {
+                    break;
+                }
 
                 var sendMessages = new List<SendMessageBatchRequestEntry>();
                 foreach (var message in messages.Messages)
@@ -135,6 +135,80 @@ namespace SlideshowCreator.Tests
         }
 
         [Test]
+        public void HarvestMomaPages()
+        {
+            var sqsClient = GalleryAwsCredentialsFactory.SqsClient;
+            const int pageIdLimit = 600000;
+            for (var ct = 299976; ct < pageIdLimit; ct += 10)
+            {
+                var batch = new List<QueueCrawlerModel>();
+                for (var pageId = ct; pageId < ct + 10 && pageId < pageIdLimit; pageId++)
+                {
+                    batch.Add(new QueueCrawlerModel
+                    {
+                        Source = MuseumOfModernArtIndexer.Source,
+                        Id = pageId.ToString()
+                    });
+                }
+
+                SendBatch(
+                    sqsClient,
+                    "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
+                    batch
+                        .Select(crawlerModel =>
+                            new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(crawlerModel)))
+                        .ToList()
+                );
+            }
+        }
+
+        [Test]
+        public void Count()
+        {
+            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
+            {
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = MuseumOfModernArtIndexer.Source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source"
+            };
+            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
+                .OrderByDescending(x => int.Parse(x.PageId))
+                .ToList();
+
+            Console.WriteLine(results.First().SourceLink);
+            Console.WriteLine(results.First().PageId);
+
+            return;
+            var sqsClient = GalleryAwsCredentialsFactory.SqsClient;
+
+
+            var crawlerJsonBatches = Batcher.Batch(10, results);
+            Parallel.ForEach(crawlerJsonBatches, crawlerJsonBatch =>
+            {
+                Console.WriteLine($"Sending {crawlerJsonBatch.Count} messages.");
+                SendBatch(
+                    sqsClient,
+                    "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
+                    crawlerJsonBatch
+                        .Select(crawlerJson =>
+                            new SendMessageBatchRequestEntry(
+                                Guid.NewGuid().ToString(),
+                                JsonConvert.SerializeObject(crawlerJson)
+                            )
+                        )
+                        .ToList()
+                );
+            });
+        }
+
+        [Test]
         public void TestIndex()
         {
             var indexer = new MuseumOfModernArtIndexer(
@@ -142,37 +216,7 @@ namespace SlideshowCreator.Tests
                 new HttpClient(),
                 new ConsoleLogging()
             );
-            var results = indexer.Index("79802").Result;
-        }
-
-        [Test]
-        public void HarvestMuseumOfModernArtPageIds()
-        {
-            var sqsClient = new AmazonSQSClient(
-                GalleryAwsCredentialsFactory.CreateCredentials(),
-                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
-
-            var json = new List<QueueCrawlerModel>();
-            for (var ct = 1; ct < 300000; ct++)
-            {
-                json.Add(new QueueCrawlerModel
-                {
-                    Id = ct.ToString(),
-                    Source = MuseumOfModernArtIndexer.Source
-                });
-                if (ct % 10 == 0)
-                {
-                    Console.WriteLine($"Sending {json.Count} messages.");
-                    SendBatch(
-                        sqsClient,
-                        "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
-                        json
-                            .Select(queueCrawlerModel => new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(queueCrawlerModel)))
-                            .ToList()
-                    );
-                    json.Clear();
-                }
-            }
+            var results = indexer.Index("218097").Result;
         }
 
         [Test]
@@ -209,9 +253,7 @@ namespace SlideshowCreator.Tests
                     })
                 .ToList();
 
-            var sqsClient = new AmazonSQSClient(
-                GalleryAwsCredentialsFactory.CreateCredentials(),
-                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
+            var sqsClient = GalleryAwsCredentialsFactory.SqsClient;
             var crawlerJsonBatches = Batcher.Batch(10, json);
             Console.WriteLine($"Sending {crawlerJsonBatches.Count} batches.");
 
@@ -226,33 +268,6 @@ namespace SlideshowCreator.Tests
                         .ToList()
                 );
             });
-        }
-
-        //[Test]
-        public void HarvestMuseeOrsayPageIds()
-        {
-            var sqsClient = new AmazonSQSClient(
-                GalleryAwsCredentialsFactory.CreateCredentials(),
-                new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.USEast1 });
-
-            for (var id = 128404; id < 300000; id += 10)
-            {
-                Console.WriteLine("Sending batch for id starting at: " + id);
-                var batch = new List<JObject>();
-                for (var currentId = id; currentId < id + 10; currentId++)
-                {
-                    batch.Add(new JObject { {"id", currentId.ToString()} });
-                }
-                Console.WriteLine($"Sending {batch.Count} messages");
-                SendBatch(
-                    sqsClient,
-                    "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
-                    batch
-                        .Select(JsonConvert.SerializeObject)
-                        .Select(jsonAd => new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), jsonAd))
-                        .ToList()
-                );
-            }
         }
 
         private string GetFailureReason(List<BatchResultErrorEntry> sqsFailures)

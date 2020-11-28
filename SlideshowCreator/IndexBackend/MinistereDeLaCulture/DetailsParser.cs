@@ -16,7 +16,7 @@ namespace IndexBackend.MinistereDeLaCulture
                 .SelectNodes("//div[@id='Titre']/p");
             if (title != null)
             {
-                model.Name = HttpUtility.HtmlDecode(title.First().InnerText.Trim());
+                model.Name = title.First().InnerText.Trim();
             }
 
             var artistNode = htmlDoc.DocumentNode
@@ -24,7 +24,7 @@ namespace IndexBackend.MinistereDeLaCulture
             var artist = string.Empty;
             if (artistNode != null)
             {
-                artist = HttpUtility.HtmlDecode(artistNode.First().InnerText.Trim());
+                artist = artistNode.First().InnerText.Trim();
             }
             model.Artist = Classifier.NormalizeArtist(artist);
             model.OriginalArtist = artist;
@@ -35,7 +35,7 @@ namespace IndexBackend.MinistereDeLaCulture
                             .SelectNodes("//div[@id='Période de création']/p");
             if (date != null)
             {
-                model.Date = HttpUtility.HtmlDecode(date.First().InnerText.Trim());
+                model.Date = date.First().InnerText.Trim();
             }
 
             return model;

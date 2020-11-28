@@ -49,6 +49,9 @@
     <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.S3.3.5.5.2\lib\net45\AWSSDK.S3.dll</HintPath>
     </Reference>
+    <Reference Include="AWSSDK.SQS, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.SQS.3.5.0.42\lib\net45\AWSSDK.SQS.dll</HintPath>
+    </Reference>
     <Reference Include="AwsTools, Version=1.0.18.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AwsTools.1.0.18\lib\net47\AwsTools.dll</HintPath>
     </Reference>
@@ -148,6 +151,7 @@
     <Analyzer Include="..\packages\AWSSDK.Lambda.3.5.3.1\analyzers\dotnet\cs\AWSSDK.Lambda.CodeAnalysis.dll" />
     <Analyzer Include="..\packages\AWSSDK.Rekognition.3.5.2.15\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
     <Analyzer Include="..\packages\AWSSDK.S3.3.5.5.2\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
+    <Analyzer Include="..\packages\AWSSDK.SQS.3.5.0.42\analyzers\dotnet\cs\AWSSDK.SQS.CodeAnalysis.dll" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
