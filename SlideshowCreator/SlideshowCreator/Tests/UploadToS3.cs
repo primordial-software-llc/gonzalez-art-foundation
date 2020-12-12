@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.WebSockets;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -69,7 +70,7 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 Regions,
                 FUNCTION_INDEX_AD_HOME,
-                1
+                25
             );
         }
 
@@ -78,9 +79,13 @@ namespace SlideshowCreator.Tests
         {
             new LambdaDeploy().Deploy(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
-                new List<RegionEndpoint> { RegionEndpoint.USEast1, RegionEndpoint.USEast2, RegionEndpoint.USWest1, RegionEndpoint.USWest2 }, // Some regions can't access the image url which happens to be an aws bucket.
+                new List<RegionEndpoint>
+                {
+                    RegionEndpoint.USEast1, // Stay in the US, because some regions can't access certain links and it's hard to tell which those are outside the US for any given region and link.
+                    RegionEndpoint.USEast2  // I'm even having problems from the west coast, which is odd, because I'm crawling the image link based on the html the image is presented on so it would adjust for each region.
+                },
                 environmentVariables,
-                5,
+                15,
                 FUNCTION_INDEX_AD_HOME,
                 @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\SlideshowCreator\ArtIndexer\ArtIndexer.csproj",
                 new LambdaEntrypointDefinition
@@ -93,7 +98,8 @@ namespace SlideshowCreator.Tests
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
                 256,
-                5);
+                1,
+                TimeSpan.FromMinutes(15));
         }
 
         [Test]
@@ -163,6 +169,123 @@ namespace SlideshowCreator.Tests
         }
 
         [Test]
+        public void SendToElastic()
+        {
+            var client = new HttpClient();
+
+            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
+            {
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    //{":source", new AttributeValue {S = MuseumOfModernArtIndexer.Source}}
+                    //{":source", new AttributeValue {S = TheAthenaeumIndexer.Source}}
+                    //{":source", new AttributeValue {S = NationalGalleryOfArtIndexer.Source}}
+                    //{":source", new AttributeValue {S = MuseeOrsayIndexer.Source }}
+                    //{":source", new AttributeValue {S = MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture }}
+                    //{":source", new AttributeValue {S = MinistereDeLaCultureIndexer.SourceMuseeDuLouvre }}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source"
+            };
+            var dbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
+
+            QueryResponse queryResponse = null;
+            do
+            {
+                if (queryResponse != null)
+                {
+                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
+                }
+                queryResponse = dbClient.QueryAsync(queryRequest).Result;
+                var status = "Sending batch from start key: " + JsonConvert.SerializeObject(queryRequest.ExclusiveStartKey);
+                Console.WriteLine(status);
+                var batch = new List<ClassificationModel>();
+                foreach (var item in queryResponse.Items)
+                {
+                    var classificationModel = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
+                    batch.Add(classificationModel);
+                }
+
+                Parallel.ForEach(batch, new ParallelOptions { MaxDegreeOfParallelism = 20 }, classification =>
+                {
+                    SendToElasticSearch(client, classification);
+                });
+
+            } while (queryResponse.LastEvaluatedKey.Any());
+
+        }
+
+        [Test]
+        public void TestSearch()
+        {
+            var text = "musee-orsay";
+            var getRequest = $@"{{
+  ""query"": {{
+    ""multi_match"" : {{
+      ""query"":    ""{text}"", 
+      ""fields"": [
+        ""artist"",
+        ""name"",
+        ""date"",
+        ""source"",
+        ""sourceLink""
+      ]
+    }}
+  }},
+  ""size"": 1000
+}}";
+
+            var handler = new WinHttpHandler();
+
+            var response = SendToElasticSearch(
+                new HttpClient(handler),
+                HttpMethod.Get,
+                "/classification/_search",
+                JObject.Parse(getRequest));
+
+            var responseJson = JObject.Parse(response);
+            var items = responseJson["hits"]["hits"].Select(x => x["_source"]).ToList();
+            Console.WriteLine(JsonConvert.SerializeObject(items, Formatting.Indented));
+        }
+
+        public void SendToElasticSearch(HttpClient client, ClassificationModel classification)
+        {
+            var json = JObject.Parse(JsonConvert.SerializeObject(classification, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
+            json.Add("@timestamp", DateTime.UtcNow.ToString("O"));
+            var path = "/classification/_doc/" + HttpUtility.UrlEncode($"{classification.Source}:{classification.PageId}");
+            SendToElasticSearch(client, HttpMethod.Post, path, json);
+        }
+
+        public string SendToElasticSearch(HttpClient client, HttpMethod method, string path, JObject json)
+        {
+            var apiKey = Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN");
+
+            var request = new HttpRequestMessage(
+                method,
+                new Uri($"{Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION")}{path}"));
+            if (json != null)
+            {
+                request.Content = new StringContent(json.ToString(), Encoding.UTF8, "application/json");
+            }
+            request.Headers.Add("Authorization", "ApiKey " + apiKey);
+
+            var response = client.SendAsync(request).Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var dataBack = response.Content.ReadAsStringAsync().Result;
+                Console.WriteLine(dataBack);
+            }
+            response.EnsureSuccessStatusCode();
+            var responseText = response.Content.ReadAsStringAsync().Result;
+            return responseText;
+        }
+
+        [Test]
         public void Count()
         {
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
@@ -180,12 +303,13 @@ namespace SlideshowCreator.Tests
             };
             var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
                 .OrderByDescending(x => int.Parse(x.PageId))
+                .Where(x => x.Name.Contains("&#"))
                 .ToList();
 
-            Console.WriteLine(results.First().SourceLink);
-            Console.WriteLine(results.First().PageId);
 
-            return;
+            Console.WriteLine(results.Count.ToString());
+            //Console.WriteLine(JsonConvert.SerializeObject(results, Formatting.Indented));
+            //return;
             var sqsClient = GalleryAwsCredentialsFactory.SqsClient;
 
 
@@ -200,7 +324,7 @@ namespace SlideshowCreator.Tests
                         .Select(crawlerJson =>
                             new SendMessageBatchRequestEntry(
                                 Guid.NewGuid().ToString(),
-                                JsonConvert.SerializeObject(crawlerJson)
+                                JsonConvert.SerializeObject(new QueueCrawlerModel { Id = crawlerJson.PageId, Source = crawlerJson.Source })
                             )
                         )
                         .ToList()
@@ -216,7 +340,8 @@ namespace SlideshowCreator.Tests
                 new HttpClient(),
                 new ConsoleLogging()
             );
-            var results = indexer.Index("218097").Result;
+            var classification = indexer.Index("298552").Result;
+            classification.Name = HttpUtility.HtmlDecode(classification.Name);
         }
 
         [Test]

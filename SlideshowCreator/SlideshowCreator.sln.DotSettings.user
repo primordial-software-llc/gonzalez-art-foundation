@@ -19,6 +19,8 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.Count&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.RetryQueue&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMomaPages&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.SendToElastic&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.TestSearch&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a250468c_002Df7d2_002D44bc_002Dbcd7_002Dc5ed3499753b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestIndex" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
@@ -30,6 +32,14 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.Count&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMinisreDeCulturePageIds&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeleteFunctions&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=aea2155e_002D89b2_002D4034_002D90ff_002D0d6f8cc3f23c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="RetryQueue" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.RetryQueue&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeployArtIndexerInEachRegion&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeleteFunctions&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.Count&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	

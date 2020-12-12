@@ -4,7 +4,6 @@ using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using ArtApi.Routes;
-using ArtApi.Routes.Unauthenticated;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))] // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -57,8 +56,7 @@ namespace ArtApi
                 List<IRoute> routes = new List<IRoute>
                 {
                     new Routes.Unauthenticated.GetScan(),
-                    new Routes.Unauthenticated.GetSearchLikeArtist(),
-                    new Routes.Unauthenticated.GetSearchExactArtist(),
+                    new Routes.Unauthenticated.GetSearch(),
                     new Routes.Unauthenticated.CacheEverything.GetImageClassification(),
                     new Routes.Unauthenticated.CacheEverything.GetImage()
                 };

@@ -45,7 +45,8 @@ namespace IndexBackend.LambdaSymphony
             string roleArn,
             Runtime runtime,
             int memorySizeMb,
-            int numberOfDeploymentsPerRegion)
+            int numberOfDeploymentsPerRegion,
+            TimeSpan timeout)
         {
             List <Tuple<CreateFunctionResponse, RegionEndpoint>> deployments = new List<Tuple<CreateFunctionResponse, RegionEndpoint>>();
             var outputPath = LambdaSymphonyComposure.GetOutputPath(projectPath);
@@ -63,7 +64,8 @@ namespace IndexBackend.LambdaSymphony
                     roleArn,
                     runtime,
                     memorySizeMb,
-                    buildPath);
+                    buildPath,
+                    timeout);
                 deployments.AddRange(deployment);
             }
 
@@ -118,7 +120,8 @@ namespace IndexBackend.LambdaSymphony
             string roleArn,
             Runtime runtime,
             int memorySizeMb,
-            string buildPath)
+            string buildPath,
+            TimeSpan timeout)
         {
             List<Tuple<CreateFunctionResponse, RegionEndpoint>> responses;
             var lambdaSymphony = new LambdaSymphonyComposure();
@@ -132,7 +135,7 @@ namespace IndexBackend.LambdaSymphony
                     Handler = entrypoint.GetEntryPointHandler(),
                     Role = roleArn,
                     Code = new FunctionCode { ZipFile = zipArchiveBuildStream },
-                    Timeout = 60 * 5,
+                    Timeout = Convert.ToInt32(timeout.TotalSeconds),
                     MemorySize = memorySizeMb
                 };
 
