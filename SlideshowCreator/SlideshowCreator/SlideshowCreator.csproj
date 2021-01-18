@@ -34,8 +34,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AwsLambdaDeploy, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\AwsLambdaDeploy.1.0.5\lib\net471\AwsLambdaDeploy.dll</HintPath>
+    <Reference Include="AwsLambdaDeploy, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AwsLambdaDeploy.1.0.6\lib\net471\AwsLambdaDeploy.dll</HintPath>
     </Reference>
     <Reference Include="AWSSDK.CloudWatchEvents, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.CloudWatchEvents.3.5.4.20\lib\net45\AWSSDK.CloudWatchEvents.dll</HintPath>
