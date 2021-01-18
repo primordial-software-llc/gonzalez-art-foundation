@@ -83,10 +83,7 @@
     <Compile Include="Model\ClassificationModel.cs" />
     <Compile Include="Model\ImageLabel.cs" />
     <Compile Include="Model\ImageLabelType.cs" />
-    <Compile Include="Model\QueueCrawlerModel.cs" />
-    <Compile Include="Model\RequestIPAddress.cs" />
     <Compile Include="Model\GalleryUser.cs" />
-    <Compile Include="Model\WaitTime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Twilio\TwilioConfig.cs" />
     <Compile Include="Twilio\TwilioRekognitionDataJson.cs" />

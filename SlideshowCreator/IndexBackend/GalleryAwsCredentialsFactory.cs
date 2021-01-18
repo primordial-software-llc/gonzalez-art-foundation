@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Web;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Rekognition;

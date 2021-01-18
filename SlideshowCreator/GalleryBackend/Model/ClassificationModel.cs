@@ -42,6 +42,9 @@ namespace GalleryBackend.Model
         [JsonProperty("s3Path")]
         public string S3Path { get; set; }
 
+        [JsonProperty("@timestamp")]
+        public string TimeStamp { get; set; }
+
         public Dictionary<string, AttributeValue> GetKey()
         {
             return new Dictionary<string, AttributeValue>

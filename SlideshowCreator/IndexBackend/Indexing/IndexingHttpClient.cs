@@ -16,15 +16,15 @@ namespace IndexBackend.Indexing
         {
             var pageResponse = await httpClient.GetAsync(sourceLink);
             string pageResponseBody = pageResponse.Content == null ? string.Empty : await pageResponse.Content.ReadAsStringAsync();
-            if (!pageResponse.IsSuccessStatusCode)
+            if (!pageResponse.IsSuccessStatusCode && pageResponse.StatusCode != HttpStatusCode.NotFound)
             {
                 logging.Log($"Failed to GET {sourceLink}. Received {pageResponse.StatusCode}: {pageResponseBody}");
-                if (pageResponse.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return null;
-                }
             }
-            pageResponse.EnsureSuccessStatusCode();
+            if (pageResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null; // Exit gracefully so the message isn't retried.
+            }
+            pageResponse.EnsureSuccessStatusCode(); // Fail hard so the message is retried.
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(pageResponseBody);
             return htmlDoc;

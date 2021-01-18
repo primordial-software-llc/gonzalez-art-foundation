@@ -67,6 +67,7 @@
     <Reference Include="HtmlAgilityPack, Version=1.11.28.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.11.28\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -99,6 +100,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ElasticSearchClient.cs" />
     <Compile Include="Indexing\Classifier.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
@@ -107,11 +109,9 @@
     <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="Indexing\IndexingHttpClient.cs" />
     <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />
-    <Compile Include="LambdaSymphony\BuildLambdaProject.cs" />
-    <Compile Include="LambdaSymphony\LambdaDeploy.cs" />
-    <Compile Include="LambdaSymphony\LambdaEntrypointDefinition.cs" />
-    <Compile Include="LambdaSymphony\LambdaFunctionExists.cs" />
-    <Compile Include="LambdaSymphony\LambdaSymphonyComposure.cs" />
+    <Compile Include="Harvester.cs" />
+    <Compile Include="MetropolitanMuseumOfArt\Harvester.cs" />
+    <Compile Include="MetropolitanMuseumOfArt\MetropolitanMuseumOfArtIndexer.cs" />
     <Compile Include="MinistereDeLaCulture\DetailsParser.cs" />
     <Compile Include="MinistereDeLaCulture\MinistereDeLaCultureIndexer.cs" />
     <Compile Include="MuseeOrsay\MuseeOrsayAssetDetailsParser.cs" />

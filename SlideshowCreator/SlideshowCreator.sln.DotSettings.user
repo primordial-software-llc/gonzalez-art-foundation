@@ -10,7 +10,12 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeleteFunctions&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a20c77eb_002D4c58_002D44dd_002D8cc3_002Dcff947f07152/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Count" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=7448b7a8_002Db544_002D4070_002D8520_002D1c337b02ed28/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DeployArtIndexerInEachRegion" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeployArtIndexerInEachRegion&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a20c77eb_002D4c58_002D44dd_002D8cc3_002Dcff947f07152/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Count" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.TestIndex&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeleteFunctions&lt;/TestId&gt;&#xD;
@@ -21,6 +26,7 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMomaPages&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.SendToElastic&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.TestSearch&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestMetropolitanMuseumOfArtPages&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a250468c_002Df7d2_002D44bc_002Dbcd7_002Dc5ed3499753b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestIndex" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
