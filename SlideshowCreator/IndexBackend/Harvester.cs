@@ -30,7 +30,7 @@ namespace IndexBackend
                     "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
                     batch
                         .Select(crawlerModel =>
-                            new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(crawlerModel)))
+                            new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(crawlerModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore})))
                         .ToList()
                 );
             }

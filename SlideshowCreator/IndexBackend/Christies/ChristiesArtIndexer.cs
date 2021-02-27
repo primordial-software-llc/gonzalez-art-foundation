@@ -15,7 +15,6 @@ namespace IndexBackend.Christies
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
 
-
         public ChristiesArtIndexer(HttpClient httpClient, ILogging logging)
         {
             HttpClient = httpClient;
