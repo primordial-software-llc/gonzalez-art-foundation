@@ -138,7 +138,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileIdQueueIndexer.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactory.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageLabel.cs" />
     <Compile Include="MonaLisaDatabaseFieldsModel.cs" />
@@ -148,18 +147,12 @@
     <Compile Include="Scripts\RestoreFromDynamoDbS3Backup.cs" />
     <Compile Include="Tests\DataAccessTests\ImageAnalysisTests.cs" />
     <Compile Include="Tests\DataAccessTests\ImageClassificationAccessTests.cs" />
-    <Compile Include="Tests\DataAccessTests\TpLinkTests.cs" />
     <Compile Include="Tests\NationalGalleryOfArtIndexingTests.cs" />
-    <Compile Include="Tests\TheAthenaeumIndexingTests.cs" />
     <Compile Include="InfrastructureAsCode\DynamoDbTableFactoryImageClassification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\UploadToS3.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
-      <Project>{d91ab026-70a1-432f-833e-3f02a17b44cf}</Project>
-      <Name>GalleryBackend</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IndexBackend\IndexBackend.csproj">
       <Project>{A9DC96F0-E723-4852-AAA5-011B7122EAA4}</Project>
       <Name>IndexBackend</Name>

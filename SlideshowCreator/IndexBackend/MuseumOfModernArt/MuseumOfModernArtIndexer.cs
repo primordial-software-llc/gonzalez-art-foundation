@@ -1,37 +1,27 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
-using Amazon.S3;
-using Amazon.S3.Model;
 using AwsTools;
-using GalleryBackend.Model;
 using IndexBackend.Indexing;
+using IndexBackend.Model;
 
 namespace IndexBackend.MuseumOfModernArt
 {
     public class MuseumOfModernArtIndexer : IIndex
     {
-        public int GetNextThrottleInMilliseconds => 0;
-
-        private IAmazonS3 S3Client { get; }
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
         public static string Source => "https://www.moma.org";
-        public static string S3Path => "collections/museum-of-modern-art";
+        public string ImagePath => "collections/museum-of-modern-art";
 
-        public MuseumOfModernArtIndexer(
-            IAmazonS3 s3Client,
-            HttpClient httpClient,
-            ILogging logging)
+        public MuseumOfModernArtIndexer(HttpClient httpClient, ILogging logging)
         {
-            S3Client = s3Client;
             HttpClient = httpClient;
             Logging = logging;
         }
 
-        public async Task<ClassificationModel> Index(string id)
+        public async Task<IndexResult> Index(string id)
         {
             var sourceLink = $"https://www.moma.org/collection/works/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -69,20 +59,11 @@ namespace IndexBackend.MuseumOfModernArt
                 return null;
             }
 
-            using (var imageStream = new MemoryStream(imageBytes))
+            return new IndexResult
             {
-                PutObjectRequest request = new PutObjectRequest
-                {
-                    BucketName = NationalGalleryOfArtIndexer.BUCKET + "/" + S3Path,
-                    Key = $"page-id-{id}.jpg",
-                    InputStream = imageStream
-                };
-                await S3Client.PutObjectAsync(request);
-            }
-
-            model.S3Path = S3Path + "/" + $"page-id-{id}.jpg";
-
-            return model;
+                Model = model,
+                ImageBytes = imageBytes
+            };
         }
     }
 }

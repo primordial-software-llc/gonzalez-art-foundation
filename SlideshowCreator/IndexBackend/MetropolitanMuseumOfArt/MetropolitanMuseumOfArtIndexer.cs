@@ -1,40 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using Amazon.S3;
-using Amazon.S3.Model;
 using AwsTools;
-using GalleryBackend.Model;
 using IndexBackend.Indexing;
+using IndexBackend.Model;
 
 namespace IndexBackend.MetropolitanMuseumOfArt
 {
     public class MetropolitanMuseumOfArtIndexer : IIndex
     {
         public static string Source => "https://www.metmuseum.org";
-        public static string S3Path => "collections/metropolitan-museum-of-art";
-        private IAmazonS3 S3Client { get; }
+        public string ImagePath => "collections/metropolitan-museum-of-art";
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
-        public int GetNextThrottleInMilliseconds => 0;
 
-
-        public MetropolitanMuseumOfArtIndexer(
-            IAmazonS3 s3Client,
-            HttpClient httpClient,
-            ILogging logging)
+        public MetropolitanMuseumOfArtIndexer(HttpClient httpClient, ILogging logging)
         {
-            S3Client = s3Client;
             HttpClient = httpClient;
             Logging = logging;
         }
 
-        public async Task<ClassificationModel> Index(string id)
+        public async Task<IndexResult> Index(string id)
         {
             var sourceLink = $"https://www.metmuseum.org/art/collection/search/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -69,16 +57,11 @@ namespace IndexBackend.MetropolitanMuseumOfArt
 
             var dateNode = infoNodes.FirstOrDefault(x =>
                 x.InnerText.ToLower().Contains("date:"));
-            if (dateNode == null)
-            {
-                infoNodes.FirstOrDefault(x => x.InnerText.ToLower().Contains("period:"));
-            }
             if (dateNode != null)
             {
                 model.Date = dateNode.SelectNodes(".//span[@class='artwork-tombstone--value']")
                     .Single().InnerText;
             }
-
             byte[] imageBytes = null;
             var imageLinkNodes = htmlDoc.DocumentNode.SelectNodes("//a[@class='gtm__download__image']");
             if (imageLinkNodes != null)
@@ -98,26 +81,11 @@ namespace IndexBackend.MetropolitanMuseumOfArt
                     }
                 }
             }
-
-            if (imageBytes == null)
+            return new IndexResult
             {
-                return null;
-            }
-
-            using (var imageStream = new MemoryStream(imageBytes))
-            {
-                PutObjectRequest request = new PutObjectRequest
-                {
-                    BucketName = NationalGalleryOfArtIndexer.BUCKET + "/" + S3Path,
-                    Key = $"page-id-{id}.jpg",
-                    InputStream = imageStream
-                };
-                await S3Client.PutObjectAsync(request);
-            }
-
-            model.S3Path = S3Path + "/" + $"page-id-{id}.jpg";
-
-            return model;
+                Model = model,
+                ImageBytes = imageBytes
+            };
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using GalleryBackend.Model;
+using IndexBackend.Model;
 using Newtonsoft.Json;
 
 namespace IndexBackend

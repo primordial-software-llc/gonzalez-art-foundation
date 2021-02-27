@@ -7,11 +7,10 @@ using System.Net.Http.Headers;
 using Amazon.DynamoDBv2;
 using Amazon.S3.Model;
 using AwsTools;
-using GalleryBackend;
-using GalleryBackend.Model;
 using IndexBackend;
 using IndexBackend.DataAccess;
-using IndexBackend.Indexing;
+using IndexBackend.Model;
+using IndexBackend.NationalGalleryOfArt;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -56,18 +55,6 @@ namespace SlideshowCreator.Tests.DataAccessTests
             // [{"s3Path":"tgonzalez-image-archive/national-gallery-of-art/image-118814.jpg","source":"http://images.nga.gov","pageId":118814,"Labels":["Ancient Egypt: 55.88667","Art: 75.78365","Collage: 53.46183","Drawing: 67.61792","Fossil: 93.04782","Mosaic: 51.66335","Ornament: 75.78365","Outdoors: 57.51022","Paper: 59.10925","Poster: 53.46183","Sand: 57.51022","Sketch: 67.61792","Soil: 57.51022","Tapestry: 75.78365","Tile: 51.66335"],"normalizedLabels":["ancient egypt","art","collage","drawing","fossil","mosaic","ornament","outdoors","paper","poster","sand","sketch","soil","tapestry","tile"]}]
             Assert.IsTrue(results.LabelsAndConfidence.Any(x => x.StartsWith("Ancient Egypt", StringComparison.OrdinalIgnoreCase)));
             Assert.IsTrue(results.LabelsAndConfidence.Any(x => x.StartsWith("Outdoors")));
-        }
-
-        [Test]
-        public void Test_Scan()
-        {
-            var dataAccess = new ImageClassificationAccess(client);
-            var results = dataAccess.Scan(0.ToString(), TheAthenaeumIndexer.Source, 10);
-            Assert.AreEqual(10, results.Count);
-            Assert.AreEqual(33, results.First().PageId);
-            Assert.AreEqual(42, results.Last().PageId);
-            var results2 = dataAccess.Scan(results.Last().PageId, TheAthenaeumIndexer.Source, 10);
-            Assert.AreEqual(43, results2.First().PageId);
         }
 
         [Test]

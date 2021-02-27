@@ -6,17 +6,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
-using Amazon.S3.Model;
-using GalleryBackend.Model;
-using IndexBackend.NationalGalleryOfArt;
+using IndexBackend.Indexing;
+using IndexBackend.Model;
 
-namespace IndexBackend.Indexing
+namespace IndexBackend.NationalGalleryOfArt
 {
     public class NationalGalleryOfArtIndexer : IIndex
     {
         public static readonly string BUCKET = "gonzalez-art-foundation";
-        public static readonly string S3_Path = "collections/national-gallery-of-art";
-        public static string S3Bucket => BUCKET + "/" + S3_Path;
+        public string ImagePath => "collections/national-gallery-of-art";
+        public string S3Bucket => BUCKET + "/" + ImagePath;
         public static string Source => "http://images.nga.gov";
         public int GetNextThrottleInMilliseconds => 0;
 
@@ -48,52 +47,42 @@ namespace IndexBackend.Indexing
             model.SourceLink = details.SourceLink;
         }
 
-        public async Task<ClassificationModel> Index(string id)
+        public async Task<IndexResult> Index(string id)
         {
             var zipFile = await NgaDataAccess.GetHighResImageZipFile(id);
-
             if (zipFile == null)
             {
                 return null;
             }
-
-            var key = SendToS3(zipFile, id);
-
-            var classification = new ClassificationModel
-            {
-                Source = Source,
-                PageId = id,
-                S3Path = key
-            };
-            SetMetaData(classification);
-
-            return classification;
-        }
-
-        public string SendToS3(byte[] zipFile, string id)
-        {
-            string key = "image-" + id;
+            byte[] imageBytes;
             using (MemoryStream zipFileStream = new MemoryStream(zipFile))
             using (ZipArchive archive = new ZipArchive(zipFileStream))
             {
                 ZipArchiveEntry imgArchive = archive.Entries
                     .Single(x => ImageExtensions.Any(
                         imgExt => x.FullName.EndsWith(imgExt, StringComparison.OrdinalIgnoreCase)));
-                key += "." + imgArchive.FullName.Split('.').Last();
-                using (Stream imgStream = imgArchive.Open())
+                using (var memoryStream = new MemoryStream())
+                using (var imgStream = imgArchive.Open())
                 {
-                    PutObjectRequest request = new PutObjectRequest
-                    {
-                        BucketName = S3Bucket,
-                        Key = key,
-                        InputStream = imgStream,
-                        
-                    };
-                    S3Client.PutObject(request);
+                    imgStream.CopyTo(memoryStream);
+                    imageBytes = memoryStream.ToArray();
+                }
+                if (!imgArchive.FullName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+                {
+                    imageBytes = new IndexingHttpClient().ConvertToJpeg(imageBytes).Result;
                 }
             }
-
-            return key;
+            var classification = new ClassificationModel
+            {
+                Source = Source,
+                PageId = id
+            };
+            SetMetaData(classification);
+            return new IndexResult
+            {
+                Model = classification,
+                ImageBytes = imageBytes
+            };
         }
 
         private List<string> ImageExtensions => new List<string> {".jpg",".tif"};

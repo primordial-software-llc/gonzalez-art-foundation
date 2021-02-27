@@ -100,7 +100,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Christies\ChristiesArtIndexer.cs" />
+    <Compile Include="ConsoleLogging.cs" />
     <Compile Include="ElasticSearchClient.cs" />
+    <Compile Include="Indexing\IndexResult.cs" />
     <Compile Include="Indexing\Classifier.cs" />
     <Compile Include="Crawler.cs" />
     <Compile Include="GalleryAwsCredentialsFactory.cs" />
@@ -108,7 +111,11 @@
     <Compile Include="Indexing\HtmlToText.cs" />
     <Compile Include="Indexing\IIndex.cs" />
     <Compile Include="Indexing\IndexingHttpClient.cs" />
-    <Compile Include="Indexing\NationalGalleryOfArtIndexer.cs" />
+    <Compile Include="Model\ArtistModel.cs" />
+    <Compile Include="Model\ClassificationModel.cs" />
+    <Compile Include="Model\ImageLabel.cs" />
+    <Compile Include="Model\ImageLabelType.cs" />
+    <Compile Include="NationalGalleryOfArt\NationalGalleryOfArtIndexer.cs" />
     <Compile Include="Harvester.cs" />
     <Compile Include="MetropolitanMuseumOfArt\Harvester.cs" />
     <Compile Include="MetropolitanMuseumOfArt\MetropolitanMuseumOfArtIndexer.cs" />
@@ -125,25 +132,13 @@
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceAssets.cs" />
     <Compile Include="NationalGalleryOfArt\HighResImageReferenceMainForm.cs" />
     <Compile Include="NationalGalleryOfArt\NationalGalleryOfArtDataAccess.cs" />
-    <Compile Include="NormalDistributionRandom\IRandomGenerator.cs" />
-    <Compile Include="NormalDistributionRandom\MersenneTwister.cs" />
-    <Compile Include="NormalDistributionRandom\NormalRandomGenerator.cs" />
-    <Compile Include="NormalDistributionRandom\UniformRandomGenerator.cs" />
     <Compile Include="PrivateConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicConfig.cs" />
-    <Compile Include="Throttle.cs" />
-    <Compile Include="Indexing\TheAthenaeumIndexer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj">
-      <Project>{D91AB026-70A1-432F-833E-3F02A17B44CF}</Project>
-      <Name>GalleryBackend</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.CloudWatchEvents.3.5.4.3\analyzers\dotnet\cs\AWSSDK.CloudWatchEvents.CodeAnalysis.dll" />

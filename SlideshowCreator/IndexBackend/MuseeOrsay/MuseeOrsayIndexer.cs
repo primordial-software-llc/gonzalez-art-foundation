@@ -1,35 +1,27 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Amazon.S3;
-using Amazon.S3.Model;
 using AwsTools;
-using GalleryBackend.Model;
 using HtmlAgilityPack;
 using IndexBackend.Indexing;
+using IndexBackend.Model;
 
 namespace IndexBackend.MuseeOrsay
 {
     public class MuseeOrsayIndexer : IIndex
     {
         public static string Source => "http://www.musee-orsay.fr";
-        public static readonly string S3_Path = "collections/musee-orsay";
-        public string S3Bucket => NationalGalleryOfArtIndexer.BUCKET + "/" + S3_Path;
-        public int GetNextThrottleInMilliseconds => 0;
-
-        private IAmazonS3 S3Client { get; }
+        public string ImagePath => "collections/musee-orsay";
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
 
-        public MuseeOrsayIndexer(IAmazonS3 s3Client, HttpClient httpClient, ILogging logging)
+        public MuseeOrsayIndexer(HttpClient httpClient, ILogging logging)
         {
-            S3Client = s3Client;
             HttpClient = httpClient;
             Logging = logging;
         }
 
-        public async Task<ClassificationModel> Index(string id)
+        public async Task<IndexResult> Index(string id)
         {
             var sourceLink = $"https://www.musee-orsay.fr/en/collections/index-of-works/notice.html?no_cache=1&nnumid={id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -42,18 +34,14 @@ namespace IndexBackend.MuseeOrsay
             {
                 return null;
             }
-
             var model = new ClassificationModel {Source = Source, SourceLink = sourceLink, PageId = id};
             MuseeOrsayAssetDetailsParser.ParseHtmlToNewModel(htmlDoc, model);
-
             var imageLink = htmlDoc.DocumentNode
                 .SelectNodes("//div[@class='unTiers']/a")
                 ?.FirstOrDefault()?.Attributes["href"].Value ?? string.Empty;
-
             var imagePage = "https://www.musee-orsay.fr/" + imageLink;
             imagePage = imagePage.Replace("amp;", string.Empty);
             var imagePageHtml = await HttpClient.GetStringAsync(imagePage);
-
             var imagePageHtmlDoc = new HtmlDocument();
             imagePageHtmlDoc.LoadHtml(imagePageHtml);
             var highResImageLinkDiv = imagePageHtmlDoc
@@ -68,7 +56,6 @@ namespace IndexBackend.MuseeOrsay
             var highResImageLinkOuterContainer = highResImageLinkDiv
                 .ChildNodes
                 .ToList()[2];
-
             byte[] imageBytes;
             if (string.Equals(highResImageLinkOuterContainer.Name, "#text"))
             {
@@ -80,26 +67,14 @@ namespace IndexBackend.MuseeOrsay
                     .ChildNodes[0]
                     .Attributes["href"].Value
                     .Replace("amp;", string.Empty);
-
                 var highResImageFqdn = "https://www.musee-orsay.fr/" + highResImageLink;
                 imageBytes = await MuseeOrsayAssetDetailsParser.GetLargeZoomedInImage(HttpClient, highResImageFqdn);
             }
-
-
-            using (var imageStream = new MemoryStream(imageBytes))
+            return new IndexResult
             {
-                PutObjectRequest request = new PutObjectRequest
-                {
-                    BucketName = S3Bucket,
-                    Key = $"page-id-{id}.jpg",
-                    InputStream = imageStream
-                };
-                await S3Client.PutObjectAsync(request);
-            }
-
-            model.S3Path = S3_Path + "/" + $"page-id-{id}.jpg";
-
-            return model;
+                Model = model,
+                ImageBytes = imageBytes
+            };
         }
     }
 }

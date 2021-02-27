@@ -1,30 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using Amazon.S3.Model;
 using Amazon.SQS;
 using AwsTools;
-using GalleryBackend.Model;
-using IndexBackend.Indexing;
+using IndexBackend.Model;
 using Microsoft.VisualBasic.FileIO;
 
 namespace IndexBackend.MetropolitanMuseumOfArt
 {
     public class Harvester
     {
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="openAccessFilePath">https://github.com/metmuseum/openaccess/blob/master/MetObjects.csv</param>
-        /// <returns></returns>
         public void Harvest(
             IAmazonSQS sqsClient,
-            string openAccessFilePath/*, ILogging logging*/)
+            string openAccessFilePath)
         {
             var models = new List<ClassificationModel>();
             using (TextFieldParser parser = new TextFieldParser(openAccessFilePath))

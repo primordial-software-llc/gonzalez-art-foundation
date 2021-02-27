@@ -15,31 +15,22 @@ using Amazon.Runtime.CredentialManagement;
 using Amazon.SQS.Model;
 using AwsLambdaDeploy;
 using AwsTools;
-using GalleryBackend;
-using GalleryBackend.Model;
 using IndexBackend;
+using IndexBackend.Christies;
 using IndexBackend.Indexing;
 using IndexBackend.MetropolitanMuseumOfArt;
 using IndexBackend.MinistereDeLaCulture;
+using IndexBackend.Model;
 using IndexBackend.MuseumOfModernArt;
 using IndexBackend.NationalGalleryOfArt;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Harvester = IndexBackend.Harvester;
 
 namespace SlideshowCreator.Tests
 {
     class UploadToS3
     {
-        public static AWSCredentials CreateCredentialsTest()
-        {
-            var chain = new CredentialProfileStoreChain();
-            var profile = "test";
-            if (!chain.TryGetAWSCredentials(profile, out AWSCredentials awsCredentials))
-            {
-                throw new Exception($"AWS credentials not found for \"{profile}\" profile.");
-            }
-            return awsCredentials;
-        }
 
         public static List<RegionEndpoint> Regions => RegionEndpoint.EnumerableAllRegions
             .Where(x =>
@@ -56,15 +47,11 @@ namespace SlideshowCreator.Tests
         private const string FUNCTION_INDEX_AD_HOME = "gonzalez-art-foundation-crawler";
 
         [Test]
-        public void DeleteFunctions()
+        public void DeleteAllFunctions()
         {
             new LambdaDeploy().Delete(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
-                new List<RegionEndpoint>    
-                {
-                    RegionEndpoint.USEast1, // Stay in the US, because some regions can't access certain links and it's hard to tell which those are outside the US for any given region and link.
-                    RegionEndpoint.USEast2  // I'm even having problems from the west coast, which is odd, because I'm crawling the image link based on the html the image is presented on so it would adjust for each region.
-                },
+                Regions,
                 FUNCTION_INDEX_AD_HOME,
                 5
             );
@@ -149,18 +136,25 @@ namespace SlideshowCreator.Tests
         [Test]
         public void TestIndex()
         {
-            var client = new HttpClient(new HttpClientHandler { UseCookies = false /*, Proxy = new WebProxy("http://127.0.0.1:8888")*/ });
-            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
-            client.DefaultRequestHeaders.Add("Cookie", "cro_segment_referrer=https://www.google.com/; cro_segment_utm_source=none; cro_segment_utm_medium=none; cro_segment_utm_campaign=none; cro_segment_utm_term=none; cro_segment_utm_content=none; cro_segment_utm_source=none; cro_segment_utm_medium=none; cro_segment_utm_campaign=none; cro_segment_utm_term=none; cro_segment_utm_content=none; visid_incap_1661977=M4oyH59ZTKSSkyFSPkvdphLEsF8AAAAAQUIPAAAAAAC9tLNpk/QnK+d3TKYQ83Po; optimizelyEndUserId=oeu1606285167990r0.264774550334149; _gcl_au=1.1.839559341.1606285168; _ga=GA1.2.393842284.1606285168; __qca=P0-2109895867-1606285168517; _fbp=fb.1.1606285168963.1824677521; ki_s=; visid_incap_1662004=8EJkRP3WQNKlVTHHXvW3/80hw18AAAAAQUIPAAAAAADnP/0pYQEd/Re3Ey/5gS5V; ki_r=; _gid=GA1.2.922936791.1607842600; visid_incap_1661922=5DiNZXBqTlKcQ4BE0M03KiTvvV8AAAAAQkIPAAAAAACAmOWYAa2q/9+nf0qHCWKV4RLUkMhshU/T; ObjectPageSet=0.52134515881601; incap_ses_8079_1661977=kCmlU6pN9gMmCmG9tl8ecJwf2F8AAAAARYSG3TEBR02t1tKp/uM96A==; incap_ses_8079_1661922=pIRePO7GOxdk9HO9tl8ecOlL2F8AAAAAadP51qdvgJwSltYOgrDYPw==; _parsely_session={%22sid%22:24%2C%22surl%22:%22https://www.metmuseum.org/art/collection/search/75677%22%2C%22sref%22:%22%22%2C%22sts%22:1608010729453%2C%22slts%22:1608004125716}; _parsely_visitor={%22id%22:%22pid=9d6d01751afd92539c1812e48d9fd162%22%2C%22session_count%22:24%2C%22last_session_ts%22:1608010729453}; incap_ses_8079_1662004=RAP5N9biz0FJAnS9tl8ecOlL2F8AAAAACJUe63j2I7ZhRyn98DyfGg==; _dc_gtm_UA-72292701-1=1; ki_t=1606285169173%3B1607995013254%3B1608010729902%3B6%3B96");
-            var indexer = new MetropolitanMuseumOfArtIndexer(
-                GalleryAwsCredentialsFactory.S3AcceleratedClient,
+            var client = new HttpClient();
+            var indexer = new ChristiesArtIndexer(
                 client,
                 new ConsoleLogging()
             );
-            var classification = indexer.Index("75677").Result;
+            var classification = indexer.Index("63072").Result;
         }
 
         [Test]
+        public void HarvestChristiesPages()
+        {
+            new Harvester().HarvestIntoSqs(
+                GalleryAwsCredentialsFactory.SqsClient,
+                ChristiesArtIndexer.Source,
+                1,
+                312000);
+        }
+
+        //[Test]
         public void HarvestMetropolitanMuseumOfArtPages()
         {
             var harvester = new IndexBackend.MetropolitanMuseumOfArt.Harvester();

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using GalleryBackend.Model;
 using HtmlAgilityPack;
 using IndexBackend.Indexing;
+using IndexBackend.Model;
 
 namespace IndexBackend.NationalGalleryOfArt
 {

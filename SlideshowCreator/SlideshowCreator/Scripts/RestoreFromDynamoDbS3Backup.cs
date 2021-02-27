@@ -2,9 +2,8 @@
 using System.IO;
 using System.Linq;
 using AwsTools;
-using GalleryBackend;
-using GalleryBackend.Model;
 using IndexBackend;
+using IndexBackend.Model;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -13,7 +12,7 @@ namespace SlideshowCreator.Scripts
     class RestoreFromDynamoDbS3Backup
     {
 
-        [Test]
+        //[Test]
         public void Restore()
         {
             var path = @"C:\Users\peon\Desktop\projects\SlideshowCreator\SlideshowCreator\dynamodb-backup.json";

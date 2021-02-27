@@ -1,12 +1,10 @@
-﻿
-using System.Threading.Tasks;
-using GalleryBackend.Model;
+﻿using System.Threading.Tasks;
 
 namespace IndexBackend.Indexing
 {
     public interface IIndex
     {
-        int GetNextThrottleInMilliseconds { get; }
-        Task<ClassificationModel> Index(string id);
+        string ImagePath { get; }
+        Task<IndexResult> Index(string id);
     }
 }

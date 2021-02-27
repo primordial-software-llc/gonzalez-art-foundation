@@ -30,6 +30,23 @@ namespace IndexBackend.Indexing
             return htmlDoc;
         }
 
+        public async Task<byte[]> ConvertToJpeg(byte[] imageBytes)
+        {
+            using (var image = Image.Load(imageBytes))
+            {
+                var encoder = new JpegEncoder
+                {
+                    Quality = 100,
+                    Subsample = JpegSubsample.Ratio444
+                };
+                using (var imageStream = new MemoryStream())
+                {
+                    await image.SaveAsync(imageStream, encoder);
+                    return imageStream.ToArray();
+                }
+            }
+        }
+
         public async Task<byte[]> GetImage(HttpClient httpClient, string imageLink, ILogging logging)
         {
             var imageResponse = await httpClient.GetAsync(imageLink);
@@ -46,24 +63,10 @@ namespace IndexBackend.Indexing
             imageResponse.EnsureSuccessStatusCode();
             var contentType = imageResponse.Content.Headers.ContentType.MediaType;
             byte[] imageBytes = await imageResponse.Content.ReadAsByteArrayAsync();
-
             if (!string.Equals(contentType, "image/jpeg", StringComparison.OrdinalIgnoreCase))
             {
-                using (var image = Image.Load(imageBytes))
-                {
-                    var encoder = new JpegEncoder
-                    {
-                        Quality = 100,
-                        Subsample = JpegSubsample.Ratio444
-                    };
-                    using (var imageStream = new MemoryStream())
-                    {
-                        await image.SaveAsync(imageStream, encoder);
-                        imageBytes = imageStream.ToArray();
-                    }
-                }
+                imageBytes = await ConvertToJpeg(imageBytes);
             }
-
             return imageBytes;
         }
     }

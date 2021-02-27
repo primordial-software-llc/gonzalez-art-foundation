@@ -1,8 +1,7 @@
 ﻿using System.Linq;
-using System.Web;
-using GalleryBackend.Model;
 using HtmlAgilityPack;
 using IndexBackend.Indexing;
+using IndexBackend.Model;
 
 namespace IndexBackend.MinistereDeLaCulture
 {

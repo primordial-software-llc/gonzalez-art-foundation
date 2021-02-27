@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GalleryBackend\GalleryBackend.csproj" />
     <ProjectReference Include="..\IndexBackend\IndexBackend.csproj" />
   </ItemGroup>
 

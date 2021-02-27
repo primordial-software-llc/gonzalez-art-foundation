@@ -1,7 +1,7 @@
 ﻿using System;
 using AwsTools;
 
-namespace GalleryBackend
+namespace IndexBackend
 {
     public class ConsoleLogging : ILogging
     {

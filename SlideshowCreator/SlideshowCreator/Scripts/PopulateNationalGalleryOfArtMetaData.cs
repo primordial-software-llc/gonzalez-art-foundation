@@ -1,25 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
-using Amazon.S3;
-using AwsTools;
-using GalleryBackend;
-using GalleryBackend.Model;
-using IndexBackend;
-using IndexBackend.Indexing;
-using IndexBackend.NationalGalleryOfArt;
-using Newtonsoft.Json;
+﻿using IndexBackend.NationalGalleryOfArt;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Scripts
 {
     class PopulateNationalGalleryOfArtMetaData
     {
-        private readonly IAmazonS3 s3Client = GalleryAwsCredentialsFactory.S3AcceleratedClient;
-        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-
         [Test]
         public void Asset_Details_From_Html_To_New_Model()
         {

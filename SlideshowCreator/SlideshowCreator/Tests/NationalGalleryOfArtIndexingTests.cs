@@ -66,7 +66,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void BucketPath()
         {
-            Assert.AreEqual("tgonzalez-image-archive/national-gallery-of-art", NationalGalleryOfArtIndexer.S3Bucket);
+            Assert.AreEqual("tgonzalez-image-archive/national-gallery-of-art", new NationalGalleryOfArtIndexer().S3Bucket);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace SlideshowCreator.Tests
             var assetId2 = 1.ToString();
             IndexAndAssertInS3(46482);
             var asset2Index = indexer.Index(assetId2);
-            Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadata(NationalGalleryOfArtIndexer.S3Bucket, "image-" + assetId2 + ".jpg"));
+            Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadata(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + assetId2 + ".jpg"));
             Assert.IsNull(asset2Index);
         }
 
@@ -89,10 +89,10 @@ namespace SlideshowCreator.Tests
         private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {
             var asset1Index = indexer.Index(id.ToString()).Result;
-            Assert.AreEqual("http://images.nga.gov", asset1Index.Source);
-            Assert.AreEqual(id, asset1Index.PageId);
-            Assert.AreEqual(NationalGalleryOfArtIndexer.S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.S3Path);
-            s3Client.GetObjectMetadata(NationalGalleryOfArtIndexer.S3Bucket, "image-" + id + expectedImageFormat);
+            Assert.AreEqual("http://images.nga.gov", asset1Index.Model.Source);
+            Assert.AreEqual(id, asset1Index.Model.PageId);
+            Assert.AreEqual(new NationalGalleryOfArtIndexer().S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.Model.S3Path);
+            s3Client.GetObjectMetadata(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + id + expectedImageFormat);
         }
 
         private const string DECODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE =

@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlideshowCreator", "SlideshowCreator\SlideshowCreator.csproj", "{2A6CFD13-3FE8-4E24-8335-74460093D7CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GalleryBackend", "GalleryBackend\GalleryBackend.csproj", "{D91AB026-70A1-432F-833E-3F02A17B44CF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndexBackend", "IndexBackend\IndexBackend.csproj", "{A9DC96F0-E723-4852-AAA5-011B7122EAA4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtIndexer", "ArtIndexer\ArtIndexer.csproj", "{D34436D4-FF86-4A1D-99D9-6862ED24B88F}"
@@ -21,10 +19,6 @@ Global
 		{2A6CFD13-3FE8-4E24-8335-74460093D7CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A6CFD13-3FE8-4E24-8335-74460093D7CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A6CFD13-3FE8-4E24-8335-74460093D7CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D91AB026-70A1-432F-833E-3F02A17B44CF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A9DC96F0-E723-4852-AAA5-011B7122EAA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A9DC96F0-E723-4852-AAA5-011B7122EAA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9DC96F0-E723-4852-AAA5-011B7122EAA4}.Release|Any CPU.ActiveCfg = Release|Any CPU

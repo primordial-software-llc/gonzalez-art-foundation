@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AwsTools;
-using GalleryBackend.Model;
-using IndexBackend.Indexing;
+using IndexBackend.Model;
+using IndexBackend.NationalGalleryOfArt;
 
 namespace IndexBackend.DataAccess
 {
@@ -20,34 +20,6 @@ namespace IndexBackend.DataAccess
         public ImageClassificationAccess(IAmazonDynamoDB client)
         {
             Client = client;
-        }
-
-        public List<ClassificationModel> Scan(string lastPageId, string source, int? limit = null)
-        {
-            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
-            {
-                ScanIndexForward = true,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {":source", new AttributeValue {S = source}}
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    {"#source", "source"}
-                },
-                KeyConditionExpression = "#source = :source",
-                ExclusiveStartKey = new Dictionary<string, AttributeValue>
-                {
-                    {"source", new AttributeValue {S = source}},
-                    {"pageId", new AttributeValue {S = lastPageId}}
-                },
-            };
-            if (limit.HasValue)
-            {
-                queryRequest.Limit = limit.GetValueOrDefault();
-            }
-            var response = Client.Query(queryRequest);
-            return Conversion<ClassificationModel>.ConvertToPoco(response.Items);
         }
 
         public List<ImageLabel> FindByLabel(
