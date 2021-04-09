@@ -72,11 +72,13 @@ namespace SlideshowCreator.Tests
 
             new LambdaDeploy().Deploy(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
-                new List<RegionEndpoint>
+                Regions,
+/*                new List<RegionEndpoint>
                 {
-                    RegionEndpoint.USEast1, // Stay in the US, because some regions can't access certain links and it's hard to tell which those are outside the US for any given region and link.
+                    //RegionEndpoint.USEast1, // Stay in the US, because some regions can't access certain links and it's hard to tell which those are outside the US for any given region and link.
                     //RegionEndpoint.USEast2  // I'm even having problems from the west coast, which is odd, because I'm crawling the image link based on the html the image is presented on so it would adjust for each region.
                 },
+*/
                 environmentVariables,
                 scheduleExpression,
                 FUNCTION_INDEX_AD_HOME,
@@ -91,7 +93,7 @@ namespace SlideshowCreator.Tests
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
                 256,
-                1,
+                5,
                 TimeSpan.FromMinutes(5));
         }
 
@@ -141,7 +143,10 @@ namespace SlideshowCreator.Tests
                 client,
                 new ConsoleLogging()
             );
-            var classification = indexer.Index("63072").Result;
+            //var classification = indexer.Index("63072").Result;
+            //var classification = indexer.Index("106").Result;
+            //indexer.Index("9795").Wait();
+            indexer.Index("2684").Wait();
         }
 
         [Test]
