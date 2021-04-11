@@ -42,7 +42,7 @@ namespace ArtApi.Routes.Unauthenticated
                       ""query"": ""{searchText}"",
                       ""type"": ""best_fields"",
                       ""fields"": [
-                        ""artist^4"",
+                        ""artist^2"",
                         ""name"",
                         ""date""
                       ]
