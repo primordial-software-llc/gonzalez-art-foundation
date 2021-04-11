@@ -23,30 +23,41 @@ namespace ArtApi.Routes.Unauthenticated
             var maxResults = request.QueryStringParameters.ContainsKey("maxResults")
                 ? int.Parse(request.QueryStringParameters["maxResults"])
                 : maxResultsLimit;
+            var source = request.QueryStringParameters.ContainsKey("source")
+                ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
+                : string.Empty;
             maxResults = maxResults <= 0 ? maxResultsLimit : maxResults;
-
-            var getRequest = @$"{{
+            var filterSource = $@"
+            ,""filter"": {{
+    		    ""term"": {{
+    		        ""source.keyword"": ""{source}""
+    		    }}
+            }}";
+            var filterSourceClause = string.IsNullOrWhiteSpace(source) ? string.Empty : filterSource;
+            var getRequest = $@"{{
               ""query"": {{
-                ""multi_match"" : {{
-                  ""query"": ""{searchText.Trim()}"", 
-                  ""fields"": [
-                    ""artist"",
-                    ""name"",
-                    ""date"",
-                    ""source"",
-                    ""sourceLink""
-                  ]
+                ""bool"": {{
+                  ""must"": {{
+                    ""multi_match"": {{
+                      ""query"": ""{searchText}"",
+                      ""type"": ""best_fields"",
+                      ""fields"": [
+                        ""artist^4"",
+                        ""name"",
+                        ""date""
+                      ]
+                    }}
+                  }}
+                  { filterSourceClause }
                 }}
               }},
               ""size"": {maxResults}
             }}";
-
             var elasticSearchResponse = SendToElasticSearch(
                 new HttpClient(),
                 System.Net.Http.HttpMethod.Get,
                 "/classification/_search",
                 JObject.Parse(getRequest));
-
             var responseJson = JObject.Parse(elasticSearchResponse);
             var items = responseJson["hits"]["hits"].Select(x => x["_source"]).ToList();
             response.Body = JsonConvert.SerializeObject(items);

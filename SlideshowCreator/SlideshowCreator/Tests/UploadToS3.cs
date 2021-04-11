@@ -157,8 +157,8 @@ namespace SlideshowCreator.Tests
             new Harvester().HarvestIntoSqs(
                 GalleryAwsCredentialsFactory.SqsClient,
                 ChristiesArtIndexer.Source,
-                108617,
-                312000);
+                1,
+                400000);
             /*
             var batch = new List<ClassificationModel>
             {
