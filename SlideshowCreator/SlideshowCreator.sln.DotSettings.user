@@ -5,6 +5,11 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\peon\Desktop\projects\SlideshowCreator\SlideshowCreator\packages\Amazon.Lambda.Core.1.0.0\lib\netstandard1.3\Amazon.Lambda.Core.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=2189e508_002D9fa2_002D4a0c_002D803a_002Dc98958469d0a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DeployArtIndexerInEachRegion #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeployArtIndexerInEachRegion&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=51d47e28_002D76a7_002D41e3_002D8730_002Ddeb9928ecc87/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DeleteFunctions" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeleteFunctions&lt;/TestId&gt;&#xD;
@@ -48,6 +53,7 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.Count&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.TestIndex&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.HarvestChristiesPages&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETFramework,Version=v4.7.1::SlideshowCreator.Tests.UploadToS3.DeleteAllFunctions&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	

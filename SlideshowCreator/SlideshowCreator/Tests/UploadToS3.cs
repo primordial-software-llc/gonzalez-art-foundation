@@ -72,13 +72,12 @@ namespace SlideshowCreator.Tests
 
             new LambdaDeploy().Deploy(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
-                Regions,
-/*                new List<RegionEndpoint>
+                new List<RegionEndpoint>
                 {
                     //RegionEndpoint.USEast1, // Stay in the US, because some regions can't access certain links and it's hard to tell which those are outside the US for any given region and link.
-                    //RegionEndpoint.USEast2  // I'm even having problems from the west coast, which is odd, because I'm crawling the image link based on the html the image is presented on so it would adjust for each region.
+                    RegionEndpoint.USEast2  // I'm even having problems from the west coast, which is odd, because I'm crawling the image link based on the html the image is presented on so it would adjust for each region.
                 },
-*/
+
                 environmentVariables,
                 scheduleExpression,
                 FUNCTION_INDEX_AD_HOME,
@@ -146,17 +145,38 @@ namespace SlideshowCreator.Tests
             //var classification = indexer.Index("63072").Result;
             //var classification = indexer.Index("106").Result;
             //indexer.Index("9795").Wait();
-            indexer.Index("2684").Wait();
+            var result = indexer.Index("108401").Result;
+            Console.WriteLine(result.Model.Source);
+            Console.WriteLine(result.Model.PageId); 
         }
 
+        // Things are getting missed but appear after re-indexing. Not sure what happened so I'm starting near the pages I want until I figure it out.
         [Test]
         public void HarvestChristiesPages()
         {
             new Harvester().HarvestIntoSqs(
                 GalleryAwsCredentialsFactory.SqsClient,
                 ChristiesArtIndexer.Source,
-                1,
+                108617,
                 312000);
+            /*
+            var batch = new List<ClassificationModel>
+            {
+                new ClassificationModel
+                {
+                    Source = ChristiesArtIndexer.Source,
+                    PageId = 108401.ToString()
+                }
+            };
+            Harvester.SendBatch(
+                GalleryAwsCredentialsFactory.SqsClient,
+                "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
+                batch
+                    .Select(crawlerModel =>
+                        new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(crawlerModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })))
+                    .ToList()
+            );
+            */
         }
 
         //[Test]
