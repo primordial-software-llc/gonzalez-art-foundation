@@ -11,6 +11,8 @@ namespace IndexBackend
 {
     public class Harvester
     {
+        public static int SqsMaxMessages => 10;
+
         public void HarvestIntoSqs(IAmazonSQS sqsClient, string source, int start, int end)
         {
             for (var ct = start; ct < end + 1; ct += 10)

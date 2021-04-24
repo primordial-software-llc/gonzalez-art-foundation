@@ -1,5 +1,4 @@
-﻿
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 
 namespace IndexBackend.Indexing
 {

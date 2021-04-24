@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Linq;
@@ -23,17 +24,56 @@ namespace ArtApi.Routes.Unauthenticated
             var maxResults = request.QueryStringParameters.ContainsKey("maxResults")
                 ? int.Parse(request.QueryStringParameters["maxResults"])
                 : maxResultsLimit;
+            maxResults = maxResults <= 0 ? maxResultsLimit : maxResults;
             var source = request.QueryStringParameters.ContainsKey("source")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
                 : string.Empty;
-            maxResults = maxResults <= 0 ? maxResultsLimit : maxResults;
-            var filterSource = $@"
+            var hideNudity = request.QueryStringParameters.ContainsKey("hideNudity") && bool.Parse(request.QueryStringParameters["hideNudity"].Trim());
+            Console.WriteLine("Hide nudity: " + hideNudity);
+            var filters = new List<string>();
+            if (hideNudity)
+            {
+                filters.Add($@"
+                {{
+                  ""bool"": {{
+                    ""should"": [
+                      {{
+                        ""term"": {{
+                          ""nudity"": ""false""
+                        }}
+                      }},
+                      {{
+                        ""bool"": {{
+                          ""must_not"": {{
+                            ""exists"": {{
+                              ""field"": ""nudity""
+                            }}
+                          }}
+                        }}
+                      }}
+                    ]
+                  }}
+                }}
+                ");
+            }
+            if (!string.IsNullOrWhiteSpace(source))
+            {
+                filters.Add($@"
+                  {{
+                    ""term"": {{
+                      ""source.keyword"": ""{source}""
+                    }}
+                  }}
+                ");
+            }
+            var filter = $@"
             ,""filter"": {{
-    		    ""term"": {{
-    		        ""source.keyword"": ""{source}""
-    		    }}
+              ""bool"": {{
+                ""must"": [
+                  {string.Join(",", filters)}
+                ]
+              }}
             }}";
-            var filterSourceClause = string.IsNullOrWhiteSpace(source) ? string.Empty : filterSource;
             var getRequest = $@"{{
               ""query"": {{
                 ""bool"": {{
@@ -48,7 +88,7 @@ namespace ArtApi.Routes.Unauthenticated
                       ]
                     }}
                   }}
-                  { filterSourceClause }
+                  { filter }
                 }}
               }},
               ""size"": {maxResults}

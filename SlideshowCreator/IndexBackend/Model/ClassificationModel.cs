@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
-using AwsTools;
 using Newtonsoft.Json;
 
 namespace IndexBackend.Model
@@ -43,10 +42,16 @@ namespace IndexBackend.Model
         public string S3Path { get; set; }
 
         [JsonProperty("price")]
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
 
         [JsonProperty("priceCurrency")]
         public string PriceCurrency { get; set; }
+
+        [JsonProperty("moderationLabels")]
+        public List<ClassificationLabel> ModerationLabels { get; set; }
+
+        [JsonProperty("nudity")]
+        public bool? Nudity { get; set; }
 
         [JsonProperty("@timestamp")]
         public string TimeStamp { get; set; }

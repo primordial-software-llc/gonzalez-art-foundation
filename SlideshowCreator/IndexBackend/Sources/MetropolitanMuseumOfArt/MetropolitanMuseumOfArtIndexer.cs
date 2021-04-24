@@ -3,11 +3,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
-using AwsTools;
 using IndexBackend.Indexing;
 using IndexBackend.Model;
 
-namespace IndexBackend.MetropolitanMuseumOfArt
+namespace IndexBackend.Sources.MetropolitanMuseumOfArt
 {
     public class MetropolitanMuseumOfArtIndexer : IIndex
     {
@@ -22,7 +21,7 @@ namespace IndexBackend.MetropolitanMuseumOfArt
             Logging = logging;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var sourceLink = $"https://www.metmuseum.org/art/collection/search/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -80,6 +79,10 @@ namespace IndexBackend.MetropolitanMuseumOfArt
                         }
                     }
                 }
+            }
+            if (imageBytes == null)
+            {
+                return null;
             }
             return new IndexResult
             {

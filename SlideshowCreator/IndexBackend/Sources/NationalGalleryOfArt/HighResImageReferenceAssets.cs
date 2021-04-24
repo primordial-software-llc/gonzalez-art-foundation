@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace IndexBackend.NationalGalleryOfArt
+namespace IndexBackend.Sources.NationalGalleryOfArt
 {
     public class HighResImageReferenceAssets
     {

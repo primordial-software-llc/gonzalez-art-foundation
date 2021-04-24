@@ -24,18 +24,21 @@ namespace ArtApi.Routes.Unauthenticated
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = source}}
+                    {":source", new AttributeValue {S = source}},
+                    {":false", new AttributeValue { BOOL = false }}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
-                    {"#source", "source"}
+                    {"#source", "source"},
+                    {"#nudity", "nudity"}
                 },
                 KeyConditionExpression = "#source = :source",
                 ExclusiveStartKey = new Dictionary<string, AttributeValue>
                 {
                     {"source", new AttributeValue {S = source}},
                     {"pageId", new AttributeValue {S = lastPageId}}
-                }
+                },
+                FilterExpression = "#nudity = :false or attribute_not_exists(#nudity)"
             };
             if (maxResults > 0)
             {

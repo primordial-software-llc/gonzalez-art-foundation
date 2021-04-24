@@ -2,11 +2,10 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
-using AwsTools;
 using IndexBackend.Indexing;
 using IndexBackend.Model;
 
-namespace IndexBackend.MuseumOfModernArt
+namespace IndexBackend.Sources.MuseumOfModernArt
 {
     public class MuseumOfModernArtIndexer : IIndex
     {
@@ -21,7 +20,7 @@ namespace IndexBackend.MuseumOfModernArt
             Logging = logging;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var sourceLink = $"https://www.moma.org/collection/works/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -58,7 +57,6 @@ namespace IndexBackend.MuseumOfModernArt
             {
                 return null;
             }
-
             return new IndexResult
             {
                 Model = model,

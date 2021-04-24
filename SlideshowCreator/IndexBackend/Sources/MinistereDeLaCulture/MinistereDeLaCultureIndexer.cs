@@ -2,10 +2,10 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
-using AwsTools;
 using IndexBackend.Indexing;
+using IndexBackend.Model;
 
-namespace IndexBackend.MinistereDeLaCulture
+namespace IndexBackend.Sources.MinistereDeLaCulture
 {
     public class MinistereDeLaCultureIndexer : IIndex
     {
@@ -31,7 +31,7 @@ namespace IndexBackend.MinistereDeLaCulture
             ImagePath = s3Path;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var sourceLink = $"https://www.pop.culture.gouv.fr/notice/joconde/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -48,6 +48,10 @@ namespace IndexBackend.MinistereDeLaCulture
             }
             var imageLink = HttpUtility.HtmlDecode(imageLinkNodes.First().Attributes["src"].Value);
             var imageBytes = await new IndexingHttpClient().GetImage(HttpClient, imageLink, Logging);
+            if (imageBytes == null)
+            {
+                return null;
+            }
             return new IndexResult
             {
                 Model = model,

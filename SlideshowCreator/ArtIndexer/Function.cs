@@ -9,22 +9,26 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.Core;
+using Amazon.Rekognition;
+using Amazon.Rekognition.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using IndexBackend;
-using IndexBackend.Christies;
 using IndexBackend.Indexing;
-using IndexBackend.MetropolitanMuseumOfArt;
-using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.Model;
-using IndexBackend.MuseeOrsay;
-using IndexBackend.MuseumOfModernArt;
-using IndexBackend.NationalGalleryOfArt;
+using IndexBackend.Sources.Christies;
+using IndexBackend.Sources.MetropolitanMuseumOfArt;
+using IndexBackend.Sources.MinistereDeLaCulture;
+using IndexBackend.Sources.MuseeOrsay;
+using IndexBackend.Sources.MuseumOfModernArt;
+using IndexBackend.Sources.NationalGalleryOfArt;
+using IndexBackend.Sources.TheAthenaeum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Console = System.Console;
+using S3Object = Amazon.S3.Model.S3Object;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -101,17 +105,21 @@ namespace ArtIndexer
             }
             try
             {
-                var indexResult = await indexer.Index(model.PageId);
-                if (indexResult?.Model == null || indexResult.ImageBytes == null)
+                var dbClient = new DatabaseClient<ClassificationModel>(DbClient);
+                var existing = dbClient.Get(new ClassificationModel { Source = model.Source, PageId = model.PageId });
+                var analyzedImageAlreadyExists = existing != null && existing.ModerationLabels != null;
+                var indexResult = await indexer.Index(model.PageId, existing);
+                if (indexResult?.Model == null)
                 {
                     Console.WriteLine($"Skipped {message.Body} due to not finding content.");
                 }
                 else
                 {
                     var classification = indexResult.Model;
-                    await using (var imageStream = new MemoryStream(indexResult.ImageBytes))
+                    if (!analyzedImageAlreadyExists)
                     {
-                        PutObjectRequest request = new PutObjectRequest
+                        await using var imageStream = new MemoryStream(indexResult.ImageBytes);
+                        var request = new PutObjectRequest
                         {
                             BucketName = NationalGalleryOfArtIndexer.BUCKET + "/" + indexer.ImagePath,
                             Key = $"page-id-{indexResult.Model.PageId}.jpg",
@@ -125,6 +133,14 @@ namespace ArtIndexer
                     classification.OriginalArtist = HttpUtility.HtmlDecode(classification.OriginalArtist);
                     classification.Artist = Classifier.NormalizeArtist(HttpUtility.HtmlDecode(classification.OriginalArtist));
                     classification.TimeStamp = DateTime.UtcNow.ToString("O");
+                    if (!analyzedImageAlreadyExists)
+                    {
+                        classification.ModerationLabels = new ImageAnalysis().GetImageAnalysis(new AmazonRekognitionClient(), NationalGalleryOfArtIndexer.BUCKET, classification.S3Path);
+                    }
+                    classification.Nudity = classification.ModerationLabels.Any(x =>
+                        x.Name.Contains("nudity", StringComparison.OrdinalIgnoreCase) ||
+                        x.ParentName.Contains("nudity", StringComparison.OrdinalIgnoreCase)
+                    );
                     var json = JObject.FromObject(classification, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
                     await DbClient.PutItemAsync(
                         new ClassificationModel().GetTable(),
@@ -144,6 +160,10 @@ namespace ArtIndexer
         private IIndex GetIndexer(string source)
         {
             var log = new ConsoleLogging();
+            if (string.Equals(source, TheAthenaeumIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            {
+                return new TheAthenaeumIndexer(S3Client, DbClient);
+            }
             if (string.Equals(source, ChristiesArtIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {
                 return new ChristiesArtIndexer(HttpClient, log);

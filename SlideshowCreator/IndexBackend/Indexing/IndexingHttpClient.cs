@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AwsTools;
 using HtmlAgilityPack;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;

@@ -3,7 +3,7 @@ using HtmlAgilityPack;
 using IndexBackend.Indexing;
 using IndexBackend.Model;
 
-namespace IndexBackend.MinistereDeLaCulture
+namespace IndexBackend.Sources.MinistereDeLaCulture
 {
     class DetailsParser
     {

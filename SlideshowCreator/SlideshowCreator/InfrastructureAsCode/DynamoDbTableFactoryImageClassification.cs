@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using IndexBackend.DataAccess;
 using IndexBackend.Model;
 
 namespace SlideshowCreator.InfrastructureAsCode
@@ -56,49 +55,6 @@ namespace SlideshowCreator.InfrastructureAsCode
             };
 
             return request;
-        }
-
-        public void CreateTableWithIndexes()
-        {
-            var request = GetTableDefinition();
-            TableFactory.CreateTable(request);
-            AddArtistNameGlobalSecondaryIndex(new ClassificationModel().GetTable());
-        }
-        
-        private void AddArtistNameGlobalSecondaryIndex(string tableName)
-        {
-            var artistNameIndexRequest = new GlobalSecondaryIndexUpdate
-            {
-                Create = new CreateGlobalSecondaryIndexAction
-                {
-                    IndexName = ImageClassificationAccess.ARTIST_NAME_INDEX,
-                    ProvisionedThroughput = new ProvisionedThroughput(25, 5),
-                    Projection = new Projection {ProjectionType = ProjectionType.ALL},
-                    KeySchema = new List<KeySchemaElement>
-                    {
-                        new KeySchemaElement {AttributeName = "artist", KeyType = "HASH"},
-                        new KeySchemaElement {AttributeName = "name", KeyType = "RANGE"}
-                    }
-                }
-            };
-
-            var updateTableRequest = new UpdateTableRequest {TableName = tableName};
-            updateTableRequest.GlobalSecondaryIndexUpdates.Add(artistNameIndexRequest);
-            updateTableRequest.AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition
-                {
-                    AttributeName = "artist",
-                    AttributeType = "S"
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "name",
-                    AttributeType = "S"
-                }
-            };
-
-            Client.UpdateTable(updateTableRequest);
         }
 
     }

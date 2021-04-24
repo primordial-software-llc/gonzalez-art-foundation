@@ -7,8 +7,7 @@ using Amazon.DynamoDBv2;
 using Amazon.S3;
 using HtmlAgilityPack;
 using IndexBackend;
-using IndexBackend.Indexing;
-using IndexBackend.NationalGalleryOfArt;
+using IndexBackend.Sources.NationalGalleryOfArt;
 using NUnit.Framework;
 
 namespace SlideshowCreator.Tests
@@ -79,8 +78,8 @@ namespace SlideshowCreator.Tests
         {
             var assetId2 = 1.ToString();
             IndexAndAssertInS3(46482);
-            var asset2Index = indexer.Index(assetId2);
-            Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadata(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + assetId2 + ".jpg"));
+            var asset2Index = indexer.Index(assetId2, null);
+            Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadataAsync(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + assetId2 + ".jpg").Wait());
             Assert.IsNull(asset2Index);
         }
 
@@ -88,11 +87,11 @@ namespace SlideshowCreator.Tests
 
         private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {
-            var asset1Index = indexer.Index(id.ToString()).Result;
+            var asset1Index = indexer.Index(id.ToString(), null).Result;
             Assert.AreEqual("http://images.nga.gov", asset1Index.Model.Source);
             Assert.AreEqual(id, asset1Index.Model.PageId);
             Assert.AreEqual(new NationalGalleryOfArtIndexer().S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.Model.S3Path);
-            s3Client.GetObjectMetadata(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + id + expectedImageFormat);
+            s3Client.GetObjectMetadataAsync(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + id + expectedImageFormat).Wait();
         }
 
         private const string DECODED_JEAN_LEON_GEROME_VIEW_OF_MEDINET_EL_FAYOUM_HIGH_RES_REFERENCE =

@@ -3,26 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda;
-using Amazon.Runtime;
-using Amazon.Runtime.CredentialManagement;
 using Amazon.SQS.Model;
 using AwsLambdaDeploy;
-using AwsTools;
 using IndexBackend;
-using IndexBackend.Christies;
-using IndexBackend.Indexing;
-using IndexBackend.MetropolitanMuseumOfArt;
-using IndexBackend.MinistereDeLaCulture;
 using IndexBackend.Model;
-using IndexBackend.MuseumOfModernArt;
-using IndexBackend.NationalGalleryOfArt;
+using IndexBackend.Sources.Christies;
+using IndexBackend.Sources.MetropolitanMuseumOfArt;
+using IndexBackend.Sources.MinistereDeLaCulture;
+using IndexBackend.Sources.MuseumOfModernArt;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Harvester = IndexBackend.Harvester;
@@ -45,7 +39,7 @@ namespace SlideshowCreator.Tests
                         x != RegionEndpoint.EUSouth1 &&
                         x != RegionEndpoint.MESouth1).ToList();
         private const string FUNCTION_INDEX_AD_HOME = "gonzalez-art-foundation-crawler";
-
+        
         [Test]
         public void DeleteAllFunctions()
         {
@@ -56,7 +50,7 @@ namespace SlideshowCreator.Tests
                 5
             );
         }
-
+        
         [Test]
         public void DeployArtIndexerInEachRegion()
         {
@@ -74,10 +68,8 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 new List<RegionEndpoint>
                 {
-                    //RegionEndpoint.USEast1, // Stay in the US, because some regions can't access certain links and it's hard to tell which those are outside the US for any given region and link.
-                    RegionEndpoint.USEast2  // I'm even having problems from the west coast, which is odd, because I'm crawling the image link based on the html the image is presented on so it would adjust for each region.
+                    RegionEndpoint.USEast1
                 },
-
                 environmentVariables,
                 scheduleExpression,
                 FUNCTION_INDEX_AD_HOME,
@@ -92,8 +84,32 @@ namespace SlideshowCreator.Tests
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
                 256,
-                5,
-                TimeSpan.FromMinutes(5));
+                1,
+                TimeSpan.FromMinutes(15));
+        }
+        
+        [Test]
+        public void HarvestTheAthenaeum()
+        {
+            var scanRequest = new ScanRequest(new ClassificationModel().GetTable()) {Limit = Harvester.SqsMaxMessages};
+            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
+            ScanResponse scanResponse = null;
+            do
+            {
+                if (scanResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
+                }
+                scanResponse = dynamoDbClient.ScanAsync(scanRequest).Result;
+                var batch = new List<ClassificationModel>();
+                foreach (var item in scanResponse.Items)
+                {
+                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
+                    batch.Add(new ClassificationModel { Source = model.Source, PageId = model.PageId });
+                }
+
+                Harvester.SendBatch(GalleryAwsCredentialsFactory.SqsClient, batch);
+            } while (scanResponse.LastEvaluatedKey.Any());
         }
 
         [Test]
@@ -104,9 +120,13 @@ namespace SlideshowCreator.Tests
             ReceiveMessageResponse messages;
             do
             {
-                var receiveRequest = new ReceiveMessageRequest("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure");
-                receiveRequest.MaxNumberOfMessages = 10;
-                messages = sqsClient.ReceiveMessage(receiveRequest);
+                var receiveRequest =
+                    new ReceiveMessageRequest(
+                        "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure")
+                    {
+                        MaxNumberOfMessages = 10
+                    };
+                messages = sqsClient.ReceiveMessageAsync(receiveRequest).Result;
 
                 if (!messages.Messages.Any())
                 {
@@ -119,7 +139,7 @@ namespace SlideshowCreator.Tests
                     sendMessages.Add(new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), message.Body));
                 }
 
-                var result = sqsClient.SendMessageBatch("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler", sendMessages);
+                var result = sqsClient.SendMessageBatchAsync("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler", sendMessages).Result;
                 if (result.Failed.Any())
                 {
                     throw new Exception("Failed to retry sqs message.");
@@ -130,7 +150,7 @@ namespace SlideshowCreator.Tests
                 {
                     deleteMessages.Add(new DeleteMessageBatchRequestEntry(Guid.NewGuid().ToString(), message.ReceiptHandle));
                 }
-                sqsClient.DeleteMessageBatch("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure", deleteMessages);
+                sqsClient.DeleteMessageBatchAsync("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure", deleteMessages).Wait();
             } while (messages.Messages.Any());
         }
 
@@ -145,7 +165,7 @@ namespace SlideshowCreator.Tests
             //var classification = indexer.Index("63072").Result;
             //var classification = indexer.Index("106").Result;
             //indexer.Index("9795").Wait();
-            var result = indexer.Index("108401").Result;
+            var result = indexer.Index("108401", null).Result;
             Console.WriteLine(result.Model.Source);
             Console.WriteLine(result.Model.PageId); 
         }
@@ -182,7 +202,7 @@ namespace SlideshowCreator.Tests
         //[Test]
         public void HarvestMetropolitanMuseumOfArtPages()
         {
-            var harvester = new IndexBackend.MetropolitanMuseumOfArt.Harvester();
+            var harvester = new IndexBackend.Sources.MetropolitanMuseumOfArt.Harvester();
             harvester.Harvest(GalleryAwsCredentialsFactory.SqsClient, @"C:\Users\peon\Downloads\MetObjects.csv");
         }
 
@@ -212,60 +232,6 @@ namespace SlideshowCreator.Tests
                         .ToList()
                 );
             }
-        }
-
-        [Test]
-        public void SendToElastic()
-        {
-            var client = new HttpClient();
-
-            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
-            {
-                ScanIndexForward = true,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    //{":source", new AttributeValue {S = MuseumOfModernArtIndexer.Source}}
-                    //{":source", new AttributeValue {S = TheAthenaeumIndexer.Source}}
-                    //{":source", new AttributeValue {S = NationalGalleryOfArtIndexer.Source}}
-                    //{":source", new AttributeValue {S = MuseeOrsayIndexer.Source }}
-                    //{":source", new AttributeValue {S = MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture }}
-                    //{":source", new AttributeValue {S = MinistereDeLaCultureIndexer.SourceMuseeDuLouvre }}
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    {"#source", "source"}
-                },
-                KeyConditionExpression = "#source = :source"
-            };
-            var dbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var elasticClient = new ElasticSearchClient(
-                client,
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
-
-            QueryResponse queryResponse = null;
-            do
-            {
-                if (queryResponse != null)
-                {
-                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
-                }
-                queryResponse = dbClient.QueryAsync(queryRequest).Result;
-                var status = "Sending batch from start key: " + JsonConvert.SerializeObject(queryRequest.ExclusiveStartKey);
-                Console.WriteLine(status);
-                var batch = new List<ClassificationModel>();
-                foreach (var item in queryResponse.Items)
-                {
-                    var classificationModel = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    batch.Add(classificationModel);
-                }
-                Parallel.ForEach(batch, new ParallelOptions { MaxDegreeOfParallelism = 20 }, classification =>
-                {
-                    elasticClient.SendToElasticSearch(classification).Wait();
-                });
-
-            } while (queryResponse.LastEvaluatedKey.Any());
-
         }
 
         [Test]
@@ -339,52 +305,6 @@ namespace SlideshowCreator.Tests
                         .Select(crawlerJson => new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(crawlerJson, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore})))
                         .ToList()
                 );
-            });
-        }
-
-        //[Test]
-        public void IndexNga()
-        {
-            var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
-            {
-                ScanIndexForward = true,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {":source", new AttributeValue {S = NationalGalleryOfArtIndexer.Source}}
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    {"#source", "source"}
-                },
-                KeyConditionExpression = "#source = :source"
-            };
-
-            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
-                .Where(x => x.S3Path.StartsWith("gonzalez-art-foundation"))
-                .ToList();
-            Console.WriteLine($"Found {results.Count} records that need images.");
-
-            Parallel.ForEach(results, new ParallelOptions {MaxDegreeOfParallelism = 2}, result =>
-            {
-                try
-                {
-                    var ngaDataAccess = new NationalGalleryOfArtDataAccess(PublicConfig.NationalGalleryOfArtUri);
-                    var indexer = new NationalGalleryOfArtIndexer(GalleryAwsCredentialsFactory.S3AcceleratedClient, GalleryAwsCredentialsFactory.ProductionDbClient, ngaDataAccess);
-                    var classification = indexer.Index(result.PageId);
-                    if (classification == null)
-                    {
-                        Console.WriteLine($"No image found for page id {result.PageId}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Uploaded image for page id {result.PageId}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    Thread.Sleep(1000);
-                }
             });
         }
 

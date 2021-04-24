@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS;
-using AwsTools;
 using IndexBackend.Model;
 using Microsoft.VisualBasic.FileIO;
 
-namespace IndexBackend.MetropolitanMuseumOfArt
+namespace IndexBackend.Sources.MetropolitanMuseumOfArt
 {
     public class Harvester
     {

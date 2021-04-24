@@ -1,27 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-	<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.2.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.8.0" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.18" />
-    <PackageReference Include="AWSSDK.S3" Version="3.5.7.6" />
-	<PackageReference Include="AWSSDK.SQS" Version="3.5.1.8" />
-	<PackageReference Include="AwsTools" Version="1.0.18" />
-	<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.0.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="2.0.0" />
+    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.7.1.12" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.0.14" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.14" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.0.13" />
+    <PackageReference Include="AWSSDK.Rekognition" Version="3.7.0.13" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.0.15" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.0.14" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
-
   <ItemGroup>
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="1.8.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\IndexBackend\IndexBackend.csproj" />
   </ItemGroup>
-
 </Project>

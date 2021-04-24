@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AwsTools;
 using IndexBackend.Indexing;
 using IndexBackend.Model;
 using Newtonsoft.Json.Linq;
 
-namespace IndexBackend.Christies
+namespace IndexBackend.Sources.Christies
 {
     public class ChristiesArtIndexer : IIndex
     {
@@ -21,7 +20,7 @@ namespace IndexBackend.Christies
             Logging = logging;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var sourceLink = $"https://onlineonly.christies.com/s/first-open/shepard-fairey-b-1970-42/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -81,6 +80,10 @@ namespace IndexBackend.Christies
             if (!string.IsNullOrWhiteSpace(imageUrl))
             {
                 imageBytes = await new IndexingHttpClient().GetImage(HttpClient, imageUrl, Logging);
+            }
+            if (imageBytes == null)
+            {
+                return null;
             }
             return new IndexResult
             {

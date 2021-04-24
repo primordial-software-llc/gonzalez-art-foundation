@@ -1,12 +1,11 @@
 ﻿using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AwsTools;
 using HtmlAgilityPack;
 using IndexBackend.Indexing;
 using IndexBackend.Model;
 
-namespace IndexBackend.MuseeOrsay
+namespace IndexBackend.Sources.MuseeOrsay
 {
     public class MuseeOrsayIndexer : IIndex
     {
@@ -21,7 +20,7 @@ namespace IndexBackend.MuseeOrsay
             Logging = logging;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var sourceLink = $"https://www.musee-orsay.fr/en/collections/index-of-works/notice.html?no_cache=1&nnumid={id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -69,6 +68,10 @@ namespace IndexBackend.MuseeOrsay
                     .Replace("amp;", string.Empty);
                 var highResImageFqdn = "https://www.musee-orsay.fr/" + highResImageLink;
                 imageBytes = await MuseeOrsayAssetDetailsParser.GetLargeZoomedInImage(HttpClient, highResImageFqdn);
+            }
+            if (imageBytes == null)
+            {
+                return null;
             }
             return new IndexResult
             {

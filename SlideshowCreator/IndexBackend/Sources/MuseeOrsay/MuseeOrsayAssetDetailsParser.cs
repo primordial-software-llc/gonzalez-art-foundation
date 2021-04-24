@@ -11,7 +11,7 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace IndexBackend.MuseeOrsay
+namespace IndexBackend.Sources.MuseeOrsay
 {
     public class MuseeOrsayAssetDetailsParser
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using AwsTools;
+using IndexBackend;
 
 namespace SlideshowCreator.InfrastructureAsCode
 {

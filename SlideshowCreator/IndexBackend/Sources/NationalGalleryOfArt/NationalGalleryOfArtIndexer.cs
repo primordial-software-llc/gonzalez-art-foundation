@@ -8,8 +8,9 @@ using Amazon.DynamoDBv2;
 using Amazon.S3;
 using IndexBackend.Indexing;
 using IndexBackend.Model;
+using IndexBackend.NationalGalleryOfArt;
 
-namespace IndexBackend.NationalGalleryOfArt
+namespace IndexBackend.Sources.NationalGalleryOfArt
 {
     public class NationalGalleryOfArtIndexer : IIndex
     {
@@ -35,19 +36,7 @@ namespace IndexBackend.NationalGalleryOfArt
             NgaDataAccess = ngaDataAccess;
         }
 
-        public void SetMetaData(ClassificationModel model)
-        {
-            Console.WriteLine("Getting metadata for page id " + model.PageId);
-            var html = NgaDataAccess.GetAssetDetails(model.PageId);
-            var details = AssetDetailsParser.ParseHtmlToNewModel(html);
-            model.OriginalArtist = details.OriginalArtist;
-            model.Artist = details.Artist;
-            model.Name = details.Name;
-            model.Date = details.Date;
-            model.SourceLink = details.SourceLink;
-        }
-
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var zipFile = await NgaDataAccess.GetHighResImageZipFile(id);
             if (zipFile == null)
@@ -78,11 +67,27 @@ namespace IndexBackend.NationalGalleryOfArt
                 PageId = id
             };
             SetMetaData(classification);
+            if (imageBytes == null)
+            {
+                return null;
+            }
             return new IndexResult
             {
                 Model = classification,
                 ImageBytes = imageBytes
             };
+        }
+
+        public void SetMetaData(ClassificationModel model)
+        {
+            Console.WriteLine("Getting metadata for page id " + model.PageId);
+            var html = NgaDataAccess.GetAssetDetails(model.PageId);
+            var details = AssetDetailsParser.ParseHtmlToNewModel(html);
+            model.OriginalArtist = details.OriginalArtist;
+            model.Artist = details.Artist;
+            model.Name = details.Name;
+            model.Date = details.Date;
+            model.SourceLink = details.SourceLink;
         }
 
         private List<string> ImageExtensions => new List<string> {".jpg",".tif"};
