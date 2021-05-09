@@ -17,6 +17,7 @@ using IndexBackend.Sources.Christies;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseumOfModernArt;
+using IndexBackend.Sources.NationalGalleryOfArt;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Harvester = IndexBackend.Harvester;
@@ -158,14 +159,8 @@ namespace SlideshowCreator.Tests
         public void TestIndex()
         {
             var client = new HttpClient();
-            var indexer = new ChristiesArtIndexer(
-                client,
-                new ConsoleLogging()
-            );
-            //var classification = indexer.Index("63072").Result;
-            //var classification = indexer.Index("106").Result;
-            //indexer.Index("9795").Wait();
-            var result = indexer.Index("108401", null).Result;
+            var indexer = new IndexerFactory().GetIndexer(NationalGalleryOfArtIndexer.Source, client, null, null);
+            var result = indexer.Index("100515", null).Result;
             Console.WriteLine(result.Model.Source);
             Console.WriteLine(result.Model.PageId); 
         }

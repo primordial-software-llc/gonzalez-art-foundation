@@ -51,6 +51,8 @@
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETCoreApp,Version=v3.1::SlideshowCreator.Tests.UploadToS3.HarvestTheAthenaeum&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETCoreApp,Version=v3.1::SlideshowCreator.Tests.DataAccessTests.ImageAnalysisTests.Test_Image_Analysis_From_Over_5MB_File&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETCoreApp,Version=v3.1::SlideshowCreator.Tests.UploadToS3.DeleteAllFunctions&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETCoreApp,Version=v3.1::SlideshowCreator.Tests.UploadToS3.TestIndex&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2A6CFD13-3FE8-4E24-8335-74460093D7CF::.NETCoreApp,Version=v3.1::SlideshowCreator.Tests.UploadToS3.RetryQueue&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	

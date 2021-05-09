@@ -9,11 +9,9 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
     public class NationalGalleryOfArtDataAccess
     {
         protected HttpClient Client { get; set; }
-        protected Uri Uri { get; }
 
-        public NationalGalleryOfArtDataAccess(Uri uri)
+        public NationalGalleryOfArtDataAccess()
         {
-            Uri = uri;
             Client = new HttpClient();
         }
 
