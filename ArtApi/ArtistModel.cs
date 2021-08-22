@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
+using AwsTools;
 using Newtonsoft.Json;
 
-namespace IndexBackend.Model
+namespace ArtApi
 {
     public class ArtistModel : IModel
     {

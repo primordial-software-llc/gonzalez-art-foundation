@@ -22,6 +22,12 @@ namespace IndexBackend
             ApiKey = apiKey;
         }
 
+        public async Task<string> DeleteFromElasticSearch(ClassificationModel classification)
+        {
+            var path = "/classification/_doc/" + HttpUtility.UrlEncode($"{classification.Source}:{classification.PageId}");
+            return await SendToElasticSearch(HttpMethod.Delete, path, null);
+        }
+
         public async Task<string> SendToElasticSearch(ClassificationModel classification)
         {
             var json = JObject.Parse(JsonConvert.SerializeObject(classification, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));

@@ -58,7 +58,8 @@ namespace ArtApi
                     new Routes.Unauthenticated.GetScan(),
                     new Routes.Unauthenticated.GetSearch(),
                     new Routes.Unauthenticated.CacheEverything.GetImageClassification(),
-                    new Routes.Unauthenticated.CacheEverything.GetImage()
+                    new Routes.Unauthenticated.CacheEverything.GetImage(),
+                    new Routes.Unauthenticated.CacheEverything.GetArtist()
                 };
                 var matchedRoute = routes.FirstOrDefault(route => string.Equals(request.HttpMethod, route.HttpMethod, StringComparison.OrdinalIgnoreCase) &&
                                                                   string.Equals(request.Path, route.Path, StringComparison.OrdinalIgnoreCase));

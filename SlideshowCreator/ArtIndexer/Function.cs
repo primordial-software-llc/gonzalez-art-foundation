@@ -139,6 +139,14 @@ namespace ArtIndexer
                         Document.FromJson(json.ToString()).ToAttributeMap()
                     );
                     await ElasticSearchClient.SendToElasticSearch(classification);
+
+                    var artistClient = new DatabaseClient<ArtistModel>(DbClient);
+                    var newArtistRecord = new ArtistModel { Artist = model.Artist, OriginalArtist = model.OriginalArtist };
+                    var artistRecord = artistClient.Get(newArtistRecord);
+                    if (artistRecord == null)
+                    {
+                        artistClient.Create(newArtistRecord);
+                    }
                 }
             }
             catch (Exception e)

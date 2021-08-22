@@ -3,7 +3,6 @@ using System.Net.Http;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using IndexBackend.Indexing;
-using IndexBackend.Sources.Christies;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseeOrsay;
@@ -21,10 +20,6 @@ namespace IndexBackend
             if (string.Equals(source, TheAthenaeumIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {
                 return new TheAthenaeumIndexer(s3Client, dynamoDbClient);
-            }
-            if (string.Equals(source, ChristiesArtIndexer.Source, StringComparison.OrdinalIgnoreCase))
-            {
-                return new ChristiesArtIndexer(httpClient, log);
             }
             if (string.Equals(source, MuseeOrsayIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {

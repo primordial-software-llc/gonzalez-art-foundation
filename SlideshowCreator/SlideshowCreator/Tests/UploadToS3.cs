@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon;
@@ -13,14 +14,13 @@ using Amazon.SQS.Model;
 using AwsLambdaDeploy;
 using IndexBackend;
 using IndexBackend.Model;
-using IndexBackend.Sources.Christies;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.NationalGalleryOfArt;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using Harvester = IndexBackend.Harvester;
 
 namespace SlideshowCreator.Tests
 {
@@ -50,6 +50,151 @@ namespace SlideshowCreator.Tests
                 FUNCTION_INDEX_AD_HOME,
                 5
             );
+        }
+
+        [Test]
+        public void GetAllArtists()
+        {
+            var items = new List<ArtistModel>();
+            var client = GalleryAwsCredentialsFactory.ProductionDbClient;
+            var scanRequest = new ScanRequest(new ArtistModel().GetTable());
+            ScanResponse queryResponse = null;
+            do
+            {
+                if (queryResponse != null)
+                {
+                    scanRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
+                }
+                queryResponse = client.ScanAsync(scanRequest).Result;
+                foreach (var item in queryResponse.Items)
+                {
+                    var model = JsonConvert.DeserializeObject<ArtistModel>(Document.FromAttributeMap(item).ToJson());
+                    items.Add(model);
+                }
+            } while (queryResponse.LastEvaluatedKey.Any());
+            Console.WriteLine(items.Count);
+        }
+
+        [Test]
+        public void BuildArtistList()
+        {
+            var artists = new Dictionary<string, string>();
+            var request = new ScanRequest(new ClassificationModel().GetTable());
+            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
+            ScanResponse response = null;
+            do
+            {
+                if (response != null)
+                {
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+                }
+                response = dynamoDbClient.ScanAsync(request).Result;
+                foreach (var item in response.Items)
+                {
+                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
+                    if (string.IsNullOrWhiteSpace(model.Artist))
+                    {
+                        Console.WriteLine("No artist");
+                    }
+                    if (!string.IsNullOrWhiteSpace(model.Artist) &&
+                        !artists.ContainsKey(model.Artist))
+                    {
+                        artists.Add(model.Artist, model.OriginalArtist);
+                        var artistModel = new ArtistModel
+                        {
+                            Artist = model.Artist,
+                            OriginalArtist = model.OriginalArtist
+                        };
+                        var json = JsonConvert.SerializeObject(artistModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                        var result = dynamoDbClient.PutItemAsync(
+                            new ArtistModel().GetTable(),
+                            Document.FromJson(json).ToAttributeMap()
+                        ).Result;
+                    }
+                }
+            } while (response.LastEvaluatedKey.Any());
+
+            //Console.WriteLine($"<li><a href='/index.html?artist={artistKey}'>${artists[artistKey]}</a></li>");
+        }
+
+        [Test]
+        public void MoveData()
+        {
+            var source = string.Empty;
+            var request = new QueryRequest(new ClassificationModel().GetTable())
+            {
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":source", new AttributeValue {S = source}}
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#source", "source"}
+                },
+                KeyConditionExpression = "#source = :source"
+            };
+            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
+            var elasticSearchClient = new ElasticSearchClient(
+                new HttpClient(),
+                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
+                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
+            QueryResponse response = null;
+            do
+            {
+                if (response != null)
+                {
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+                }
+                response = dynamoDbClient.QueryAsync(request).Result;
+                foreach (var item in response.Items)
+                {
+                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
+                    MoveForReview(dynamoDbClient, elasticSearchClient, model);
+                }
+            } while (response.LastEvaluatedKey.Any());
+        }
+
+        private void MoveForReview(
+            IAmazonDynamoDB dbClient,
+            ElasticSearchClient elasticSearchClient,
+            ClassificationModel model)
+        {
+            var json = JObject.FromObject(model, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
+            var reviewTable = "gonzalez-art-foundation-image-classification-review";
+            
+            var result = dbClient.PutItemAsync(
+                reviewTable,
+                Document.FromJson(json.ToString()).ToAttributeMap()
+            ).Result;
+            
+            if (result.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Failed to move to review table");
+            }
+
+            try
+            {
+                var searchDeletionResult = elasticSearchClient.DeleteFromElasticSearch(model).Result;
+                var searchDeletionResultJson = JObject.Parse(searchDeletionResult);
+                if (!string.Equals(searchDeletionResultJson["result"].Value<string>(), "deleted", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception("Failed to delete from elastic search");
+                }
+            }
+            catch (AggregateException exception)
+            {
+                if (!exception.Message.Contains("404 (Not Found)", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw;
+                }
+            }
+
+            var modelDeletionResult = dbClient.DeleteItemAsync(model.GetTable(), model.GetKey()).Result;
+            if (modelDeletionResult.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Failed to delete from classification table");
+            }
         }
         
         [Test]
@@ -87,30 +232,6 @@ namespace SlideshowCreator.Tests
                 256,
                 1,
                 TimeSpan.FromMinutes(15));
-        }
-        
-        [Test]
-        public void HarvestTheAthenaeum()
-        {
-            var scanRequest = new ScanRequest(new ClassificationModel().GetTable()) {Limit = Harvester.SqsMaxMessages};
-            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            ScanResponse scanResponse = null;
-            do
-            {
-                if (scanResponse != null)
-                {
-                    scanRequest.ExclusiveStartKey = scanResponse.LastEvaluatedKey;
-                }
-                scanResponse = dynamoDbClient.ScanAsync(scanRequest).Result;
-                var batch = new List<ClassificationModel>();
-                foreach (var item in scanResponse.Items)
-                {
-                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    batch.Add(new ClassificationModel { Source = model.Source, PageId = model.PageId });
-                }
-
-                Harvester.SendBatch(GalleryAwsCredentialsFactory.SqsClient, batch);
-            } while (scanResponse.LastEvaluatedKey.Any());
         }
 
         [Test]
@@ -164,36 +285,7 @@ namespace SlideshowCreator.Tests
             Console.WriteLine(result.Model.Source);
             Console.WriteLine(result.Model.PageId); 
         }
-
-        // Things are getting missed but appear after re-indexing. Not sure what happened so I'm starting near the pages I want until I figure it out.
-        [Test]
-        public void HarvestChristiesPages()
-        {
-            new Harvester().HarvestIntoSqs(
-                GalleryAwsCredentialsFactory.SqsClient,
-                ChristiesArtIndexer.Source,
-                1,
-                400000);
-            /*
-            var batch = new List<ClassificationModel>
-            {
-                new ClassificationModel
-                {
-                    Source = ChristiesArtIndexer.Source,
-                    PageId = 108401.ToString()
-                }
-            };
-            Harvester.SendBatch(
-                GalleryAwsCredentialsFactory.SqsClient,
-                "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler",
-                batch
-                    .Select(crawlerModel =>
-                        new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), JsonConvert.SerializeObject(crawlerModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })))
-                    .ToList()
-            );
-            */
-        }
-
+        
         //[Test]
         public void HarvestMetropolitanMuseumOfArtPages()
         {
