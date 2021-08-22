@@ -32,6 +32,7 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
                     items.Add(model);
                 }
             } while (queryResponse.LastEvaluatedKey.Any());
+            items = items.OrderBy(x => x.Artist).ToList();
             response.Body = JsonConvert.SerializeObject(items);
         }
 
