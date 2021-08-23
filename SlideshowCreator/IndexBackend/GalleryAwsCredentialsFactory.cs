@@ -31,12 +31,11 @@ namespace IndexBackend
             CreateCredentials(),
             new AmazonSQSConfig {RegionEndpoint = RegionEndpoint.USEast1});
 
-        public static IAmazonS3 S3AcceleratedClient => new AmazonS3Client(
+        public static IAmazonS3 S3Client => new AmazonS3Client(
             CreateCredentials(),
             new AmazonS3Config
             {
-                RegionEndpoint = RegionEndpoint.USEast1,
-                UseAccelerateEndpoint = true
+                RegionEndpoint = RegionEndpoint.USEast1
             });
 
         public static IAmazonDynamoDB ProductionDbClient => new AmazonDynamoDBClient(

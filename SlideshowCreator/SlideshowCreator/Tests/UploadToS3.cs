@@ -10,6 +10,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda;
+using Amazon.S3.Model;
 using Amazon.SQS.Model;
 using AwsLambdaDeploy;
 using IndexBackend;
@@ -50,29 +51,6 @@ namespace SlideshowCreator.Tests
                 FUNCTION_INDEX_AD_HOME,
                 5
             );
-        }
-
-        [Test]
-        public void GetAllArtists()
-        {
-            var items = new List<ArtistModel>();
-            var client = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var scanRequest = new ScanRequest(new ArtistModel().GetTable());
-            ScanResponse queryResponse = null;
-            do
-            {
-                if (queryResponse != null)
-                {
-                    scanRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
-                }
-                queryResponse = client.ScanAsync(scanRequest).Result;
-                foreach (var item in queryResponse.Items)
-                {
-                    var model = JsonConvert.DeserializeObject<ArtistModel>(Document.FromAttributeMap(item).ToJson());
-                    items.Add(model);
-                }
-            } while (queryResponse.LastEvaluatedKey.Any());
-            Console.WriteLine(items.Count);
         }
 
         [Test]

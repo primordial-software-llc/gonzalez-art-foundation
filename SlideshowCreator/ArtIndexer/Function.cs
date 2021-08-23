@@ -99,6 +99,14 @@ namespace ArtIndexer
             {
                 var dbClient = new DatabaseClient<ClassificationModel>(DbClient);
                 var existing = dbClient.Get(new ClassificationModel { Source = model.Source, PageId = model.PageId });
+                if (existing != null)
+                {
+                    Console.WriteLine(
+                        $"This record has already been crawled and is being skipped, because the record is now archived and protected: {model.Source} - {model.PageId}."+
+                        $" If you want to re-crawl the record delete it in dynamodb and s3.");
+                    await QueueClient.DeleteMessageAsync(QUEUE_URL, message.ReceiptHandle);
+                    return;
+                }
                 var analyzedImageAlreadyExists = existing != null && existing.ModerationLabels != null;
                 var indexResult = await indexer.Index(model.PageId, existing);
                 if (indexResult?.Model == null)

@@ -39,7 +39,7 @@ namespace SlideshowCreator.Tests.DataAccessTests
         public void Get_Image()
         {
             var key = "national-gallery-of-art/image-18392.jpg";
-            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3AcceleratedClient.GetObjectAsync("tgonzalez-image-archive", key).Result;
+            GetObjectResponse s3Object = GalleryAwsCredentialsFactory.S3Client.GetObjectAsync("tgonzalez-image-archive", key).Result;
             var memoryStream = new MemoryStream();
             s3Object.ResponseStream.CopyTo(memoryStream);
 
