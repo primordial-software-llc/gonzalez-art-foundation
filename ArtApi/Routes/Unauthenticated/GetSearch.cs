@@ -105,12 +105,11 @@ namespace ArtApi.Routes.Unauthenticated
                 "/classification/_search",
                 JObject.Parse(getRequest));
             var responseJson = JObject.Parse(elasticSearchResponse);
-            var items = responseJson["hits"]["hits"].Select(x => x["_source"]).ToList();
             var searchResult = new JObject
             {
-                { "items", JToken.FromObject(items) },
-                { "total", responseJson["total"]["value"] },
-                { "maxSearchResultsHit", string.Equals(responseJson["total"]["relation"].Value<string>(), "gte", StringComparison.OrdinalIgnoreCase) }
+                { "items", JToken.FromObject(responseJson["hits"]["hits"].Select(x => x["_source"]).ToList()) },
+                { "total", responseJson["hits"]["total"]["value"] },
+                { "maxSearchResultsHit", string.Equals(responseJson["hits"]["total"]["relation"].Value<string>(), "gte", StringComparison.OrdinalIgnoreCase) }
             };
             response.Body = JsonConvert.SerializeObject(searchResult);
         }
