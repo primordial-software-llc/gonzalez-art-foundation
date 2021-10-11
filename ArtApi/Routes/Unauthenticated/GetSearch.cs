@@ -108,6 +108,7 @@ namespace ArtApi.Routes.Unauthenticated
             var searchResult = new JObject
             {
                 { "items", JToken.FromObject(responseJson["hits"]["hits"].Select(x => x["_source"]).ToList()) },
+                { "searchFrom", searchFrom },
                 { "total", responseJson["hits"]["total"]["value"] },
                 { "maxSearchResultsHit", string.Equals(responseJson["hits"]["total"]["relation"].Value<string>(), "gte", StringComparison.OrdinalIgnoreCase) }
             };
