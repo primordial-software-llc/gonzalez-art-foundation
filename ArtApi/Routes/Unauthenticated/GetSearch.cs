@@ -20,11 +20,16 @@ namespace ArtApi.Routes.Unauthenticated
             var searchText = request.QueryStringParameters.ContainsKey("searchText")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["searchText"].Trim())
                 : string.Empty;
-            const int maxResultsLimit = 5000;
+            const int maxResultsLimit = 500;
             var maxResults = request.QueryStringParameters.ContainsKey("maxResults")
                 ? int.Parse(request.QueryStringParameters["maxResults"])
                 : maxResultsLimit;
-            maxResults = maxResults <= 0 ? maxResultsLimit : maxResults;
+            maxResults = maxResults <= 0 || maxResults >= maxResultsLimit
+                ? maxResultsLimit
+                : maxResults;
+            var searchFrom = request.QueryStringParameters.ContainsKey("searchFrom")
+                ? int.Parse(request.QueryStringParameters["searchFrom"])
+                : 0;
             var source = request.QueryStringParameters.ContainsKey("source")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
                 : string.Empty;
@@ -91,7 +96,8 @@ namespace ArtApi.Routes.Unauthenticated
                   { filter }
                 }}
               }},
-              ""size"": {maxResults}
+              ""size"": {maxResults},
+              ""from"": {searchFrom}
             }}";
             var elasticSearchResponse = SendToElasticSearch(
                 new HttpClient(),
@@ -100,7 +106,13 @@ namespace ArtApi.Routes.Unauthenticated
                 JObject.Parse(getRequest));
             var responseJson = JObject.Parse(elasticSearchResponse);
             var items = responseJson["hits"]["hits"].Select(x => x["_source"]).ToList();
-            response.Body = JsonConvert.SerializeObject(items);
+            var searchResult = new JObject
+            {
+                { "items", JToken.FromObject(items) },
+                { "total", responseJson["total"]["value"] },
+                { "maxSearchResultsHit", string.Equals(responseJson["total"]["relation"].Value<string>(), "gte", StringComparison.OrdinalIgnoreCase) }
+            };
+            response.Body = JsonConvert.SerializeObject(searchResult);
         }
 
         public string SendToElasticSearch(HttpClient client, HttpMethod method, string path, JObject json)

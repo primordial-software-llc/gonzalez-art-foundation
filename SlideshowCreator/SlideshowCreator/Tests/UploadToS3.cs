@@ -4,12 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.SQS.Model;
 using AwsLambdaDeploy;
@@ -19,6 +21,7 @@ using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.NationalGalleryOfArt;
+using IndexBackend.Sources.TheAthenaeum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -42,7 +45,7 @@ namespace SlideshowCreator.Tests
                         x != RegionEndpoint.MESouth1).ToList();
         private const string FUNCTION_INDEX_AD_HOME = "gonzalez-art-foundation-crawler";
         
-        [Test]
+        //[Test]
         public void DeleteAllFunctions()
         {
             new LambdaDeploy().Delete(
@@ -54,6 +57,52 @@ namespace SlideshowCreator.Tests
         }
 
         [Test]
+        public void FindInvalidDates() // Incredibly important for knowing what's in the public domain.
+        {
+            const int thresholdYear = 1924; // https://fairuse.stanford.edu/overview/public-domain/
+            var request = new QueryRequest(new ClassificationModel().GetTable())
+            {
+                ScanIndexForward = true,
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":source", new AttributeValue { S = TheAthenaeumIndexer.Source } }
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#source", "source" }
+                },
+                KeyConditionExpression = "#source = :source"
+            };
+            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
+            var elasticSearchClient = new ElasticSearchClient(
+                new HttpClient(),
+                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
+                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
+            QueryResponse response = null;
+            do
+            {
+                if (response != null)
+                {
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+                }
+                response = dynamoDbClient.QueryAsync(request).Result;
+                foreach (var item in response.Items)
+                {
+                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
+                    if (!int.TryParse(model.Date, out int parsedYear))
+                    {
+                        Console.WriteLine("Unknown date: " + model.Date);
+                    }
+                    else if (parsedYear > thresholdYear)
+                    {
+                        MoveForReview(dynamoDbClient, elasticSearchClient, model);
+                        Thread.Sleep(200);
+                    }
+                }
+            } while (response.LastEvaluatedKey.Any());
+        }
+
+        //[Test] - The table should probably be rebuilt maybe once per week to keep up with any data changes.
         public void BuildArtistList()
         {
             var artists = new Dictionary<string, string>();
@@ -91,46 +140,44 @@ namespace SlideshowCreator.Tests
                     }
                 }
             } while (response.LastEvaluatedKey.Any());
-
-            //Console.WriteLine($"<li><a href='/index.html?artist={artistKey}'>${artists[artistKey]}</a></li>");
         }
 
+
         [Test]
-        public void MoveData()
+        public void HideImagesInReview()
         {
-            var source = string.Empty;
-            var request = new QueryRequest(new ClassificationModel().GetTable())
-            {
-                ScanIndexForward = true,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {":source", new AttributeValue {S = source}}
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    {"#source", "source"}
-                },
-                KeyConditionExpression = "#source = :source"
-            };
+            // HAZARD TEST THIS DEBUGGING. THIS LOGIC WILL HAVE BEEN TESTED IN ISOLATION, BUT NOT IN THIS LARGER REVIEW ROUTINE.
+
+            var request = new ScanRequest(NationalGalleryOfArtIndexer.TABLE_REVIEW);
             var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var elasticSearchClient = new ElasticSearchClient(
-                new HttpClient(),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
-            QueryResponse response = null;
+            ScanResponse response = null;
             do
             {
                 if (response != null)
                 {
                     request.ExclusiveStartKey = response.LastEvaluatedKey;
                 }
-                response = dynamoDbClient.QueryAsync(request).Result;
-                foreach (var item in response.Items)
+                response = dynamoDbClient.ScanAsync(request).Result;
+                //foreach (var item in response.Items)
+                Parallel.ForEach(response.Items, item => 
                 {
                     var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    MoveForReview(dynamoDbClient, elasticSearchClient, model);
-                }
+                    var s3Client = GalleryAwsCredentialsFactory.S3Client;
+                    try
+                    {
+                        MoveS3ImageForReview(s3Client, model);
+                    }
+                    catch (AggregateException ex)
+                    {
+                        if (!ex.Message.Contains("specified key does not exist"))
+                        {
+                            throw;
+                        }
+                    }
+                    
+                });
             } while (response.LastEvaluatedKey.Any());
+
         }
 
         private void MoveForReview(
@@ -139,10 +186,9 @@ namespace SlideshowCreator.Tests
             ClassificationModel model)
         {
             var json = JObject.FromObject(model, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
-            var reviewTable = "gonzalez-art-foundation-image-classification-review";
             
             var result = dbClient.PutItemAsync(
-                reviewTable,
+                NationalGalleryOfArtIndexer.TABLE_REVIEW,
                 Document.FromJson(json.ToString()).ToAttributeMap()
             ).Result;
             
@@ -150,6 +196,10 @@ namespace SlideshowCreator.Tests
             {
                 throw new Exception("Failed to move to review table");
             }
+
+            // HAZARD TEST THIS DEBUGGING. THIS LOGIC WILL HAVE BEEN TESTED IN ISOLATION, BUT NOT IN THIS LARGER REVIEW ROUTINE.
+            var s3Client = GalleryAwsCredentialsFactory.S3Client;
+            MoveS3ImageForReview(s3Client, model);
 
             try
             {
@@ -174,7 +224,73 @@ namespace SlideshowCreator.Tests
                 throw new Exception("Failed to delete from classification table");
             }
         }
-        
+
+        private void MoveS3ImageForReview(IAmazonS3 s3Client, ClassificationModel model)
+        {
+            var reviewImageCopyResult = s3Client.CopyObjectAsync(
+                NationalGalleryOfArtIndexer.BUCKET,
+                model.S3Path,
+                NationalGalleryOfArtIndexer.BUCKET_REVIEW,
+                model.S3Path
+            ).Result;
+            if (reviewImageCopyResult.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Failed to copy image to review bucket");
+            }
+
+            var imageOriginalDeleteResult = s3Client.DeleteObjectAsync(NationalGalleryOfArtIndexer.BUCKET, model.S3Path).Result;
+            if (!string.Equals(imageOriginalDeleteResult.DeleteMarker, "true", StringComparison.OrdinalIgnoreCase)) // Assumes versioning is enabled. If versioning isn't enabled the the object shouldn't be deleted, because some of these images are no longer accessible and the operation would be hazardous.
+            {
+                throw new Exception("Failed to delete image from primary bucket");
+            }
+        }
+
+        [Test]
+        public void CreateQuery()
+        {
+            var filters = new List<string>();
+            var source = "http://the-athenaeum.org";
+            var searchText = "lawrence";
+            if (!string.IsNullOrWhiteSpace(source))
+            {
+                filters.Add($@"
+                  {{
+                    ""term"": {{
+                      ""source.keyword"": ""{source}""
+                    }}
+                  }}
+                ");
+            }
+            var filter = $@"
+            ,""filter"": {{
+              ""bool"": {{
+                ""must"": [
+                  {string.Join(",", filters)}
+                ]
+              }}
+            }}";
+            var getRequest = $@"{{
+              ""query"": {{
+                ""bool"": {{
+                  ""must"": {{
+                    ""multi_match"": {{
+                      ""query"": ""{searchText}"",
+                      ""type"": ""best_fields"",
+                      ""fields"": [
+                        ""artist^2"",
+                        ""name"",
+                        ""date""
+                      ]
+                    }}
+                  }}
+                  { filter }
+                }}
+              }},
+              ""size"": {200}
+            }}";
+            Console.WriteLine(getRequest);
+        }
+
         [Test]
         public void DeployArtIndexerInEachRegion()
         {
@@ -394,6 +510,49 @@ namespace SlideshowCreator.Tests
                 }
             } while (queryResponse.LastEvaluatedKey.Any());
             return items;
+        }
+
+        //[Test]
+        public void SendToElastic()
+        {
+            var client = new HttpClient();
+
+            var queryRequest = new ScanRequest(new ClassificationModel().GetTable());
+            var dbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
+            var elasticClient = new ElasticSearchClient(
+                client,
+                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
+                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
+
+            ScanResponse queryResponse = null;
+            queryResponse = new ScanResponse();
+            queryResponse.LastEvaluatedKey = new Dictionary<string, AttributeValue>
+            {
+                { "source", new AttributeValue { S = "https://www.pop.culture.gouv.fr/notice/museo/M5031" } },
+                { "pageId", new AttributeValue { S = "50350123823" } }
+            };
+            do
+            {
+                if (queryResponse != null)
+                {
+                    queryRequest.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
+                }
+                queryResponse = dbClient.ScanAsync(queryRequest).Result;
+                var status = "Sending batch from start key: " + JsonConvert.SerializeObject(queryRequest.ExclusiveStartKey);
+                Console.WriteLine(status);
+                var batch = new List<ClassificationModel>();
+                foreach (var item in queryResponse.Items)
+                {
+                    var classificationModel = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
+                    batch.Add(classificationModel);
+                }
+                Parallel.ForEach(batch, new ParallelOptions { MaxDegreeOfParallelism = 10 }, classification =>
+                {
+                    elasticClient.SendToElasticSearch(classification).Wait();
+                });
+               Thread.Sleep(500);
+            } while (queryResponse.LastEvaluatedKey.Any());
+
         }
     }
 }
