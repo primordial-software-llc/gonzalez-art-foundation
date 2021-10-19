@@ -142,44 +142,6 @@ namespace SlideshowCreator.Tests
             } while (response.LastEvaluatedKey.Any());
         }
 
-
-        [Test]
-        public void HideImagesInReview()
-        {
-            // HAZARD TEST THIS DEBUGGING. THIS LOGIC WILL HAVE BEEN TESTED IN ISOLATION, BUT NOT IN THIS LARGER REVIEW ROUTINE.
-
-            var request = new ScanRequest(NationalGalleryOfArtIndexer.TABLE_REVIEW);
-            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            ScanResponse response = null;
-            do
-            {
-                if (response != null)
-                {
-                    request.ExclusiveStartKey = response.LastEvaluatedKey;
-                }
-                response = dynamoDbClient.ScanAsync(request).Result;
-                //foreach (var item in response.Items)
-                Parallel.ForEach(response.Items, item => 
-                {
-                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    var s3Client = GalleryAwsCredentialsFactory.S3Client;
-                    try
-                    {
-                        MoveS3ImageForReview(s3Client, model);
-                    }
-                    catch (AggregateException ex)
-                    {
-                        if (!ex.Message.Contains("specified key does not exist"))
-                        {
-                            throw;
-                        }
-                    }
-                    
-                });
-            } while (response.LastEvaluatedKey.Any());
-
-        }
-
         private void MoveForReview(
             IAmazonDynamoDB dbClient,
             ElasticSearchClient elasticSearchClient,
@@ -244,53 +206,7 @@ namespace SlideshowCreator.Tests
                 throw new Exception("Failed to delete image from primary bucket");
             }
         }
-
-        [Test]
-        public void CreateQuery()
-        {
-            var filters = new List<string>();
-            var source = "http://the-athenaeum.org";
-            var searchText = "lawrence";
-            if (!string.IsNullOrWhiteSpace(source))
-            {
-                filters.Add($@"
-                  {{
-                    ""term"": {{
-                      ""source.keyword"": ""{source}""
-                    }}
-                  }}
-                ");
-            }
-            var filter = $@"
-            ,""filter"": {{
-              ""bool"": {{
-                ""must"": [
-                  {string.Join(",", filters)}
-                ]
-              }}
-            }}";
-            var getRequest = $@"{{
-              ""query"": {{
-                ""bool"": {{
-                  ""must"": {{
-                    ""multi_match"": {{
-                      ""query"": ""{searchText}"",
-                      ""type"": ""best_fields"",
-                      ""fields"": [
-                        ""artist^2"",
-                        ""name"",
-                        ""date""
-                      ]
-                    }}
-                  }}
-                  { filter }
-                }}
-              }},
-              ""size"": {200}
-            }}";
-            Console.WriteLine(getRequest);
-        }
-
+        
         [Test]
         public void DeployArtIndexerInEachRegion()
         {

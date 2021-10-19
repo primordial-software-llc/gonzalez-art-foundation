@@ -14,7 +14,7 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
 {
     public class NationalGalleryOfArtIndexer : IIndex
     {
-        public static readonly string BUCKET = "gonzalez-art-foundation";
+        public static readonly string BUCKET = "images.gonzalez-art-foundation";
 
         public static readonly string TABLE_REVIEW = "gonzalez-art-foundation-image-classification-review";
         public static readonly string BUCKET_REVIEW = "gonzalez-art-foundation-review";
