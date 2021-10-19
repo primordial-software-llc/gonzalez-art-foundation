@@ -4,25 +4,27 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.S3;
 using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
 namespace ArtApi.Routes.Unauthenticated.CacheEverything
 {
+    /// <summary>
+    /// Thumbnails only now to fix compression limitations.
+    /// Create thumbnails in s3 then get rid of this.
+    /// This endpoint gets blasted with hundreds of hits for every search.
+    /// The infrastructure can handle it no problem, but it's unnecessary.
+    /// </summary>
     class GetImage : IRoute
     {
         public string HttpMethod => "GET";
         public string Path => "/unauthenticated/cache-everything/image";
         private const double MAX_MEGABYTES = 5.5;
-        private const string BUCKET = "gonzalez-art-foundation";
+        private const string BUCKET = "images.gonzalez-art-foundation";
 
         public void Run(APIGatewayProxyRequest request, APIGatewayProxyResponse response)
         {
             var path = request.QueryStringParameters != null && request.QueryStringParameters.ContainsKey("path")
                 ? request.QueryStringParameters["path"]
-                : string.Empty;
-            var thumbnail = request.QueryStringParameters != null && request.QueryStringParameters.ContainsKey("thumbnail")
-                ? request.QueryStringParameters["thumbnail"]
                 : string.Empty;
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -38,7 +40,6 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
             }
             var s3 = new AmazonS3Client();
             var objectImage = s3.GetObjectAsync(BUCKET, $"{path}").Result;
-            var contentType = objectImage.Headers["Content-Type"];
             byte[] bytes;
             using (var stream = objectImage.ResponseStream)
             using (var memoryStream = new MemoryStream())
@@ -46,31 +47,10 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
                 stream.CopyTo(memoryStream);
                 bytes = memoryStream.ToArray();
             }
-            if (string.Equals(thumbnail, "thumbnail", StringComparison.Ordinal)) // Compare by case so cache can't be broken by changing the case
-            {
-                bytes = CreateThumbnail(bytes);
-                contentType = "image/jpeg";
-            }
-            else if (ConvertBytesToMegabytes(bytes.Length) > MAX_MEGABYTES)
-            {
-                bytes = GetCompressed(bytes);
-                contentType = "image/jpeg";
-            }
-            response.Headers["Content-Type"] = contentType;
+            bytes = CreateThumbnail(bytes);
+            response.Headers["Content-Type"] = "image/jpeg";
             response.Body = Convert.ToBase64String(bytes);
             response.IsBase64Encoded = true;
-        }
-
-        private byte[] GetCompressed(byte[] bytes)
-        {
-            using var image = Image.Load(bytes);
-            var encoder = new JpegEncoder
-            {
-                Quality = 90
-            };
-            using var compressedMemoryStream = new MemoryStream();
-            image.Save(compressedMemoryStream, encoder);
-            return compressedMemoryStream.ToArray();
         }
 
         private static byte[] CreateThumbnail(byte[] bytes)
@@ -81,11 +61,6 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
             using var compressedMemoryStream = new MemoryStream();
             image.SaveAsJpeg(compressedMemoryStream);
             return compressedMemoryStream.ToArray();
-        }
-
-        private static double ConvertBytesToMegabytes(long bytes)
-        {
-            return bytes / 1024f / 1024f;
         }
 
         private static Size ResizeKeepAspect(Size src, int maxWidth, int maxHeight)
