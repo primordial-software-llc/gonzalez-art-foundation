@@ -18,8 +18,7 @@ namespace ArtApi.Routes.Unauthenticated.CacheEverything
     {
         public string HttpMethod => "GET";
         public string Path => "/unauthenticated/cache-everything/image";
-        private const double MAX_MEGABYTES = 5.5;
-        private const string BUCKET = "images.gonzalez-art-foundation";
+        private const string BUCKET = "images.gonzalez-art-foundation.org";
 
         public void Run(APIGatewayProxyRequest request, APIGatewayProxyResponse response)
         {
