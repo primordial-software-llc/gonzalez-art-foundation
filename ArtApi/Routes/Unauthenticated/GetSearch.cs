@@ -72,17 +72,18 @@ namespace ArtApi.Routes.Unauthenticated
                 ");
             }
             var filter = $@"
-            ,""filter"": {{
+            ""filter"": {{
               ""bool"": {{
                 ""must"": [
                   {string.Join(",", filters)}
                 ]
               }}
             }}";
-            var getRequest = $@"{{
-              ""query"": {{
-                ""bool"": {{
-                  ""must"": {{
+            var searchTextQueryPart = string.Empty;
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                searchTextQueryPart = $@"
+                ""must"": {{
                     ""multi_match"": {{
                       ""query"": ""{searchText}"",
                       ""type"": ""best_fields"",
@@ -92,7 +93,12 @@ namespace ArtApi.Routes.Unauthenticated
                         ""date""
                       ]
                     }}
-                  }}
+                }},";
+            }
+            var getRequest = $@"{{
+              ""query"": {{
+                ""bool"": {{
+                  { searchTextQueryPart }
                   { filter }
                 }}
               }},
@@ -105,12 +111,17 @@ namespace ArtApi.Routes.Unauthenticated
                 "/classification/_search",
                 JObject.Parse(getRequest));
             var responseJson = JObject.Parse(elasticSearchResponse);
-            var searchResult = new JObject
+            var searchResult = new SearchResult
             {
-                { "items", JToken.FromObject(responseJson["hits"]["hits"].Select(x => x["_source"]).ToList()) },
-                { "searchFrom", searchFrom },
-                { "total", responseJson["hits"]["total"]["value"] },
-                { "maxSearchResultsHit", string.Equals(responseJson["hits"]["total"]["relation"].Value<string>(), "gte", StringComparison.OrdinalIgnoreCase) }
+                Items = JToken.FromObject(responseJson["hits"]["hits"].Select(x => x["_source"]).ToList()),
+                Total = responseJson["hits"]["total"]["value"].Value<int>(),
+                MaxSearchResultsHit = string.Equals(responseJson["hits"]["total"]["relation"].Value<string>(), "gte",
+                    StringComparison.OrdinalIgnoreCase),
+                Source = source,
+                SearchText = searchText,
+                SearchFrom = searchFrom,
+                MaxResults = maxResults,
+                HideNudity = hideNudity
             };
             response.Body = JsonConvert.SerializeObject(searchResult);
         }

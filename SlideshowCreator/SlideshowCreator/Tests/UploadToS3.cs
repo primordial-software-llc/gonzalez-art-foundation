@@ -142,6 +142,46 @@ namespace SlideshowCreator.Tests
             } while (response.LastEvaluatedKey.Any());
         }
 
+        [Test]
+        public void MoveImage()
+        {
+            var s3Client = GalleryAwsCredentialsFactory.S3Client;
+            const string SOURCE_BUCKET = "gonzalez-art-foundation";
+            ListObjectsResponse objectsResult;
+
+            //var results = s3Client.GetAllObjectKeysAsync("gonzalez-art-foundation", "collections/the-athenaeum",
+            //    new Dictionary<string, object>()).Result;
+
+            do
+            {
+                objectsResult = s3Client.ListObjectsAsync(new ListObjectsRequest
+                {
+                    BucketName = "gonzalez-art-foundation",
+                    Prefix = ""
+                }).Result;
+
+                Parallel.ForEach(objectsResult.S3Objects, new ParallelOptions { MaxDegreeOfParallelism = 30 }, s3Object =>
+                {
+                    var reviewImageCopyResult = s3Client.CopyObjectAsync(
+                        SOURCE_BUCKET,
+                        s3Object.Key,
+                        NationalGalleryOfArtIndexer.BUCKET,
+                        s3Object.Key
+                    ).Result;
+                    if (reviewImageCopyResult.HttpStatusCode != HttpStatusCode.OK)
+                    {
+                        throw new Exception("Failed to copy image to review bucket");
+                    }
+
+                    var imageOriginalDeleteResult = s3Client.DeleteObjectAsync(SOURCE_BUCKET, s3Object.Key).Result;
+                    if (!string.Equals(imageOriginalDeleteResult.DeleteMarker, "true", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new Exception("Failed to delete image from primary bucket");
+                    }
+                });
+            } while (objectsResult.S3Objects.Any());
+        }
+
         private void MoveForReview(
             IAmazonDynamoDB dbClient,
             ElasticSearchClient elasticSearchClient,

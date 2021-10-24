@@ -55,7 +55,6 @@ namespace ArtApi
             {
                 List<IRoute> routes = new List<IRoute>
                 {
-                    new Routes.Unauthenticated.GetScan(),
                     new Routes.Unauthenticated.GetSearch(),
                     new Routes.Unauthenticated.CacheEverything.GetImageClassification(),
                     new Routes.Unauthenticated.CacheEverything.GetImage(),
