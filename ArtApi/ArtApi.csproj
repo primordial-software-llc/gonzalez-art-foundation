@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -12,5 +12,8 @@
     <PackageReference Include="AWSSDK.S3" Version="3.7.3.17" />
     <PackageReference Include="AwsTools" Version="1.0.18" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ArtApi.Model\ArtApi.Model.csproj" />
   </ItemGroup>
 </Project>

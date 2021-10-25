@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+	</PropertyGroup>
+  <ItemGroup>
+	  <PackageReference Include="AwsLambdaDeploy" Version="1.0.6" />
+	  <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.7.3.20" />
+	  <PackageReference Include="AWSSDK.Core" Version="3.7.2.5" />
+	  <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.54" />
+	  <PackageReference Include="AWSSDK.Lambda" Version="3.7.3.2" />
+	  <PackageReference Include="AWSSDK.Rekognition" Version="3.7.2.4" />
+	  <PackageReference Include="AWSSDK.S3" Version="3.7.1.25" />
+	  <PackageReference Include="AWSSDK.SQS" Version="3.7.0.54" />
+	  <PackageReference Include="HtmlAgilityPack" Version="1.11.36" />
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+	  <PackageReference Include="NUnit" Version="3.13.2" />
+	  <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+	  <Reference Include="..\Dlls\CloudFlareImUnderAttackMode.dll" />
+	  <Reference Include="..\Dlls\Diacritics.dll" />
+	  <ProjectReference Include="..\ArtApi.Model\ArtApi.Model.csproj" />
+	  <ProjectReference Include="..\DistributedProcessor\DistributedProcessor.csproj" />
+	  <ProjectReference Include="..\IndexBackend\IndexBackend.csproj" />
+  </ItemGroup>
+</Project>

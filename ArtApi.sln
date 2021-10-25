@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29418.71
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtApi", "ArtApi\ArtApi.csproj", "{71BB2EED-A0D9-4B0C-BEA4-239CC0CF730B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtIndexer", "ArtIndexer\ArtIndexer.csproj", "{62CD5F4A-D17F-4BFE-94C4-91A6AF681B74}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndexBackend", "IndexBackend\IndexBackend.csproj", "{BD8C33C1-609B-4877-9D96-E9CA912611C9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SlideshowCreator", "SlideshowCreator\SlideshowCreator.csproj", "{B68795F6-39C7-4872-8BCF-2D5CFC5C45A6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedProcessor", "DistributedProcessor\DistributedProcessor.csproj", "{E0113977-BA64-4E39-8487-C578E6D209E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtApi.Model", "ArtApi.Model\ArtApi.Model.csproj", "{26D9257B-07F4-4A3A-9856-2F5F984BFCEB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71BB2EED-A0D9-4B0C-BEA4-239CC0CF730B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71BB2EED-A0D9-4B0C-BEA4-239CC0CF730B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71BB2EED-A0D9-4B0C-BEA4-239CC0CF730B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71BB2EED-A0D9-4B0C-BEA4-239CC0CF730B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62CD5F4A-D17F-4BFE-94C4-91A6AF681B74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62CD5F4A-D17F-4BFE-94C4-91A6AF681B74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62CD5F4A-D17F-4BFE-94C4-91A6AF681B74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62CD5F4A-D17F-4BFE-94C4-91A6AF681B74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD8C33C1-609B-4877-9D96-E9CA912611C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD8C33C1-609B-4877-9D96-E9CA912611C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD8C33C1-609B-4877-9D96-E9CA912611C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD8C33C1-609B-4877-9D96-E9CA912611C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B68795F6-39C7-4872-8BCF-2D5CFC5C45A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B68795F6-39C7-4872-8BCF-2D5CFC5C45A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B68795F6-39C7-4872-8BCF-2D5CFC5C45A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B68795F6-39C7-4872-8BCF-2D5CFC5C45A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0113977-BA64-4E39-8487-C578E6D209E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0113977-BA64-4E39-8487-C578E6D209E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0113977-BA64-4E39-8487-C578E6D209E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0113977-BA64-4E39-8487-C578E6D209E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26D9257B-07F4-4A3A-9856-2F5F984BFCEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26D9257B-07F4-4A3A-9856-2F5F984BFCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26D9257B-07F4-4A3A-9856-2F5F984BFCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26D9257B-07F4-4A3A-9856-2F5F984BFCEB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3FFD6536-89BD-479C-9C0C-8D8B3AE92508}
+	EndGlobalSection
+EndGlobal
