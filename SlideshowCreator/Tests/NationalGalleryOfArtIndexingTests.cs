@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Amazon.DynamoDBv2;
 using Amazon.S3;
 using HtmlAgilityPack;
 using IndexBackend;
@@ -15,7 +14,6 @@ namespace SlideshowCreator.Tests
     class NationalGalleryOfArtIndexingTests
     {
         private readonly IAmazonS3 s3Client = GalleryAwsCredentialsFactory.S3Client;
-        private readonly IAmazonDynamoDB dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
 
         private NationalGalleryOfArtDataAccess ngaDataAccess;
         private NationalGalleryOfArtIndexer indexer;
@@ -25,7 +23,7 @@ namespace SlideshowCreator.Tests
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             ngaDataAccess = new NationalGalleryOfArtDataAccess();
-            indexer = new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, ngaDataAccess);
+            indexer = new NationalGalleryOfArtIndexer(ngaDataAccess);
         }
 
         //[Test] This really is strictly production code. I have inder's which use id's, but the crawlers I'm working on that process to know what type of "stuff" needs to be indexed. So far crawling is stupid simple and indexing the "stuff" is the meat of the problem.
@@ -78,7 +76,7 @@ namespace SlideshowCreator.Tests
         {
             var assetId2 = 1.ToString();
             IndexAndAssertInS3(46482);
-            var asset2Index = indexer.Index(assetId2, null);
+            var asset2Index = indexer.Index(assetId2);
             Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadataAsync(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + assetId2 + ".jpg").Wait());
             Assert.IsNull(asset2Index);
         }
@@ -87,7 +85,7 @@ namespace SlideshowCreator.Tests
 
         private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {
-            var asset1Index = indexer.Index(id.ToString(), null).Result;
+            var asset1Index = indexer.Index(id.ToString()).Result;
             Assert.AreEqual("http://images.nga.gov", asset1Index.Model.Source);
             Assert.AreEqual(id, asset1Index.Model.PageId);
             Assert.AreEqual(new NationalGalleryOfArtIndexer().S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.Model.S3Path);

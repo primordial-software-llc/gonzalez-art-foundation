@@ -4,8 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
-using Amazon.S3;
 using ArtApi.Model;
 using IndexBackend.Indexing;
 
@@ -20,9 +18,6 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
         public string S3Bucket => Constants.IMAGES_BUCKET + "/" + ImagePath;
         public static string Source => "http://images.nga.gov";
         public int GetNextThrottleInMilliseconds => 0;
-
-        protected IAmazonS3 S3Client { get; }
-        protected IAmazonDynamoDB DynamoDbClient { get; }
         protected NationalGalleryOfArtDataAccess NgaDataAccess { get; set; }
 
         public NationalGalleryOfArtIndexer()
@@ -30,14 +25,12 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
             
         }
 
-        public NationalGalleryOfArtIndexer(IAmazonS3 s3Client, IAmazonDynamoDB dynamoDbClient, NationalGalleryOfArtDataAccess ngaDataAccess)
+        public NationalGalleryOfArtIndexer(NationalGalleryOfArtDataAccess ngaDataAccess)
         {
-            S3Client = s3Client;
-            DynamoDbClient = dynamoDbClient;
             NgaDataAccess = ngaDataAccess;
         }
 
-        public async Task<IndexResult> Index(string id, ClassificationModel existing)
+        public async Task<IndexResult> Index(string id)
         {
             var zipFile = await NgaDataAccess.GetHighResImageZipFile(id);
             if (zipFile == null)
@@ -75,7 +68,7 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
             return new IndexResult
             {
                 Model = classification,
-                ImageBytes = imageBytes
+                ImageJpegBytes = imageBytes
             };
         }
 

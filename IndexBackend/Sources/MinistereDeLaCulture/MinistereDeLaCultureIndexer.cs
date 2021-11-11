@@ -31,7 +31,7 @@ namespace IndexBackend.Sources.MinistereDeLaCulture
             ImagePath = s3Path;
         }
 
-        public async Task<IndexResult> Index(string id, ClassificationModel existing)
+        public async Task<IndexResult> Index(string id)
         {
             var sourceLink = $"https://www.pop.culture.gouv.fr/notice/joconde/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);
@@ -55,7 +55,7 @@ namespace IndexBackend.Sources.MinistereDeLaCulture
             return new IndexResult
             {
                 Model = model,
-                ImageBytes = imageBytes
+                ImageJpegBytes = imageBytes
             };
         }
     }

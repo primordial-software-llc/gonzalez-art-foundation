@@ -55,7 +55,6 @@ namespace DistributedProcessor
             {
                 FilterExpression = "attribute_not_exists(orientation)"
             };
-            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
             ScanResponse response = null;
             do
             {
@@ -63,8 +62,8 @@ namespace DistributedProcessor
                 {
                     request.ExclusiveStartKey = response.LastEvaluatedKey;
                 }
-                response = dynamoDbClient.ScanAsync(request).Result;
-                Parallel.ForEach(response.Items, new ParallelOptions { MaxDegreeOfParallelism = 10 }, item =>
+                response = DbClient.ScanAsync(request).Result;
+                Parallel.ForEach(response.Items, new ParallelOptions { MaxDegreeOfParallelism = 2 }, item =>
                 {
                     var modelJson = Document.FromAttributeMap(item).ToJson();
                     var classification = JsonConvert.DeserializeObject<ClassificationModel>(modelJson);
@@ -84,7 +83,7 @@ namespace DistributedProcessor
         private async Task Process(ClassificationModel classification)
         {
             Console.WriteLine($"Re-processing source: {classification.Source} page id: {classification.PageId}");
-            if (!classification.Nudity.HasValue)
+            if (classification.ModerationLabels != null && !classification.Nudity.HasValue)
             {
                 classification.Nudity = classification.ModerationLabels.Any(x =>
                     x.Name.Contains("nudity", StringComparison.OrdinalIgnoreCase) ||
@@ -94,11 +93,17 @@ namespace DistributedProcessor
             classification.S3Bucket = Constants.IMAGES_BUCKET;
             var objectImage = S3Client.GetObjectAsync(Constants.IMAGES_BUCKET, $"{classification.S3Path}").Result;
 
-            byte[] imageBytes;
-            using (var stream = objectImage.ResponseStream)
-            using (var memoryStream = new MemoryStream())
+            if (objectImage.ContentLength == 0)
             {
-                stream.CopyTo(memoryStream);
+                new ReviewProcess().MoveForReview(DbClient, ElasticSearchClient, S3Client, classification);
+                return;
+            }
+
+            byte[] imageBytes;
+            await using (var stream = objectImage.ResponseStream)
+            await using (var memoryStream = new MemoryStream())
+            {
+                await stream.CopyToAsync(memoryStream);
                 imageBytes = memoryStream.ToArray();
             }
             using var image = Image.Load(imageBytes);

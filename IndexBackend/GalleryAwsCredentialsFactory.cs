@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Rekognition;
@@ -45,5 +46,11 @@ namespace IndexBackend
         public static AmazonRekognitionClient RekognitionClientClient => new AmazonRekognitionClient(
             CreateCredentials(),
             RegionEndpoint.USEast1);
+
+        public static ElasticSearchClient ElasticSearchClient = new ElasticSearchClient(
+            new HttpClient(),
+            Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
+            Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
+
     }
 }

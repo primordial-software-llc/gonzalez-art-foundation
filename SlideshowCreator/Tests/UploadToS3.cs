@@ -17,15 +17,19 @@ using Amazon.SQS.Model;
 using ArtApi.Model;
 using AwsLambdaDeploy;
 using IndexBackend;
+using IndexBackend.Indexing;
 using IndexBackend.Model;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.NationalGalleryOfArt;
-using IndexBackend.Sources.TheAthenaeum;
+using IndexBackend.Sources.Rijksmuseum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace SlideshowCreator.Tests
 {
@@ -46,61 +50,15 @@ namespace SlideshowCreator.Tests
                         x != RegionEndpoint.MESouth1).ToList();
         private const string FUNCTION_INDEX_AD_HOME = "gonzalez-art-foundation-crawler";
         
-        //[Test]
+        [Test]
         public void DeleteAllFunctions()
         {
             new LambdaDeploy().Delete(
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 Regions,
                 FUNCTION_INDEX_AD_HOME,
-                5
+                10
             );
-        }
-
-        [Test]
-        public void FindInvalidDates() // Incredibly important for knowing what's in the public domain.
-        {
-            const int thresholdYear = 1924; // https://fairuse.stanford.edu/overview/public-domain/
-            var request = new QueryRequest(new ClassificationModel().GetTable())
-            {
-                ScanIndexForward = true,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    { ":source", new AttributeValue { S = TheAthenaeumIndexer.Source } }
-                },
-                ExpressionAttributeNames = new Dictionary<string, string>
-                {
-                    { "#source", "source" }
-                },
-                KeyConditionExpression = "#source = :source"
-            };
-            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var elasticSearchClient = new ElasticSearchClient(
-                new HttpClient(),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
-            QueryResponse response = null;
-            do
-            {
-                if (response != null)
-                {
-                    request.ExclusiveStartKey = response.LastEvaluatedKey;
-                }
-                response = dynamoDbClient.QueryAsync(request).Result;
-                foreach (var item in response.Items)
-                {
-                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    if (!int.TryParse(model.Date, out int parsedYear))
-                    {
-                        Console.WriteLine("Unknown date: " + model.Date);
-                    }
-                    else if (parsedYear > thresholdYear)
-                    {
-                        MoveForReview(dynamoDbClient, elasticSearchClient, model);
-                        Thread.Sleep(200);
-                    }
-                }
-            } while (response.LastEvaluatedKey.Any());
         }
 
         //[Test] - The table should probably be rebuilt maybe once per week to keep up with any data changes.
@@ -143,78 +101,14 @@ namespace SlideshowCreator.Tests
             } while (response.LastEvaluatedKey.Any());
         }
         
-        private void MoveForReview(
-            IAmazonDynamoDB dbClient,
-            ElasticSearchClient elasticSearchClient,
-            ClassificationModel model)
-        {
-            var json = JObject.FromObject(model, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
-            
-            var result = dbClient.PutItemAsync(
-                NationalGalleryOfArtIndexer.TABLE_REVIEW,
-                Document.FromJson(json.ToString()).ToAttributeMap()
-            ).Result;
-            
-            if (result.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception("Failed to move to review table");
-            }
-
-            // HAZARD TEST THIS DEBUGGING. THIS LOGIC WILL HAVE BEEN TESTED IN ISOLATION, BUT NOT IN THIS LARGER REVIEW ROUTINE.
-            var s3Client = GalleryAwsCredentialsFactory.S3Client;
-            MoveS3ImageForReview(s3Client, model);
-
-            try
-            {
-                var searchDeletionResult = elasticSearchClient.DeleteFromElasticSearch(model).Result;
-                var searchDeletionResultJson = JObject.Parse(searchDeletionResult);
-                if (!string.Equals(searchDeletionResultJson["result"].Value<string>(), "deleted", StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new Exception("Failed to delete from elastic search");
-                }
-            }
-            catch (AggregateException exception)
-            {
-                if (!exception.Message.Contains("404 (Not Found)", StringComparison.OrdinalIgnoreCase))
-                {
-                    throw;
-                }
-            }
-
-            var modelDeletionResult = dbClient.DeleteItemAsync(model.GetTable(), model.GetKey()).Result;
-            if (modelDeletionResult.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception("Failed to delete from classification table");
-            }
-        }
-
-        private void MoveS3ImageForReview(IAmazonS3 s3Client, ClassificationModel model)
-        {
-            var reviewImageCopyResult = s3Client.CopyObjectAsync(
-                Constants.IMAGES_BUCKET,
-                model.S3Path,
-                NationalGalleryOfArtIndexer.BUCKET_REVIEW,
-                model.S3Path
-            ).Result;
-            if (reviewImageCopyResult.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception("Failed to copy image to review bucket");
-            }
-
-            var imageOriginalDeleteResult = s3Client.DeleteObjectAsync(Constants.IMAGES_BUCKET, model.S3Path).Result;
-            if (!string.Equals(imageOriginalDeleteResult.DeleteMarker, "true", StringComparison.OrdinalIgnoreCase)) // Assumes versioning is enabled. If versioning isn't enabled the the object shouldn't be deleted, because some of these images are no longer accessible and the operation would be hazardous.
-            {
-                throw new Exception("Failed to delete image from primary bucket");
-            }
-        }
-        
         [Test]
         public void DeployArtIndexerInEachRegion()
         {
             var environmentVariables = new Dictionary<string, string>
             {
                 { "ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN", Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN") },
-                { "ELASTICSEARCH_API_ENDPOINT_FOUNDATION", Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION") }
+                { "ELASTICSEARCH_API_ENDPOINT_FOUNDATION", Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION") },
+                { "RIJKSMUSEUM_DATA_API_KEY", Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY") }
             };
 
             var scheduledFrequencyInMinutes = 15;
@@ -230,7 +124,7 @@ namespace SlideshowCreator.Tests
                 environmentVariables,
                 scheduleExpression,
                 FUNCTION_INDEX_AD_HOME,
-                @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\SlideshowCreator\ArtIndexer\ArtIndexer.csproj",
+                @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\ArtIndexer\ArtIndexer.csproj",
                 new LambdaEntrypointDefinition
                 {
                     AssemblyName = "ArtIndexer",
@@ -240,7 +134,7 @@ namespace SlideshowCreator.Tests
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
-                256,
+                8192,
                 1,
                 TimeSpan.FromMinutes(15));
         }
@@ -290,11 +184,11 @@ namespace SlideshowCreator.Tests
         //[Test]
         public void TestIndex()
         {
-            var client = new HttpClient();
-            var indexer = new IndexerFactory().GetIndexer(NationalGalleryOfArtIndexer.Source, client, null, null);
-            var result = indexer.Index("100515", null).Result;
-            Console.WriteLine(result.Model.Source);
-            Console.WriteLine(result.Model.PageId); 
+            //var client = new HttpClient();
+            //var indexer = new IndexerFactory().GetIndexer(NationalGalleryOfArtIndexer.Source, client, null, null);
+            //var result = indexer.Index("100515", null).Result;
+            //Console.WriteLine(result.Model.Source);
+            //Console.WriteLine(result.Model.PageId); 
         }
         
         //[Test]
@@ -470,6 +364,31 @@ namespace SlideshowCreator.Tests
                Thread.Sleep(500);
             } while (queryResponse.LastEvaluatedKey.Any());
 
+        }
+
+        //[Test] I can delete this and keep the rest unreferenced or in source once everything is crawled.
+        public void HarvestRikjsmuseumPageIds()
+        {
+            var apiKey = Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY");
+            new IndexBackend.Sources.Rijksmuseum.Harvester(GalleryAwsCredentialsFactory.SqsClient, apiKey).Harvest().Wait();
+        }
+
+        //[Test] Keep for debugging until everything is crawled.
+        public void StitchImages()
+        {
+            var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
+
+            var indexingCore = new IndexingCore(
+                GalleryAwsCredentialsFactory.ProductionDbClient,
+                GalleryAwsCredentialsFactory.S3Client,
+                GalleryAwsCredentialsFactory.ElasticSearchClient,
+                GalleryAwsCredentialsFactory.RekognitionClientClient);
+
+            var queueIndexer = new QueueIndexer(GalleryAwsCredentialsFactory.SqsClient,
+                new HttpClient(),
+                indexingCore,
+                new ConsoleLogging());
+            queueIndexer.ProcessAllInQueue();
         }
     }
 }

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using Amazon;
+using Amazon.Lambda;
+using AwsLambdaDeploy;
 using IndexBackend;
 using NUnit.Framework;
 
@@ -7,6 +11,44 @@ namespace SlideshowCreator.Tests
 {
     public class DistributedProcessorTests
     {
+
+        [Test]
+        public void Deploy()
+        {
+            var environmentVariables = new Dictionary<string, string>
+            {
+                { "ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN", Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN") },
+                { "ELASTICSEARCH_API_ENDPOINT_FOUNDATION", Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION") }
+            };
+
+            var scheduledFrequencyInMinutes = 15;
+            var increment = scheduledFrequencyInMinutes == 1 ? "minute" : "minutes";
+            var scheduleExpression = $"rate({scheduledFrequencyInMinutes} {increment})";
+
+            new LambdaDeploy().Deploy(
+                GalleryAwsCredentialsFactory.CreateCredentials(),
+                new List<RegionEndpoint>
+                {
+                    RegionEndpoint.USEast1
+                },
+                environmentVariables,
+                scheduleExpression,
+                "gonzalez-art-foundation-DistributedProcessor",
+                @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\DistributedProcessor\DistributedProcessor.csproj",
+                new LambdaEntrypointDefinition
+                {
+                    AssemblyName = "DistributedProcessor",
+                    Namespace = "DistributedProcessor",
+                    ClassName = "Function",
+                    FunctionName = "FunctionHandler"
+                },
+                roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
+                runtime: Runtime.Dotnetcore31,
+                8192,
+                1,
+                TimeSpan.FromMinutes(15));
+        }
+
         [Test]
         public void TestDistributedProcessorLocally()
         {

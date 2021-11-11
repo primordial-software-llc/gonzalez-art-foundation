@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Net.Http;
-using Amazon.DynamoDBv2;
-using Amazon.S3;
 using IndexBackend.Indexing;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseeOrsay;
 using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.NationalGalleryOfArt;
-using IndexBackend.Sources.TheAthenaeum;
+using IndexBackend.Sources.Rijksmuseum;
 
 namespace IndexBackend
 {
     public class IndexerFactory
     {
-        public IIndex GetIndexer(string source, HttpClient httpClient, IAmazonS3 s3Client, IAmazonDynamoDB dynamoDbClient)
+        public IIndex GetIndexer(string source, HttpClient httpClient)
         {
             var log = new ConsoleLogging();
-            if (string.Equals(source, TheAthenaeumIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, RijksmuseumIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {
-                return new TheAthenaeumIndexer(s3Client, dynamoDbClient);
+                return new RijksmuseumIndexer(httpClient, log);
             }
             if (string.Equals(source, MuseeOrsayIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {
@@ -55,7 +53,7 @@ namespace IndexBackend
             }
             if (string.Equals(source, NationalGalleryOfArtIndexer.Source, StringComparison.OrdinalIgnoreCase))
             {
-                return new NationalGalleryOfArtIndexer(s3Client, dynamoDbClient, new NationalGalleryOfArtDataAccess());
+                return new NationalGalleryOfArtIndexer(new NationalGalleryOfArtDataAccess());
             }
             return null;
         }
