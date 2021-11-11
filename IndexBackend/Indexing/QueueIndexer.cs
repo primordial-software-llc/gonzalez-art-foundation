@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using ArtApi.Model;
+using IndexBackend.Sources.Rijksmuseum;
 using Newtonsoft.Json;
 
 namespace IndexBackend.Indexing
@@ -68,12 +69,18 @@ namespace IndexBackend.Indexing
             }
             catch (Exception e) when (e.InnerException is ProtectedClassificationException)
             {
-                Logger.Log($"Skipping index request due to attempting to re-index protected classification {e.Message} for message: {message.Body}. Error: " + e);
+                Logger.Log($"Skipping index request due to attempting to re-index protected classification: {e.Message} for message: {message.Body}. Error: " + e);
                 await QueueClient.DeleteMessageAsync(QUEUE_URL, message.ReceiptHandle);
+                return;
+            }
+            catch (Exception e) when (e.InnerException is StitchedImageException)
+            {
+                Logger.Log($"Failed to stitch image tiles together. The image can be reprocessed by the queue: {e.Message} for message: {message.Body}. Error: " + e);
+                return;
             }
             catch (Exception e)
             {
-                Logger.Log($"Failed to process message due to error {e.Message} for message: {message.Body}. Error: " + e);
+                Logger.Log($"Failed to process message due to unknown error: {e.Message} for message: {message.Body}. Error: " + e);
                 return;
             }
 
