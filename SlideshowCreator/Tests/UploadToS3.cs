@@ -125,7 +125,7 @@ namespace SlideshowCreator.Tests
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
-                1024*4,
+                1024*6,
                 1,
                 TimeSpan.FromMinutes(15));
         }

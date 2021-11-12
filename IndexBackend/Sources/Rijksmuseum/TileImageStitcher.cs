@@ -32,7 +32,7 @@ namespace IndexBackend.Sources.Rijksmuseum
             var tiles = JsonConvert.DeserializeObject<List<Tile>>(highestResolutionImage["tiles"].ToString());
 
             var tileImages = new List<TileImage>();
-            Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism = 10 }, tile =>
+            Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism = 5 }, tile =>
             {
                 using var tileClient = new HttpClient();
                 var imageJpegBytes = tileClient.GetByteArrayAsync(tile.Url).Result;
