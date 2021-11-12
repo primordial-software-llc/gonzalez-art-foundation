@@ -1,13 +1,10 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ArtApi.Model;
 using IndexBackend.Indexing;
 using Newtonsoft.Json.Linq;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace IndexBackend.Sources.Rijksmuseum
 {
@@ -37,29 +34,18 @@ namespace IndexBackend.Sources.Rijksmuseum
                 PageId = id,
                 SourceLink = $"https://www.rijksmuseum.nl/en/collection/{id}",
                 OriginalArtist = collectionJson["artObject"]["principalMaker"].Value<string>(),
-                Date = collectionJson["artObject"]["dating"]["presentingDate"].Value<string>()
+                Date = collectionJson["artObject"]["dating"]["presentingDate"].Value<string>(),
+                Name = collectionJson["artObject"]["titles"].Values<string>().FirstOrDefault()
             };
-            model.Name = collectionJson["artObject"]["titles"].Values<string>().FirstOrDefault();
             if (string.IsNullOrWhiteSpace(model.Name))
             {
                 model.Name = collectionJson["artObject"]["title"].Value<string>();
             }
             var indexResult = new IndexResult
             {
-                Model = model
+                Model = model,
+                ImageJpegBytes = await new TileImageStitcher().GetStitchedTileImageJpegBytes(id, Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY"))
             };
-            Image<Rgba64> stitchedImage = null;
-            try
-            {
-                stitchedImage = new TileImageStitcher().GetStitchedTileImage(id, Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY"));
-                await using var imageStream = new MemoryStream();
-                await stitchedImage.SaveAsJpegAsync(imageStream);
-                indexResult.ImageJpegBytes = imageStream.ToArray();
-            }
-            finally
-            {
-                stitchedImage?.Dispose();
-            }
             return indexResult;
         }
     }

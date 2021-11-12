@@ -46,7 +46,7 @@ namespace IndexBackend.Indexing
                     " If you want to re-crawl the record delete it in dynamodb, but all associated data will be overwritten when re-crawled.");
             }
             var indexResult = await indexer.Index(messageModel.PageId);
-             if (indexResult?.Model == null)
+             if (indexResult == null || indexResult.Model == null || indexResult.ImageJpegBytes == null)
             {
                 Console.WriteLine($"Skipped {messageModel.Source} {messageModel.PageId} due to not finding content.");
             }

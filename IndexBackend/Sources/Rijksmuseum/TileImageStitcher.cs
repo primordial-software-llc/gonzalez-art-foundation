@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,11 +14,17 @@ namespace IndexBackend.Sources.Rijksmuseum
 {
     public class TileImageStitcher
     {
-        public Image<Rgba64> GetStitchedTileImage(string objectNumber, string apiKey)
+        public async Task<byte[]> GetStitchedTileImageJpegBytes(string objectNumber, string apiKey)
         {
             var tilesImageRequestUrl = $"https://www.rijksmuseum.nl/api/nl/collection/{objectNumber}/tiles?key={apiKey}";
-            var tilesImageResponse = new HttpClient().GetStringAsync(tilesImageRequestUrl).Result;
+            using var httpClient = new HttpClient();
+            var tilesImageResponse = httpClient.GetStringAsync(tilesImageRequestUrl).Result;
             var tilesImageJson = JObject.Parse(tilesImageResponse);
+
+            if (tilesImageJson["levels"] == null || !tilesImageJson["levels"].Any())
+            {
+                return null;
+            }
 
             var highestResolutionImageWidth = tilesImageJson["levels"].Max(x => x["width"].Value<int>());
             var highestResolutionImage = tilesImageJson["levels"].First(x => x["width"].Value<int>() == highestResolutionImageWidth);
@@ -25,52 +32,48 @@ namespace IndexBackend.Sources.Rijksmuseum
             var tiles = JsonConvert.DeserializeObject<List<Tile>>(highestResolutionImage["tiles"].ToString());
 
             var tileImages = new List<TileImage>();
-            Image<Rgba64> stitchedImage = null;
-            try
+            Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism = 10 }, tile =>
             {
                 using var tileClient = new HttpClient();
-                Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism = 10 }, tile =>
+                var imageJpegBytes = tileClient.GetByteArrayAsync(tile.Url).Result;
+                using var image = Image.Load<Rgba64>(imageJpegBytes);
+                tileImages.Add(new TileImage
                 {
-                    tileImages.Add(new TileImage
-                    {
-                        X = tile.X,
-                        Y = tile.Y,
-                        Image = Image.Load<Rgba64>(tileClient.GetByteArrayAsync(tile.Url).Result)
-                    });
+                    X = tile.X,
+                    Y = tile.Y,
+                    Height = image.Height,
+                    Width = image.Width,
+                    ImageJpegBytes = imageJpegBytes
                 });
-                stitchedImage = StitchImages(
-                    highestResolutionImage["width"].Value<int>(),
-                    highestResolutionImage["height"].Value<int>(),
-                    tileImages);
-            }
-            finally
-            {
-                foreach (var tileImage in tileImages)
-                {
-                    tileImage?.Image?.Dispose();
-                }
-            }
-            return stitchedImage;
+            });
+            return await StitchImages(
+                highestResolutionImage["width"].Value<int>(),
+                highestResolutionImage["height"].Value<int>(),
+                tileImages);
         }
 
-        public Image<Rgba64> StitchImages(int width, int height, List<TileImage> tileImages)
+        public async Task<byte[]> StitchImages(int width, int height, List<TileImage> tileImages)
         {
             AssertImageWidthAlongAllYAxis(width, tileImages); // Fix sporadic black blocks in stitched images even though no exceptions are thrown when getting tile data.
             AssertImageHeightAlongAllXAxis(height, tileImages);
-            var outputImage = new Image<Rgba64>(width, height);
-            outputImage.Mutate(o => {
+            using var outputImage = new Image<Rgba64>(width, height);
+            outputImage.Mutate(o =>
+            {
                 foreach (var tileImage in tileImages)
                 {
                     var xOffset = tileImages
                         .Where(image => image.Y == tileImage.Y && image.X < tileImage.X)
-                        .Sum(x => x.Image.Width);
+                        .Sum(x => x.Width);
                     var yOffset = tileImages
                         .Where(image => image.X == tileImage.X && image.Y < tileImage.Y)
-                        .Sum(x => x.Image.Height);
-                    o.DrawImage(tileImage.Image, new Point(xOffset, yOffset), 1f);
+                        .Sum(x => x.Height);
+                    using var image = Image.Load<Rgba64>(tileImage.ImageJpegBytes);
+                    o.DrawImage(image, new Point(xOffset, yOffset), 1f);
                 }
             });
-            return outputImage;
+            await using var imageStream = new MemoryStream();
+            await outputImage.SaveAsJpegAsync(imageStream);
+            return imageStream.ToArray();
         }
 
         private void AssertImageWidthAlongAllYAxis(int width, List<TileImage> tileImages)
@@ -79,7 +82,7 @@ namespace IndexBackend.Sources.Rijksmuseum
             {
                 var xWidthForYAxis = tileImages
                     .Where(x => x.Y == yAxis)
-                    .Sum(x => x.Image.Width);
+                    .Sum(x => x.Width);
                 if (xWidthForYAxis != width)
                 {
                     throw new StitchedImageException($"Total tile width along Y axis {yAxis} of {xWidthForYAxis} doesn't equal image width of {width}");
@@ -93,7 +96,7 @@ namespace IndexBackend.Sources.Rijksmuseum
             {
                 var yHeightForYAxis = tileImages
                     .Where(x => x.X == xAxis)
-                    .Sum(x => x.Image.Height);
+                    .Sum(x => x.Height);
                 if (yHeightForYAxis != height)
                 {
                     throw new StitchedImageException($"Total tile width along Y axis {xAxis} of {yHeightForYAxis} doesn't equal image height of {height}");

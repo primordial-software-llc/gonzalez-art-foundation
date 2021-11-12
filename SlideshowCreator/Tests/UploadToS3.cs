@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,25 +10,17 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda;
-using Amazon.S3;
-using Amazon.S3.Model;
 using Amazon.SQS.Model;
 using ArtApi.Model;
 using AwsLambdaDeploy;
 using IndexBackend;
 using IndexBackend.Indexing;
-using IndexBackend.Model;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseumOfModernArt;
-using IndexBackend.Sources.NationalGalleryOfArt;
 using IndexBackend.Sources.Rijksmuseum;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace SlideshowCreator.Tests
 {
@@ -134,7 +125,7 @@ namespace SlideshowCreator.Tests
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
-                10240,
+                1024*4,
                 1,
                 TimeSpan.FromMinutes(15));
         }
@@ -373,7 +364,7 @@ namespace SlideshowCreator.Tests
             new IndexBackend.Sources.Rijksmuseum.Harvester(GalleryAwsCredentialsFactory.SqsClient, apiKey).Harvest().Wait();
         }
 
-        //[Test] Keep for debugging until everything is crawled.
+        [Test] //Keep for debugging until everything is crawled.
         public void StitchImages()
         {
             var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
@@ -384,6 +375,8 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.ElasticSearchClient,
                 GalleryAwsCredentialsFactory.RekognitionClientClient);
 
+            //indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "RP-P-OB-4509W(V)" }).Wait();
+            
             var queueIndexer = new QueueIndexer(GalleryAwsCredentialsFactory.SqsClient,
                 new HttpClient(),
                 indexingCore,
