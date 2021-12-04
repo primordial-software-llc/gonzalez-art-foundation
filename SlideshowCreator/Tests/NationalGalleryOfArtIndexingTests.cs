@@ -76,7 +76,7 @@ namespace SlideshowCreator.Tests
         {
             var assetId2 = 1.ToString();
             IndexAndAssertInS3(46482);
-            var asset2Index = indexer.Index(assetId2);
+            var asset2Index = indexer.Index(assetId2, null);
             Assert.Throws<AmazonS3Exception>(() => s3Client.GetObjectMetadataAsync(new NationalGalleryOfArtIndexer().S3Bucket, "image-" + assetId2 + ".jpg").Wait());
             Assert.IsNull(asset2Index);
         }
@@ -85,7 +85,7 @@ namespace SlideshowCreator.Tests
 
         private void IndexAndAssertInS3(int id, string expectedImageFormat = ".jpg")
         {
-            var asset1Index = indexer.Index(id.ToString()).Result;
+            var asset1Index = indexer.Index(id.ToString(), null).Result;
             Assert.AreEqual("http://images.nga.gov", asset1Index.Model.Source);
             Assert.AreEqual(id, asset1Index.Model.PageId);
             Assert.AreEqual(new NationalGalleryOfArtIndexer().S3Bucket + "/" + "image-" + id + expectedImageFormat, asset1Index.Model.S3Path);
