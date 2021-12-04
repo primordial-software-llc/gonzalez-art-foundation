@@ -22,10 +22,10 @@ namespace IndexBackend.Sources.Rijksmuseum
             Logging = logging;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var apiKey = Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY");
-            var collectionApiRequestUrl = $"https://www.rijksmuseum.nl/api/nl/collection/{id}?key={apiKey}";
+            var collectionApiRequestUrl = $"https://www.rijksmuseum.nl/api/en/collection/{id}?key={apiKey}";
             var collectionResponse = await HttpClient.GetStringAsync(collectionApiRequestUrl);
             var collectionJson = JObject.Parse(collectionResponse);
             var model = new ClassificationModel
@@ -44,7 +44,7 @@ namespace IndexBackend.Sources.Rijksmuseum
             var indexResult = new IndexResult
             {
                 Model = model,
-                ImageJpegBytes = await new TileImageStitcher().GetStitchedTileImageJpegBytes(id, Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY"))
+                ImageJpegBytes = existing != null ? null : await new TileImageStitcher().GetStitchedTileImageJpegBytes(id, Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY"))
             };
             return indexResult;
         }
