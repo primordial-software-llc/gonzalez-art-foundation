@@ -19,14 +19,18 @@ using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
 using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.Rijksmuseum;
+using IndexBackend.Sources.Rijksmuseum.Model;
+using JetBrains.dotMemoryUnit;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace SlideshowCreator.Tests
 {
     class UploadToS3
     {
-
         public static List<RegionEndpoint> Regions => RegionEndpoint.EnumerableAllRegions
             .Where(x =>
                         x != RegionEndpoint.USGovCloudWest1 && // Government regions are restricted
@@ -48,7 +52,7 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.CreateCredentials(),
                 Regions,
                 FUNCTION_INDEX_AD_HOME,
-                10
+                100
             );
         }
 
@@ -127,7 +131,7 @@ namespace SlideshowCreator.Tests
                 runtime: Runtime.Dotnetcore31,
                 1024*6,
                 1,
-                TimeSpan.FromMinutes(15));
+                TimeSpan.FromMinutes(scheduledFrequencyInMinutes));
         }
 
         [Test]
@@ -139,8 +143,7 @@ namespace SlideshowCreator.Tests
             do
             {
                 var receiveRequest =
-                    new ReceiveMessageRequest(
-                        "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure")
+                    new ReceiveMessageRequest(QueueIndexer.QUEUE_URL)
                     {
                         MaxNumberOfMessages = 10
                     };
@@ -157,7 +160,7 @@ namespace SlideshowCreator.Tests
                     sendMessages.Add(new SendMessageBatchRequestEntry(Guid.NewGuid().ToString(), message.Body));
                 }
 
-                var result = sqsClient.SendMessageBatchAsync("https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler", sendMessages).Result;
+                var result = sqsClient.SendMessageBatchAsync(QueueIndexer.QUEUE_FAILURE_URL, sendMessages).Result;
                 if (result.Failed.Any())
                 {
                     throw new Exception("Failed to retry sqs message.");
@@ -357,7 +360,7 @@ namespace SlideshowCreator.Tests
 
         }
 
-        //[Test] I can delete this and keep the rest unreferenced or in source once everything is crawled.
+        [Test]
         public void HarvestRikjsmuseumPageIds()
         {
             var apiKey = Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY");
@@ -365,23 +368,43 @@ namespace SlideshowCreator.Tests
         }
 
         [Test] //Keep for debugging until everything is crawled.
-        public void StitchImages()
+        public void IndexSingleRecord()
         {
-            var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
-
             var indexingCore = new IndexingCore(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3Client,
                 GalleryAwsCredentialsFactory.ElasticSearchClient,
                 GalleryAwsCredentialsFactory.RekognitionClientClient);
+            var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
+            indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "BK-1954-43-1" }).Wait();
+        }
 
-            //indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "RP-P-OB-4509W(V)" }).Wait();
-            
+        [Test] //Keep for debugging until everything is crawled.
+        public void RunQueueLocally()
+        {
+            var indexingCore = new IndexingCore(
+                GalleryAwsCredentialsFactory.ProductionDbClient,
+                GalleryAwsCredentialsFactory.S3Client,
+                GalleryAwsCredentialsFactory.ElasticSearchClient,
+                GalleryAwsCredentialsFactory.RekognitionClientClient);
             var queueIndexer = new QueueIndexer(GalleryAwsCredentialsFactory.SqsClient,
                 new HttpClient(),
                 indexingCore,
                 new ConsoleLogging());
-            queueIndexer.ProcessAllInQueue();
+            queueIndexer.ProcessAllInQueue(4);
+            dotMemory.Check(memory =>
+            {
+                Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
+                Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<IndexResult>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<MemoryStream>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<TileImage>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba64>>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
+                Assert.LessOrEqual(memory.SizeInBytes, 512 * 1024 * 1024);
+                // when memory is high, uncomment to throw error and then debug the .dmw file in UI.
+                //dotMemory.Check(memory => Assert.AreEqual(1, 2));
+            });
         }
     }
 }

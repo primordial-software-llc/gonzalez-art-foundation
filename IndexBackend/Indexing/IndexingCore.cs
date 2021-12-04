@@ -12,6 +12,7 @@ using ArtApi.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace IndexBackend.Indexing
 {
@@ -39,40 +40,55 @@ namespace IndexBackend.Indexing
         {
             var dbClient = new DatabaseClient<ClassificationModel>(DbClient);
             var existing = dbClient.Get(new ClassificationModel { Source = messageModel.Source, PageId = messageModel.PageId });
-            if (existing != null)
+            /*if (existing != null)
             {
                 throw new ProtectedClassificationException(
                     $"This record has already been crawled and is now protected: {messageModel.Source} - {messageModel.PageId}." +
                     " If you want to re-crawl the record delete it in dynamodb, but all associated data will be overwritten when re-crawled.");
             }
-            var indexResult = await indexer.Index(messageModel.PageId);
-             if (indexResult == null || indexResult.Model == null || indexResult.ImageJpegBytes == null)
+            */
+            // Rikjsmuseum is excluded from archive, because it's actively being crawled.
+            var indexResult = await indexer.Index(messageModel.PageId, existing);
+            if (indexResult == null ||
+                indexResult.Model == null ||
+                (existing == null && indexResult.ImageJpegBytes == null)
+                /*|| indexResult.ImageJpegBytes == null*/ // Normally we would skip, but allow for now until english definitions are added and we don't get images again which is a costly process.
+            )
             {
                 Console.WriteLine($"Skipped {messageModel.Source} {messageModel.PageId} due to not finding content.");
             }
             else
             {
                 var classification = indexResult.Model;
-                await using var imageStream = new MemoryStream(indexResult.ImageJpegBytes);
-                var request = new PutObjectRequest
+                if (indexResult.ImageJpegBytes != null)
                 {
-                    BucketName = Constants.IMAGES_BUCKET + "/" + indexer.ImagePath,
-                    Key = $"page-id-{indexResult.Model.PageId}.jpg",
-                    InputStream = imageStream
-                };
-                await S3Client.PutObjectAsync(request);
-                using var image = Image.Load(indexResult.ImageJpegBytes);
-                classification.Height = image.Height;
-                classification.Width = image.Width;
-                classification.Orientation = image.Height >= image.Width
-                    ? Constants.ORIENTATION_PORTRAIT
-                    : Constants.ORIENTATION_LANDSCAPE;
-                classification.S3Path = indexer.ImagePath + "/" + $"page-id-{indexResult.Model.PageId}.jpg";
+                    await using var imageStream = new MemoryStream(indexResult.ImageJpegBytes);
+                    var request = new PutObjectRequest
+                    {
+                        BucketName = Constants.IMAGES_BUCKET + "/" + indexer.ImagePath,
+                        Key = $"page-id-{indexResult.Model.PageId}.jpg",
+                        InputStream = imageStream
+                    };
+                    await S3Client.PutObjectAsync(request);
+                    using var image = Image.Load<Rgba64>(indexResult.ImageJpegBytes);
+                    classification.Height = image.Height;
+                    classification.Width = image.Width;
+                    classification.Orientation = image.Height >= image.Width
+                        ? Constants.ORIENTATION_PORTRAIT
+                        : Constants.ORIENTATION_LANDSCAPE;
+                }
+                else
+                {
+                    classification.Height = existing.Height;
+                    classification.Width = existing.Width;
+                    classification.Orientation = existing.Orientation;
+                }
                 classification.Name = HttpUtility.HtmlDecode(classification.Name);
                 classification.Date = HttpUtility.HtmlDecode(classification.Date);
                 classification.OriginalArtist = HttpUtility.HtmlDecode(classification.OriginalArtist);
                 classification.Artist = Classifier.NormalizeArtist(HttpUtility.HtmlDecode(classification.OriginalArtist));
                 classification.TimeStamp = DateTime.UtcNow.ToString("O");
+                indexResult.ImageJpegBytes = null;
                 /*
                 WARNING:
                 I can't afford this right now, but it's very important.
@@ -94,6 +110,7 @@ namespace IndexBackend.Indexing
                 );
                 */
                 classification.Nudity = false;
+                classification.S3Path = indexer.ImagePath + "/" + $"page-id-{indexResult.Model.PageId}.jpg";
                 classification.S3Bucket = Constants.IMAGES_BUCKET;
                 var json = JObject.FromObject(classification,
                     new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
