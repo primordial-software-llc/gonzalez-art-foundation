@@ -18,21 +18,17 @@ namespace IndexBackend.Sources.Rijksmuseum
         {
             var tilesImageRequestUrl = $"https://www.rijksmuseum.nl/api/nl/collection/{objectNumber}/tiles?key={apiKey}";
             using var httpClient = new HttpClient();
-            var tilesImageResponse = httpClient.GetStringAsync(tilesImageRequestUrl).Result;
+            var tilesImageResponse = await httpClient.GetStringAsync(tilesImageRequestUrl);
             var tilesImageJson = JObject.Parse(tilesImageResponse);
-
             if (tilesImageJson["levels"] == null || !tilesImageJson["levels"].Any())
             {
                 return null;
             }
-
             var highestResolutionImageWidth = tilesImageJson["levels"].Max(x => x["width"].Value<int>());
             var highestResolutionImage = tilesImageJson["levels"].First(x => x["width"].Value<int>() == highestResolutionImageWidth);
-
-            var tiles = JsonConvert.DeserializeObject<List<Tile>>(highestResolutionImage["tiles"].ToString());
-
+            var tiles = JsonConvert.DeserializeObject<List<Tile>>(highestResolutionImage["tiles"].ToString()) ?? new List<Tile>();
             var tileImages = new List<TileImage>();
-            Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism = 5 }, tile =>
+            Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism =  2 }, tile =>
             {
                 using var tileClient = new HttpClient();
                 var imageJpegBytes = tileClient.GetByteArrayAsync(tile.Url).Result;
@@ -80,26 +76,26 @@ namespace IndexBackend.Sources.Rijksmuseum
         {
             for (var yAxis = 0; yAxis < tileImages.Max(x => x.Y); yAxis++)
             {
-                var xWidthForYAxis = tileImages
+                var widthForYAxis = tileImages
                     .Where(x => x.Y == yAxis)
                     .Sum(x => x.Width);
-                if (xWidthForYAxis != width)
+                if (widthForYAxis != width)
                 {
-                    throw new StitchedImageException($"Total tile width along Y axis {yAxis} of {xWidthForYAxis} doesn't equal image width of {width}");
+                    throw new StitchedImageException($"Total tile width along Y axis {yAxis} of {widthForYAxis} doesn't equal image width of {width}");
                 }
             }
         }
 
         private void AssertImageHeightAlongAllXAxis(int height, List<TileImage> tileImages)
         {
-            for (var xAxis = 0; xAxis < tileImages.Max(x => x.Y); xAxis++)
+            for (var xAxis = 0; xAxis < tileImages.Max(x => x.X); xAxis++)
             {
-                var yHeightForYAxis = tileImages
+                var heightForYAxis = tileImages
                     .Where(x => x.X == xAxis)
                     .Sum(x => x.Height);
-                if (yHeightForYAxis != height)
+                if (heightForYAxis != height)
                 {
-                    throw new StitchedImageException($"Total tile width along Y axis {xAxis} of {yHeightForYAxis} doesn't equal image height of {height}");
+                    throw new StitchedImageException($"Total tile width along Y axis {xAxis} of {heightForYAxis} doesn't equal image height of {height}");
                 }
             }
         }
