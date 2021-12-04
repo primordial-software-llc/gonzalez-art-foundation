@@ -21,7 +21,7 @@ namespace IndexBackend.Sources.MetropolitanMuseumOfArt
             Logging = logging;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var sourceLink = $"https://www.metmuseum.org/art/collection/search/{id}";
             var htmlDoc = await new IndexingHttpClient().GetPage(HttpClient, sourceLink, Logging);

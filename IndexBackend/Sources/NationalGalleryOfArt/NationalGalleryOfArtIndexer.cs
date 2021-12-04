@@ -30,7 +30,7 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
             NgaDataAccess = ngaDataAccess;
         }
 
-        public async Task<IndexResult> Index(string id)
+        public async Task<IndexResult> Index(string id, ClassificationModel existing)
         {
             var zipFile = await NgaDataAccess.GetHighResImageZipFile(id);
             if (zipFile == null)
