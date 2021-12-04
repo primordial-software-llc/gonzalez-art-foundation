@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Amazon.SQS;
@@ -26,6 +27,7 @@ namespace IndexBackend.Sources.Rijksmuseum
                 var harvestUrl = $"https://www.rijksmuseum.nl/api/oai/{ApiKey}?verb=ListRecords&set=subject:EntirePublicDomainSet&metadataPrefix=dc";
                 if (!string.IsNullOrWhiteSpace(resumptionToken))
                 {
+                    Console.WriteLine("Harvesting from " + resumptionToken);
                     harvestUrl += $"&resumptionToken={resumptionToken}";
                 }
                 var harvestXml = await GetHarvestXml(client, harvestUrl, 0, 5);
@@ -64,6 +66,7 @@ namespace IndexBackend.Sources.Rijksmuseum
             {
                 if (attempt < maxAttempts)
                 {
+                    Thread.Sleep(Convert.ToInt32(Math.Pow(2, attempt) * 100));
                     return await GetHarvestXml(client, url, attempt + 1, maxAttempts);
                 }
                 throw;
