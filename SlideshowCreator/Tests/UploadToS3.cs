@@ -106,7 +106,7 @@ namespace SlideshowCreator.Tests
                 { "RIJKSMUSEUM_DATA_API_KEY", Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY") }
             };
 
-            var scheduledFrequencyInMinutes = 15;
+            var scheduledFrequencyInMinutes = 5;
             var increment = scheduledFrequencyInMinutes == 1 ? "minute" : "minutes";
             var scheduleExpression = $"rate({scheduledFrequencyInMinutes} {increment})";
 
@@ -129,7 +129,7 @@ namespace SlideshowCreator.Tests
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
-                1024*6,
+                1024,
                 1,
                 TimeSpan.FromMinutes(scheduledFrequencyInMinutes));
         }
@@ -370,18 +370,37 @@ namespace SlideshowCreator.Tests
         [Test] //Keep for debugging until everything is crawled.
         public void IndexSingleRecord()
         {
+            var mcp1 = dotMemory.Check();
+
             var indexingCore = new IndexingCore(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3Client,
                 GalleryAwsCredentialsFactory.ElasticSearchClient,
                 GalleryAwsCredentialsFactory.RekognitionClientClient);
-            var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
-            indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "BK-1954-43-1" }).Wait();
+            using var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
+
+            indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "RP-T-1960-355" }).Wait();
+            dotMemory.Check(memory =>
+            {
+                var newObjects = memory.GetDifference(mcp1).GetNewObjects();
+                Console.WriteLine("Peak memory usage: " + newObjects.SizeInBytes / 1024 / 1024 + "MB");
+
+                Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
+                Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<IndexResult>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<MemoryStream>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<TileImage>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba64>>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba32>>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
+                Assert.LessOrEqual(memory.SizeInBytes, 512 * 1024 * 1024);
+            });
         }
 
         [Test] //Keep for debugging until everything is crawled.
         public void RunQueueLocally()
         {
+            var mcp1 = dotMemory.Check();
             var indexingCore = new IndexingCore(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3Client,
@@ -391,19 +410,23 @@ namespace SlideshowCreator.Tests
                 new HttpClient(),
                 indexingCore,
                 new ConsoleLogging());
-            queueIndexer.ProcessAllInQueue(4);
+            queueIndexer.ProcessAllInQueue(20);
             dotMemory.Check(memory =>
             {
+                var newObjects = memory.GetDifference(mcp1).GetNewObjects();
+                Console.WriteLine("Peak memory usage: " + newObjects.SizeInBytes / 1024 / 1024 + "MB");
+
                 Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
                 Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<IndexResult>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<MemoryStream>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<TileImage>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba64>>()).ObjectsCount));
+                dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba32>>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
                 Assert.LessOrEqual(memory.SizeInBytes, 512 * 1024 * 1024);
                 // when memory is high, uncomment to throw error and then debug the .dmw file in UI.
-                //dotMemory.Check(memory => Assert.AreEqual(1, 2));
+                dotMemory.Check(memory => Assert.AreEqual(1, 2));
             });
         }
     }
