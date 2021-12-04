@@ -8,6 +8,8 @@ using Amazon.SQS.Model;
 using ArtApi.Model;
 using IndexBackend.Sources.Rijksmuseum;
 using Newtonsoft.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Memory;
 
 namespace IndexBackend.Indexing
 {
@@ -17,7 +19,9 @@ namespace IndexBackend.Indexing
         private IndexingCore IndexingCore { get; }
         private HttpClient HttpClient { get; }
         private ILogging Logger { get; }
-        private const string QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler";
+        public const string QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler";
+        public const string QUEUE_FAILURE_URL = "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure";
+        private const int SQS_BATCH_SIZE = SQS_MAX_BATCH;
         private const int SQS_MAX_BATCH = 10;
 
         public QueueIndexer(IAmazonSQS queueClient, HttpClient httpClient, IndexingCore indexingCore, ILogging logger)
@@ -26,16 +30,18 @@ namespace IndexBackend.Indexing
             IndexingCore = indexingCore;
             HttpClient = httpClient;
             Logger = logger;
+            Configuration.Default.MemoryAllocator = ArrayPoolMemoryAllocator.CreateWithModeratePooling(); // Used to override the default and prevent memory from persisting without explicitly calling Configuration.Default.MemoryAllocator.ReleaseRetainedResources(). See here for more details https://docs.sixlabors.com/articles/imagesharp/memorymanagement.html
         }
 
-        public string ProcessAllInQueue()
+        public string ProcessAllInQueue(int? maxBatches = null)
         {
             ReceiveMessageResponse batch;
+            int totalBatches = 0;
             do
             {
                 batch = QueueClient.ReceiveMessageAsync(new ReceiveMessageRequest
                 {
-                    MaxNumberOfMessages = SQS_MAX_BATCH,
+                    MaxNumberOfMessages = SQS_BATCH_SIZE,
                     QueueUrl = QUEUE_URL
                 }).Result;
                 if (!batch.Messages.Any())
@@ -48,10 +54,10 @@ namespace IndexBackend.Indexing
                     tasks.Add(IndexAndMarkComplete(message));
                 }
                 Task.WaitAll(tasks.ToArray());
-            } while (batch.Messages.Any());
+                totalBatches += 1;
+            } while (batch.Messages.Any() && (maxBatches.HasValue && totalBatches < maxBatches));
             return $"No additional SQS messages found in {QUEUE_URL}";
         }
-
 
         private async Task IndexAndMarkComplete(Message message)
         {
@@ -67,13 +73,13 @@ namespace IndexBackend.Indexing
 
                 await IndexingCore.Index(indexer, model);
             }
-            catch (Exception e) when (e.InnerException is ProtectedClassificationException)
+            catch (Exception e) when (e is ProtectedClassificationException || e.InnerException is ProtectedClassificationException)
             {
                 Logger.Log($"Skipping index request due to attempting to re-index protected classification: {e.Message} for message: {message.Body}. Error: " + e);
                 await QueueClient.DeleteMessageAsync(QUEUE_URL, message.ReceiptHandle);
                 return;
             }
-            catch (Exception e) when (e.InnerException is StitchedImageException)
+            catch (Exception e) when (e is StitchedImageException || e.InnerException is StitchedImageException)
             {
                 Logger.Log($"Failed to stitch image tiles together. The image can be reprocessed by the queue: {e.Message} for message: {message.Body}. Error: " + e);
                 return;
