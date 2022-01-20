@@ -34,82 +34,17 @@ namespace ArtApi.Routes.Unauthenticated
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
                 : string.Empty;
             var hideNudity = request.QueryStringParameters.ContainsKey("hideNudity") && bool.Parse(request.QueryStringParameters["hideNudity"].Trim());
-            Console.WriteLine("Hide nudity: " + hideNudity);
-            var filters = new List<string>();
-            if (hideNudity)
-            {
-                filters.Add($@"
-                {{
-                  ""bool"": {{
-                    ""should"": [
-                      {{
-                        ""term"": {{
-                          ""nudity"": ""false""
-                        }}
-                      }},
-                      {{
-                        ""bool"": {{
-                          ""must_not"": {{
-                            ""exists"": {{
-                              ""field"": ""nudity""
-                            }}
-                          }}
-                        }}
-                      }}
-                    ]
-                  }}
-                }}
-                ");
-            }
-            if (!string.IsNullOrWhiteSpace(source))
-            {
-                filters.Add($@"
-                  {{
-                    ""term"": {{
-                      ""source.keyword"": ""{source}""
-                    }}
-                  }}
-                ");
-            }
-            var filter = $@"
-            ""filter"": {{
-              ""bool"": {{
-                ""must"": [
-                  {string.Join(",", filters)}
-                ]
-              }}
-            }}";
-            var searchTextQueryPart = string.Empty;
-            if (!string.IsNullOrWhiteSpace(searchText))
-            {
-                searchTextQueryPart = $@"
-                ""must"": {{
-                    ""multi_match"": {{
-                      ""query"": ""{searchText}"",
-                      ""type"": ""best_fields"",
-                      ""fields"": [
-                        ""artist^2"",
-                        ""name"",
-                        ""date""
-                      ]
-                    }}
-                }},";
-            }
-            var getRequest = $@"{{
-              ""query"": {{
-                ""bool"": {{
-                  { searchTextQueryPart }
-                  { filter }
-                }}
-              }},
-              ""size"": {maxResults},
-              ""from"": {searchFrom}
-            }}";
+            var getRequest = Model.ElasticSearchRequest.GetSearchRequestBody(
+                hideNudity,
+                source,
+                searchText,
+                maxResults,
+                searchFrom);
             var elasticSearchResponse = SendToElasticSearch(
                 new HttpClient(),
                 System.Net.Http.HttpMethod.Get,
                 "/classification/_search",
-                JObject.Parse(getRequest));
+                getRequest);
             var responseJson = JObject.Parse(elasticSearchResponse);
             var searchResult = new SearchResult
             {
