@@ -7,38 +7,12 @@ namespace ArtApi.Model
     public class ElasticSearchRequest
     {
         public static JObject GetSearchRequestBody(
-            bool hideNudity,
             string source,
             string searchText,
             int maxResults,
             JToken searchAfter)
         {
             var filters = new List<string>();
-            if (hideNudity)
-            {
-                filters.Add($@"
-                {{
-                  ""bool"": {{
-                    ""should"": [
-                      {{
-                        ""term"": {{
-                          ""nudity"": ""false""
-                        }}
-                      }},
-                      {{
-                        ""bool"": {{
-                          ""must_not"": {{
-                            ""exists"": {{
-                              ""field"": ""nudity""
-                            }}
-                          }}
-                        }}
-                      }}
-                    ]
-                  }}
-                }}
-                ");
-            }
             if (!string.IsNullOrWhiteSpace(source))
             {
                 filters.Add($@"

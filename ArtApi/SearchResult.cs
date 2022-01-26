@@ -22,8 +22,5 @@ namespace ArtApi
 
         [JsonProperty("maxResults")]
         public int MaxResults { get; set; }
-
-        [JsonProperty("hideNudity")]
-        public bool HideNudity { get; set; }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using System.Text;
 using ArtApi.Model;
 using IndexBackend;
 using IndexBackend.Sources.Rijksmuseum;
@@ -23,7 +22,6 @@ namespace SlideshowCreator.Tests
                 HttpMethod.Get,
                 "/classification/_search",
                 ElasticSearchRequest.GetSearchRequestBody(
-                    true,
                     "",
                     "Sir Lawrence Alma-Tadema",
                     100,
@@ -34,7 +32,6 @@ namespace SlideshowCreator.Tests
                 HttpMethod.Get,
                 "/classification/_search",
                 ElasticSearchRequest.GetSearchRequestBody(
-                    true,
                     "",
                     "Sir Lawrence Alma-Tadema",
                     100,
@@ -43,13 +40,13 @@ namespace SlideshowCreator.Tests
             ).Result;
         }
 
-        /*
         [Test]
         public void TestSearchJson()
         {
-            var json = ElasticSearchRequest.GetSearchRequestBody(true, RijksmuseumIndexer.Source, "lawrence", 100, 999);
+            var json = ElasticSearchRequest.GetSearchRequestBody(RijksmuseumIndexer.Source, "lawrence", 100, null);
             Console.WriteLine(json);
             var expected = @"{
+  ""track_total_hits"": true,
   ""query"": {
     ""bool"": {
       ""must"": {
@@ -67,26 +64,6 @@ namespace SlideshowCreator.Tests
         ""bool"": {
           ""must"": [
             {
-              ""bool"": {
-                ""should"": [
-                  {
-                    ""term"": {
-                      ""nudity"": ""false""
-                    }
-                  },
-                  {
-                    ""bool"": {
-                      ""must_not"": {
-                        ""exists"": {
-                          ""field"": ""nudity""
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            {
               ""term"": {
                 ""source.keyword"": ""https://www.rijksmuseum.nl""
               }
@@ -97,10 +74,21 @@ namespace SlideshowCreator.Tests
     }
   },
   ""size"": 100,
-  ""from"": 999
+  ""sort"": [
+    {
+      ""_score"": {
+        ""order"": ""desc""
+      }
+    },
+    {
+      ""_id"": {
+        ""order"": ""asc""
+      }
+    }
+  ]
 }";
             Assert.AreEqual(expected, json.ToString());
         }
-        */
+        
     }
 }

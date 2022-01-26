@@ -33,9 +33,7 @@ namespace ArtApi.Routes.Unauthenticated
             var source = request.QueryStringParameters.ContainsKey("source")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
                 : string.Empty;
-            var hideNudity = request.QueryStringParameters.ContainsKey("hideNudity") && bool.Parse(request.QueryStringParameters["hideNudity"].Trim());
             var getRequest = Model.ElasticSearchRequest.GetSearchRequestBody(
-                hideNudity,
                 source,
                 searchText,
                 maxResults,
@@ -53,8 +51,7 @@ namespace ArtApi.Routes.Unauthenticated
                 Source = source,
                 SearchText = searchText,
                 SearchAfter = searchAfterParsed,
-                MaxResults = maxResults,
-                HideNudity = hideNudity
+                MaxResults = maxResults
             };
             response.Body = JsonConvert.SerializeObject(searchResult);
         }
