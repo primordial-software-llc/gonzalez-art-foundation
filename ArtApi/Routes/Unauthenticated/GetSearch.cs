@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
-using System.Linq;
 using System.Web;
 using Amazon.Lambda.APIGatewayEvents;
 using Newtonsoft.Json;
@@ -21,15 +19,17 @@ namespace ArtApi.Routes.Unauthenticated
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["searchText"].Trim())
                 : string.Empty;
             const int maxResultsLimit = 500;
-            var maxResults = request.QueryStringParameters.ContainsKey("maxResults")
-                ? int.Parse(request.QueryStringParameters["maxResults"])
-                : maxResultsLimit;
+            request.QueryStringParameters.TryGetValue("maxResults", out var maxResultsText);
+            int.TryParse(maxResultsText, out var maxResults);
             maxResults = maxResults <= 0 || maxResults >= maxResultsLimit
                 ? maxResultsLimit
                 : maxResults;
-            var searchFrom = request.QueryStringParameters.ContainsKey("searchFrom")
-                ? int.Parse(request.QueryStringParameters["searchFrom"])
-                : 0;
+            JArray searchAfterParsed = null;
+            request.QueryStringParameters.TryGetValue("searchAfter", out var searchAfter);
+            if (!string.IsNullOrWhiteSpace(searchAfter))
+            {
+                searchAfterParsed = JArray.Parse(searchAfter);
+            }
             var source = request.QueryStringParameters.ContainsKey("source")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
                 : string.Empty;
@@ -39,7 +39,7 @@ namespace ArtApi.Routes.Unauthenticated
                 source,
                 searchText,
                 maxResults,
-                searchFrom);
+                searchAfterParsed);
             var elasticSearchResponse = SendToElasticSearch(
                 new HttpClient(),
                 System.Net.Http.HttpMethod.Get,
@@ -48,13 +48,11 @@ namespace ArtApi.Routes.Unauthenticated
             var responseJson = JObject.Parse(elasticSearchResponse);
             var searchResult = new SearchResult
             {
-                Items = JToken.FromObject(responseJson["hits"]["hits"].Select(x => x["_source"]).ToList()),
+                Items = responseJson["hits"]["hits"],
                 Total = responseJson["hits"]["total"]["value"].Value<int>(),
-                MaxSearchResultsHit = string.Equals(responseJson["hits"]["total"]["relation"].Value<string>(), "gte",
-                    StringComparison.OrdinalIgnoreCase),
                 Source = source,
                 SearchText = searchText,
-                SearchFrom = searchFrom,
+                SearchAfter = searchAfterParsed,
                 MaxResults = maxResults,
                 HideNudity = hideNudity
             };

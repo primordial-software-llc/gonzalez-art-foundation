@@ -54,6 +54,7 @@ namespace IndexBackend.Sources.Rijksmuseum
                 });
                 resumptionToken = doc.DocumentElement.SelectSingleNode("//ListRecords/resumptionToken")?.InnerText;
             } while (!string.IsNullOrWhiteSpace(resumptionToken));
+            Console.WriteLine("Done harvesting.");
         }
 
         public async Task<string> GetHarvestXml(HttpClient client, string url, int attempt, int maxAttempts)

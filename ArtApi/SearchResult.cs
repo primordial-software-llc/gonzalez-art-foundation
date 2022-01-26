@@ -11,17 +11,14 @@ namespace ArtApi
         [JsonProperty("total")]
         public int Total { get; set; }
 
-        [JsonProperty("maxSearchResultsHit")]
-        public bool MaxSearchResultsHit { get; set; }
-
         [JsonProperty("source")]
         public string Source { get; set; }
 
         [JsonProperty("searchText")]
         public string SearchText { get; set; }
 
-        [JsonProperty("searchFrom")]
-        public int SearchFrom { get; set; }
+        [JsonProperty("searchAfter")]
+        public JArray SearchAfter { get; set; }
 
         [JsonProperty("maxResults")]
         public int MaxResults { get; set; }

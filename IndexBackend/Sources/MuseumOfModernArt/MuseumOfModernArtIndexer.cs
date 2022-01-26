@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using System.Web;
 using ArtApi.Model;
 using IndexBackend.Indexing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace IndexBackend.Sources.MuseumOfModernArt
 {
@@ -60,8 +62,13 @@ namespace IndexBackend.Sources.MuseumOfModernArt
             return new IndexResult
             {
                 Model = model,
-                ImageJpegBytes = imageBytes
+                ImageJpeg = Image.Load<Rgba64>(imageBytes)
             };
+        }
+
+        public void Dispose()
+        {
+            Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Net.Http;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
-using Amazon.Rekognition;
 using Amazon.S3;
 using Amazon.SQS;
 using IndexBackend;
@@ -30,8 +29,7 @@ namespace ArtIndexer
                     new ElasticSearchClient(
                         new HttpClient(),
                         Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
-                        Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN")),
-                    new AmazonRekognitionClient()
+                        Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"))
                 ))
         {
 

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,7 +13,8 @@ namespace IndexBackend.Sources.Rijksmuseum
 {
     public class TileImageStitcher
     {
-        public async Task<byte[]> GetStitchedTileImageJpegBytes(string objectNumber, string apiKey)
+        /// <remarks>Tiles aren't squares. The tiles at the max X and Y axis will be shorter.</remarks>
+        public async Task<Image<Rgba64>> GetStitchedTileImageJpegBytes(string objectNumber, string apiKey)
         {
             var tilesImageRequestUrl = $"https://www.rijksmuseum.nl/api/nl/collection/{objectNumber}/tiles?key={apiKey}";
             using var httpClient = new HttpClient();
@@ -28,48 +28,37 @@ namespace IndexBackend.Sources.Rijksmuseum
             var highestResolutionImage = tilesImageJson["levels"].First(x => x["width"].Value<int>() == highestResolutionImageWidth);
             var tiles = JsonConvert.DeserializeObject<List<Tile>>(highestResolutionImage["tiles"].ToString()) ?? new List<Tile>();
             var tileImages = new List<TileImage>();
-            Parallel.ForEach(tiles, new ParallelOptions { MaxDegreeOfParallelism =  2 }, tile =>
+            var outputImage = new Image<Rgba64>(highestResolutionImage["width"].Value<int>(), highestResolutionImage["height"].Value<int>());
+            foreach (var tile in tiles.OrderBy(x => x.Y).ThenBy(x => x.X))
             {
                 using var tileClient = new HttpClient();
                 var imageJpegBytes = tileClient.GetByteArrayAsync(tile.Url).Result;
                 using var image = Image.Load<Rgba64>(imageJpegBytes);
+                image.SaveAsJpeg(@$"C:\Users\peon\Desktop\tiles\tile-{tile.X}-{tile.Y}.jpg");
                 tileImages.Add(new TileImage
                 {
                     X = tile.X,
                     Y = tile.Y,
                     Height = image.Height,
-                    Width = image.Width,
-                    ImageJpegBytes = imageJpegBytes
+                    Width = image.Width
                 });
-            });
-            return await StitchImages(
-                highestResolutionImage["width"].Value<int>(),
-                highestResolutionImage["height"].Value<int>(),
-                tileImages);
-        }
-
-        public async Task<byte[]> StitchImages(int width, int height, List<TileImage> tileImages)
-        {
-            AssertImageWidthAlongAllYAxis(width, tileImages); // Fix sporadic black blocks in stitched images even though no exceptions are thrown when getting tile data.
-            AssertImageHeightAlongAllXAxis(height, tileImages);
-            using var outputImage = new Image<Rgba64>(width, height);
-            outputImage.Mutate(o =>
-            {
-                foreach (var tileImage in tileImages)
+                outputImage.Mutate(o =>
                 {
                     var xOffset = tileImages
-                        .Where(image => image.Y == tileImage.Y && image.X < tileImage.X)
+                        .Where(image => image.Y == tile.Y && image.X < tile.X)
                         .Sum(x => x.Width);
                     var yOffset = tileImages
-                        .Where(image => image.X == tileImage.X && image.Y < tileImage.Y)
+                        .Where(image => image.X == tile.X && image.Y < tile.Y)
                         .Sum(x => x.Height);
-                    using var image = Image.Load<Rgba64>(tileImage.ImageJpegBytes);
                     o.DrawImage(image, new Point(xOffset, yOffset), 1f);
-                }
-            });
-            await using var imageStream = new MemoryStream();
-            await outputImage.SaveAsJpegAsync(imageStream);
-            return imageStream.ToArray();
+                });
+            }
+            outputImage.SaveAsJpeg(@$"C:\Users\peon\Desktop\tiles\stitched.jpg");
+
+            AssertImageWidthAlongAllYAxis(highestResolutionImage["width"].Value<int>(), tileImages); // Fix sporadic black blocks in stitched images even though no exceptions are thrown when getting tile data.
+            AssertImageHeightAlongAllXAxis(highestResolutionImage["height"].Value<int>(), tileImages);
+
+            return outputImage;
         }
 
         private void AssertImageWidthAlongAllYAxis(int width, List<TileImage> tileImages)

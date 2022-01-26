@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ArtApi.Model;
 using IndexBackend.Indexing;
 using Newtonsoft.Json.Linq;
+using SixLabors.ImageSharp;
 
 namespace IndexBackend.Sources.Rijksmuseum
 {
@@ -44,9 +45,14 @@ namespace IndexBackend.Sources.Rijksmuseum
             var indexResult = new IndexResult
             {
                 Model = model,
-                ImageJpegBytes = existing != null ? null : await new TileImageStitcher().GetStitchedTileImageJpegBytes(id, Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY"))
+                ImageJpeg = await new TileImageStitcher().GetStitchedTileImageJpegBytes(id, Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY"))
             };
             return indexResult;
+        }
+
+        public void Dispose()
+        {
+            Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         }
     }
 }

@@ -7,6 +7,5 @@ namespace IndexBackend.Sources.Rijksmuseum.Model
         public int Y { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
-        public byte[] ImageJpegBytes { get; set; }
     }
 }

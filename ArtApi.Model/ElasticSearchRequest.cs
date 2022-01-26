@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 
 namespace ArtApi.Model
@@ -10,7 +11,7 @@ namespace ArtApi.Model
             string source,
             string searchText,
             int maxResults,
-            int searchFrom)
+            JToken searchAfter)
         {
             var filters = new List<string>();
             if (hideNudity)
@@ -74,12 +75,21 @@ namespace ArtApi.Model
             }
             boolSearch.Add("filter", JObject.Parse(filter));
             var query = new JObject { { "bool", boolSearch } };
+            var sort = JToken.Parse(@"[ 
+                { ""_score"": {""order"": ""desc""}},
+                { ""_id"": { ""order"":""asc""} }
+            ]");
             var request = new JObject
             {
+                { "track_total_hits", true }, // Turn off to improve search performance: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-your-data.html#track-total-hits
                 { "query", query },
                 { "size", maxResults },
-                { "from", searchFrom }
+                { "sort", sort }
             };
+            if (searchAfter != null && searchAfter.Any())
+            {
+                request.Add("search_after", searchAfter);
+            }
             return request;
         }
     }

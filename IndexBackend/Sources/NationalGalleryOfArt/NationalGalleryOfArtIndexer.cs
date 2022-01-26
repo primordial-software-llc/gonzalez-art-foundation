@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArtApi.Model;
 using IndexBackend.Indexing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace IndexBackend.Sources.NationalGalleryOfArt
 {
@@ -68,7 +70,7 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
             return new IndexResult
             {
                 Model = classification,
-                ImageJpegBytes = imageBytes
+                ImageJpeg = Image.Load<Rgba64>(imageBytes)
             };
         }
 
@@ -82,6 +84,11 @@ namespace IndexBackend.Sources.NationalGalleryOfArt
             model.Name = details.Name;
             model.Date = details.Date;
             model.SourceLink = details.SourceLink;
+        }
+
+        public void Dispose()
+        {
+            Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         }
 
         private List<string> ImageExtensions => new List<string> {".jpg",".tif"};

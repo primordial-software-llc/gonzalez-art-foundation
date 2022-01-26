@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using ArtApi.Model;
 using HtmlAgilityPack;
 using IndexBackend.Indexing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace IndexBackend.Sources.MuseeOrsay
 {
@@ -76,8 +78,13 @@ namespace IndexBackend.Sources.MuseeOrsay
             return new IndexResult
             {
                 Model = model,
-                ImageJpegBytes = imageBytes
+                ImageJpeg = Image.Load<Rgba64>(imageBytes)
             };
+        }
+
+        public void Dispose()
+        {
+            Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         }
     }
 }

@@ -21,6 +21,7 @@ using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.Rijksmuseum;
 using IndexBackend.Sources.Rijksmuseum.Model;
 using JetBrains.dotMemoryUnit;
+using JetBrains.dotMemoryUnit.Kernel;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using SixLabors.ImageSharp;
@@ -129,7 +130,7 @@ namespace SlideshowCreator.Tests
                 },
                 roleArn: "arn:aws:iam::283733643774:role/lambda_exec_art_api",
                 runtime: Runtime.Dotnetcore31,
-                1024,
+                2048,
                 1,
                 TimeSpan.FromMinutes(scheduledFrequencyInMinutes));
         }
@@ -221,14 +222,14 @@ namespace SlideshowCreator.Tests
         }
 
         [Test]
-        public void Count()
+        public void GetRijksmuseumCount()
         {
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
             {
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = MetropolitanMuseumOfArtIndexer.Source}}
+                    {":source", new AttributeValue {S = RijksmuseumIndexer.Source }}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
@@ -236,11 +237,8 @@ namespace SlideshowCreator.Tests
                 },
                 KeyConditionExpression = "#source = :source"
             };
-            var results = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient)
-                .OrderByDescending(x => int.Parse(x.PageId))
-                .ToList();
-
-            Console.WriteLine(results.Count.ToString());
+            var count = QueryAll<ClassificationModel>(queryRequest, GalleryAwsCredentialsFactory.ProductionDbClient);
+            Console.WriteLine(count.Count.ToString());
         }
 
         [Test]
@@ -361,30 +359,26 @@ namespace SlideshowCreator.Tests
         }
 
         [Test]
-        public void HarvestRikjsmuseumPageIds()
+        public void HarvestRijksmuseumPageIds()
         {
             var apiKey = Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY");
             new IndexBackend.Sources.Rijksmuseum.Harvester(GalleryAwsCredentialsFactory.SqsClient, apiKey).Harvest().Wait();
         }
 
+        [AssertTraffic(AllocatedSizeInBytes = 1024 * 1024 * 1024)]
         [Test] //Keep for debugging until everything is crawled.
         public void IndexSingleRecord()
         {
-            var mcp1 = dotMemory.Check();
-
             var indexingCore = new IndexingCore(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3Client,
-                GalleryAwsCredentialsFactory.ElasticSearchClient,
-                GalleryAwsCredentialsFactory.RekognitionClientClient);
+                GalleryAwsCredentialsFactory.ElasticSearchClient);
             using var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
 
-            indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "RP-T-1960-355" }).Wait();
+            indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "SK-C-2" }).Wait();
+
             dotMemory.Check(memory =>
             {
-                var newObjects = memory.GetDifference(mcp1).GetNewObjects();
-                Console.WriteLine("Peak memory usage: " + newObjects.SizeInBytes / 1024 / 1024 + "MB");
-
                 Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
                 Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<IndexResult>()).ObjectsCount));
@@ -393,29 +387,24 @@ namespace SlideshowCreator.Tests
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba64>>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba32>>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
-                Assert.LessOrEqual(memory.SizeInBytes, 512 * 1024 * 1024);
             });
+            
         }
 
+        [AssertTraffic(AllocatedSizeInBytes = 1024 * 1024 * 1024)]
         [Test] //Keep for debugging until everything is crawled.
         public void RunQueueLocally()
         {
-            var mcp1 = dotMemory.Check();
             var indexingCore = new IndexingCore(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3Client,
-                GalleryAwsCredentialsFactory.ElasticSearchClient,
-                GalleryAwsCredentialsFactory.RekognitionClientClient);
+                GalleryAwsCredentialsFactory.ElasticSearchClient);
             var queueIndexer = new QueueIndexer(GalleryAwsCredentialsFactory.SqsClient,
                 new HttpClient(),
                 indexingCore,
                 new ConsoleLogging());
-            queueIndexer.ProcessAllInQueue(20);
-            dotMemory.Check(memory =>
+            queueIndexer.ProcessAllInQueue(99999);            dotMemory.Check(memory =>
             {
-                var newObjects = memory.GetDifference(mcp1).GetNewObjects();
-                Console.WriteLine("Peak memory usage: " + newObjects.SizeInBytes / 1024 / 1024 + "MB");
-
                 Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
                 Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<IndexResult>()).ObjectsCount));
@@ -425,7 +414,7 @@ namespace SlideshowCreator.Tests
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba32>>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
                 Assert.LessOrEqual(memory.SizeInBytes, 512 * 1024 * 1024);
-                // when memory is high, uncomment to throw error and then debug the .dmw file in UI.
+                // when memory is high, uncomment to throw error and then you can use the .dmw file in the UI to investigate.
                 dotMemory.Check(memory => Assert.AreEqual(1, 2));
             });
         }

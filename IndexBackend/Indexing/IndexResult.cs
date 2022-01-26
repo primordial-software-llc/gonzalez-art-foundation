@@ -1,4 +1,6 @@
 ﻿using ArtApi.Model;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace IndexBackend.Indexing
 {
@@ -10,6 +12,6 @@ namespace IndexBackend.Indexing
         /// See the following method if you encounter source images which aren't .jpg files:
         /// IndexBackend.Indexing.IndexingHttpClient.ConvertToJpeg(byte[] imageBytes)
         /// </summary>
-        public byte[] ImageJpegBytes { get; set; }
+        public Image<Rgba64> ImageJpeg { get; set; }
     }
 }
