@@ -43,13 +43,12 @@ namespace IndexBackend.Indexing
             var dbClient = new DatabaseClient<ClassificationModel>(DbClient);
             var existing = dbClient.Get(new ClassificationModel { Source = messageModel.Source, PageId = messageModel.PageId });
             var activelyCrawledSources = new List<string>();
-            /*
             if (existing != null && !activelyCrawledSources.Any(x => string.Equals(existing.Source, x, StringComparison.OrdinalIgnoreCase)))
             {
                 throw new ProtectedClassificationException(
                     $"This record has already been crawled and is now protected: {messageModel.Source} - {messageModel.PageId}." +
                     " If you want to re-crawl the record delete it in dynamodb, but all associated data will be overwritten when re-crawled.");
-            }*/
+            }
             var indexResult = await indexer.Index(messageModel.PageId, existing);
             if (indexResult == null ||
                 indexResult.Model == null ||
