@@ -9,11 +9,11 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.S3;
 using Amazon.S3.Model;
 using ArtApi.Model;
-using IndexBackend.Sources.Rijksmuseum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Processing;
 
 namespace IndexBackend.Indexing
 {
@@ -43,12 +43,13 @@ namespace IndexBackend.Indexing
             var dbClient = new DatabaseClient<ClassificationModel>(DbClient);
             var existing = dbClient.Get(new ClassificationModel { Source = messageModel.Source, PageId = messageModel.PageId });
             var activelyCrawledSources = new List<string>();
+            /*
             if (existing != null && !activelyCrawledSources.Any(x => string.Equals(existing.Source, x, StringComparison.OrdinalIgnoreCase)))
             {
                 throw new ProtectedClassificationException(
                     $"This record has already been crawled and is now protected: {messageModel.Source} - {messageModel.PageId}." +
                     " If you want to re-crawl the record delete it in dynamodb, but all associated data will be overwritten when re-crawled.");
-            }
+            }*/
             var indexResult = await indexer.Index(messageModel.PageId, existing);
             if (indexResult == null ||
                 indexResult.Model == null ||
@@ -72,18 +73,26 @@ namespace IndexBackend.Indexing
                 {
                     await using var imageStream = new MemoryStream();
                     await indexResult.ImageJpeg.SaveAsJpegAsync(imageStream);
-                    var request = new PutObjectRequest
-                    {
-                        BucketName = Constants.IMAGES_BUCKET + "/" + indexer.ImagePath,
-                        Key = $"page-id-{indexResult.Model.PageId}.jpg",
-                        InputStream = imageStream
-                    };
-                    await S3Client.PutObjectAsync(request);
+                    await S3Client.PutObjectAsync(
+                        new PutObjectRequest
+                        {
+                            BucketName = Constants.IMAGES_BUCKET + "/" + indexer.ImagePath,
+                            Key = $"page-id-{indexResult.Model.PageId}.jpg",
+                            InputStream = imageStream
+                        });
                     classification.Height = indexResult.ImageJpeg.Height;
                     classification.Width = indexResult.ImageJpeg.Width;
                     classification.Orientation = indexResult.ImageJpeg.Height >= indexResult.ImageJpeg.Width
                         ? Constants.ORIENTATION_PORTRAIT
                         : Constants.ORIENTATION_LANDSCAPE;
+                    var thumbnailBytes = ImageCompression.CreateThumbnail(imageStream.ToArray(), 200, 200, KnownResamplers.Lanczos3);
+                    await using var thumbnailStream = new MemoryStream(thumbnailBytes);
+                    await S3Client.PutObjectAsync(new PutObjectRequest
+                    {
+                        BucketName = $"{Constants.IMAGES_BUCKET}/{indexer.ImagePath}/thumbnails",
+                        Key = $"page-id-{indexResult.Model.PageId}.jpg",
+                        InputStream = thumbnailStream
+                    });
                     indexResult.ImageJpeg.Dispose();
                 }
                 else
@@ -99,6 +108,7 @@ namespace IndexBackend.Indexing
                 classification.TimeStamp = DateTime.UtcNow.ToString("O");
                 classification.Nudity = false;
                 classification.S3Path = indexer.ImagePath + "/" + $"page-id-{indexResult.Model.PageId}.jpg";
+                classification.S3ThumbnailPath = indexer.ImagePath + "/thumbnails/" + $"page-id-{indexResult.Model.PageId}.jpg";
                 classification.S3Bucket = Constants.IMAGES_BUCKET;
                 var json = JObject.FromObject(classification,
                     new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });

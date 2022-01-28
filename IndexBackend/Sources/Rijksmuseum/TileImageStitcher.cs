@@ -34,7 +34,6 @@ namespace IndexBackend.Sources.Rijksmuseum
                 using var tileClient = new HttpClient();
                 var imageJpegBytes = tileClient.GetByteArrayAsync(tile.Url).Result;
                 using var image = Image.Load<Rgba64>(imageJpegBytes);
-                image.SaveAsJpeg(@$"C:\Users\peon\Desktop\tiles\tile-{tile.X}-{tile.Y}.jpg");
                 tileImages.Add(new TileImage
                 {
                     X = tile.X,
@@ -53,11 +52,8 @@ namespace IndexBackend.Sources.Rijksmuseum
                     o.DrawImage(image, new Point(xOffset, yOffset), 1f);
                 });
             }
-            outputImage.SaveAsJpeg(@$"C:\Users\peon\Desktop\tiles\stitched.jpg");
-
             AssertImageWidthAlongAllYAxis(highestResolutionImage["width"].Value<int>(), tileImages); // Fix sporadic black blocks in stitched images even though no exceptions are thrown when getting tile data.
             AssertImageHeightAlongAllXAxis(highestResolutionImage["height"].Value<int>(), tileImages);
-
             return outputImage;
         }
 

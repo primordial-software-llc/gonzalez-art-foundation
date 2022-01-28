@@ -19,7 +19,7 @@ namespace IndexBackend.Indexing
         private ILogging Logger { get; }
         public const string QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler";
         public const string QUEUE_FAILURE_URL = "https://sqs.us-east-1.amazonaws.com/283733643774/gonzalez-art-foundation-crawler-failure";
-        private const int SQS_BATCH_SIZE = 4;
+        private const int SQS_BATCH_SIZE = SQS_MAX_BATCH;
         private const int SQS_MAX_BATCH = 10;
 
         public QueueIndexer(IAmazonSQS queueClient, HttpClient httpClient, IndexingCore indexingCore, ILogging logger)

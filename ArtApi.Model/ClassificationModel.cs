@@ -44,6 +44,9 @@ namespace ArtApi.Model
         [JsonProperty("s3Path")]
         public string S3Path { get; set; }
 
+        [JsonProperty("s3ThumbnailPath")]
+        public string S3ThumbnailPath { get; set; }
+
         [JsonProperty("height")]
         public int? Height { get; set; }
 
