@@ -20,6 +20,6 @@
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="1.8.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IndexBackend\IndexBackend.csproj" />
+    <ProjectReference Include="..\..\IndexBackend\IndexBackend.csproj" />
   </ItemGroup>
 </Project>

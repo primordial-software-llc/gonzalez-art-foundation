@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using ArtApi.Model;
 using IndexBackend.Indexing;
 using IndexBackend.Sources.MetropolitanMuseumOfArt;
 using IndexBackend.Sources.MinistereDeLaCulture;
@@ -15,31 +16,31 @@ namespace IndexBackend
         public IIndex GetIndexer(string source, HttpClient httpClient)
         {
             var log = new ConsoleLogging();
-            if (string.Equals(source, RijksmuseumIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, Constants.SOURCE_RIJKSMUSEUM, StringComparison.OrdinalIgnoreCase))
             {
                 return new RijksmuseumIndexer(httpClient, log);
             }
-            if (string.Equals(source, MuseeOrsayIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, Constants.SOURCE_MUSEE_DORSAY, StringComparison.OrdinalIgnoreCase))
             {
                 return new MuseeOrsayIndexer(httpClient, log);
             }
-            if (string.Equals(source, MinistereDeLaCultureIndexer.SourceMuseeDuLouvre, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, Constants.SOURCE_MUSEE_DU_LOUVRE, StringComparison.OrdinalIgnoreCase))
             {
                 return new MinistereDeLaCultureIndexer(
                     httpClient,
                     log,
-                    MinistereDeLaCultureIndexer.SourceMuseeDuLouvre,
+                    Constants.SOURCE_MUSEE_DU_LOUVRE,
                     MinistereDeLaCultureIndexer.S3PathLouvre);
             }
-            if (string.Equals(source, MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, Constants.SOURCE_MINISTERE_DE_LA_CULTURE, StringComparison.OrdinalIgnoreCase))
             {
                 return new MinistereDeLaCultureIndexer(
                     httpClient,
                     log,
-                    MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture,
+                    Constants.SOURCE_MINISTERE_DE_LA_CULTURE,
                     MinistereDeLaCultureIndexer.S3PathMinistereDeLaCulture);
             }
-            if (string.Equals(source, MuseumOfModernArtIndexer.Source, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(source, Constants.SOURCE_MUSEUM_OF_MODERN_ART, StringComparison.OrdinalIgnoreCase))
             {
                 return new MuseumOfModernArtIndexer(httpClient, log);
             }

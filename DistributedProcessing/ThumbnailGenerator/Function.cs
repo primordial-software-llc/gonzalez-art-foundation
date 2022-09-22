@@ -9,16 +9,19 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.Core;
 using Amazon.S3;
+using Amazon.S3.Model;
 using ArtApi.Model;
 using IndexBackend;
+using IndexBackend.DataMaintenance;
+using IndexBackend.Indexing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace DistributedProcessor
+namespace ThumbnailGenerator
 {
     public class Function
     {
@@ -49,11 +52,12 @@ namespace DistributedProcessor
             ElasticSearchClient = elasticSearchClient;
         }
 
+        // Need an index. This is now timing out and exceeding dynamodb capacity.
         public string FunctionHandler(ILambdaContext context)
         {
             var request = new ScanRequest(new ClassificationModel().GetTable())
             {
-                FilterExpression = "attribute_not_exists(orientation)"
+                FilterExpression = "attribute_not_exists(s3ThumbnailPath)"
             };
             ScanResponse response = null;
             do
@@ -63,7 +67,7 @@ namespace DistributedProcessor
                     request.ExclusiveStartKey = response.LastEvaluatedKey;
                 }
                 response = DbClient.ScanAsync(request).Result;
-                Parallel.ForEach(response.Items, new ParallelOptions { MaxDegreeOfParallelism = 2 }, item =>
+                foreach (var item in response.Items)
                 {
                     var modelJson = Document.FromAttributeMap(item).ToJson();
                     var classification = JsonConvert.DeserializeObject<ClassificationModel>(modelJson);
@@ -75,43 +79,37 @@ namespace DistributedProcessor
                     {
                         Console.WriteLine($"Failed to re-process source: {classification.Source} page id: {classification.PageId}: {e}");
                     }
-                });
+                }
             } while (response.LastEvaluatedKey.Any());
             return "Finished re-processing all records without orientation.";
         }
 
         private async Task Process(ClassificationModel classification)
         {
-            Console.WriteLine($"Re-processing source: {classification.Source} page id: {classification.PageId}");
-            if (classification.ModerationLabels != null && !classification.Nudity.HasValue)
-            {
-                classification.Nudity = classification.ModerationLabels.Any(x =>
-                    x.Name.Contains("nudity", StringComparison.OrdinalIgnoreCase) ||
-                    x.ParentName.Contains("nudity", StringComparison.OrdinalIgnoreCase)
-                );
-            }
-            classification.S3Bucket = Constants.IMAGES_BUCKET;
             var objectImage = S3Client.GetObjectAsync(Constants.IMAGES_BUCKET, $"{classification.S3Path}").Result;
-
             if (objectImage.ContentLength == 0)
             {
-                new ReviewProcess().MoveForReview(DbClient, ElasticSearchClient, S3Client, classification);
+                new ReviewAndArchiveProcess().MoveForReview(DbClient, ElasticSearchClient, S3Client, classification);
                 return;
             }
 
-            byte[] imageBytes;
-            await using (var stream = objectImage.ResponseStream)
-            await using (var memoryStream = new MemoryStream())
+            await using var imageStream = objectImage.ResponseStream;
+            await using var imageMemoryStream = new MemoryStream();
+            await imageStream.CopyToAsync(imageMemoryStream);
+
+            var thumbnailBytes = ImageCompression.CreateThumbnail(imageMemoryStream.ToArray(), ImageCompression.DefaultSize, KnownResamplers.Lanczos3);
+            await using var thumbnailStream = new MemoryStream(thumbnailBytes);
+            var s3FileName = classification.S3Path.Split("/").Last();
+            var s3PurePath = classification.S3Path.Replace("/" + s3FileName, string.Empty);
+            var createThumbnailRequest = new PutObjectRequest
             {
-                await stream.CopyToAsync(memoryStream);
-                imageBytes = memoryStream.ToArray();
-            }
-            using var image = Image.Load(imageBytes);
+                BucketName = $"{Constants.IMAGES_BUCKET}/{s3PurePath}/thumbnails",
+                Key = s3FileName,
+                InputStream = thumbnailStream
+            };
+            classification.S3ThumbnailPath = $"{s3PurePath}/thumbnails/{s3FileName}";
 
-            classification.Height = image.Height;
-            classification.Width = image.Width;
-            classification.Orientation = image.Height >= image.Width ? Constants.ORIENTATION_PORTRAIT : Constants.ORIENTATION_LANDSCAPE;
-
+            await S3Client.PutObjectAsync(createThumbnailRequest);
             var json = JObject.FromObject(classification, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
             await ElasticSearchClient.SendToElasticSearch(classification);
             await DbClient.PutItemAsync(

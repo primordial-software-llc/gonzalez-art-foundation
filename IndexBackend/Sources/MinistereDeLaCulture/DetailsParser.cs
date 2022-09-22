@@ -25,7 +25,7 @@ namespace IndexBackend.Sources.MinistereDeLaCulture
             {
                 artist = artistNode.First().InnerText.Trim();
             }
-            model.Artist = Classifier.NormalizeArtist(artist);
+            model.Artist = artist;
             model.OriginalArtist = artist;
 
             var date = htmlDoc.DocumentNode

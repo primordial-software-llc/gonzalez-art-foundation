@@ -1,7 +1,7 @@
 ﻿using IndexBackend.Sources.NationalGalleryOfArt;
 using NUnit.Framework;
 
-namespace SlideshowCreator.Scripts
+namespace SlideshowCreator
 {
     class PopulateNationalGalleryOfArtMetaData
     {

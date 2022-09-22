@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace SlideshowCreator.Tests
 {
-    public class DistributedProcessorTests
+    public class ThumbnailGeneratorTests
     {
 
         [Test]
@@ -33,12 +33,12 @@ namespace SlideshowCreator.Tests
                 },
                 environmentVariables,
                 scheduleExpression,
-                "gonzalez-art-foundation-DistributedProcessor",
-                @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\DistributedProcessor\DistributedProcessor.csproj",
+                "gonzalez-art-foundation-thumbnail-generator",
+                @"C:\Users\peon\Desktop\projects\gonzalez-art-foundation-api\DistributedProcessing\ThumbnailGenerator.csproj",
                 new LambdaEntrypointDefinition
                 {
-                    AssemblyName = "DistributedProcessor",
-                    Namespace = "DistributedProcessor",
+                    AssemblyName = "ThumbnailGenerator",
+                    Namespace = "ThumbnailGenerator",
                     ClassName = "Function",
                     FunctionName = "FunctionHandler"
                 },
@@ -57,12 +57,13 @@ namespace SlideshowCreator.Tests
                 client,
                 Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
                 Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
-            var processor = new DistributedProcessor.Function(
+            var processor = new ThumbnailGenerator.Function(
                 GalleryAwsCredentialsFactory.ProductionDbClient,
                 GalleryAwsCredentialsFactory.S3Client,
                 elasticClient
             );
             processor.FunctionHandler(null);
         }
+        
     }
 }

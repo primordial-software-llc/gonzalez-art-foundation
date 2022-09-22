@@ -19,7 +19,7 @@
 	  <Reference Include="..\Dlls\CloudFlareImUnderAttackMode.dll" />
 	  <Reference Include="..\Dlls\Diacritics.dll" />
 	  <ProjectReference Include="..\ArtApi.Model\ArtApi.Model.csproj" />
-	  <ProjectReference Include="..\DistributedProcessor\DistributedProcessor.csproj" />
+	  <ProjectReference Include="..\DistributedProcessing\ThumbnailGenerator\ThumbnailGenerator.csproj" />
 	  <ProjectReference Include="..\IndexBackend\IndexBackend.csproj" />
   </ItemGroup>
 </Project>

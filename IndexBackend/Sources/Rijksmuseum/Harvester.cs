@@ -42,7 +42,7 @@ namespace IndexBackend.Sources.Rijksmuseum
                     .Select(x =>
                         new ClassificationModel
                         {
-                            Source = RijksmuseumIndexer.Source,
+                            Source = Constants.SOURCE_RIJKSMUSEUM,
                             PageId = x.InnerText
                         }
                     )

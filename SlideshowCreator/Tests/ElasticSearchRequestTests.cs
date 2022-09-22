@@ -2,7 +2,6 @@
 using System.Net.Http;
 using ArtApi.Model;
 using IndexBackend;
-using IndexBackend.Sources.Rijksmuseum;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
@@ -43,7 +42,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void TestSearchJson()
         {
-            var json = ElasticSearchRequest.GetSearchRequestBody(RijksmuseumIndexer.Source, "lawrence", 100, null);
+            var json = ElasticSearchRequest.GetSearchRequestBody(Constants.SOURCE_RIJKSMUSEUM, "lawrence", 100, null);
             Console.WriteLine(json);
             var expected = @"{
   ""track_total_hits"": true,

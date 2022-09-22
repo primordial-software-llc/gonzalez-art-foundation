@@ -12,7 +12,6 @@ namespace IndexBackend.Sources.Rijksmuseum
     public class RijksmuseumIndexer : IIndex
     {
         public string ImagePath => "collections/rijksmuseum";
-        public static string Source => "https://www.rijksmuseum.nl";
 
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
@@ -31,7 +30,7 @@ namespace IndexBackend.Sources.Rijksmuseum
             var collectionJson = JObject.Parse(collectionResponse);
             var model = new ClassificationModel
             {
-                Source = Source,
+                Source = Constants.SOURCE_RIJKSMUSEUM,
                 PageId = id,
                 SourceLink = $"https://www.rijksmuseum.nl/en/collection/{id}",
                 OriginalArtist = collectionJson["artObject"]["principalMaker"].Value<string>(),

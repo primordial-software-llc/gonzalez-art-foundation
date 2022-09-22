@@ -84,7 +84,7 @@ namespace IndexBackend.Indexing
                     classification.Orientation = indexResult.ImageJpeg.Height >= indexResult.ImageJpeg.Width
                         ? Constants.ORIENTATION_PORTRAIT
                         : Constants.ORIENTATION_LANDSCAPE;
-                    var thumbnailBytes = ImageCompression.CreateThumbnail(imageStream.ToArray(), 200, 200, KnownResamplers.Lanczos3);
+                    var thumbnailBytes = ImageCompression.CreateThumbnail(imageStream.ToArray(), new Size(200, 200), KnownResamplers.Lanczos3);
                     await using var thumbnailStream = new MemoryStream(thumbnailBytes);
                     await S3Client.PutObjectAsync(new PutObjectRequest
                     {
@@ -100,6 +100,7 @@ namespace IndexBackend.Indexing
                     classification.Width = existing.Width;
                     classification.Orientation = existing.Orientation;
                 }
+                // All of these fields need to be trimmed. This indexing core must cleanse all data. Once that's done trimming can be removed from each individual indexer/parser.
                 classification.Name = HttpUtility.HtmlDecode(classification.Name);
                 classification.Date = HttpUtility.HtmlDecode(classification.Date);
                 classification.OriginalArtist = HttpUtility.HtmlDecode(classification.OriginalArtist);

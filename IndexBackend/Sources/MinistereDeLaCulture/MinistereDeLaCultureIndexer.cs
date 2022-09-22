@@ -11,8 +11,6 @@ namespace IndexBackend.Sources.MinistereDeLaCulture
 {
     public class MinistereDeLaCultureIndexer : IIndex
     {
-        public static string SourceMuseeDuLouvre => "https://www.pop.culture.gouv.fr/notice/museo/M5031";
-        public static string SourceMinistereDeLaCulture => "https://www.pop.culture.gouv.fr";
         public static string S3PathLouvre => "collections/ministere-de-la-culture/louvre";
         public static string S3PathMinistereDeLaCulture => "collections/ministere-de-la-culture";
 

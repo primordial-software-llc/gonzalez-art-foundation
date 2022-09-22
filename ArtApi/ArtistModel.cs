@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
-using AwsTools;
+using ArtApi.Model;
 using Newtonsoft.Json;
+using IModel = AwsTools.IModel;
 
 namespace ArtApi
 {
@@ -32,7 +33,7 @@ namespace ArtApi
 
         public string GetTable()
         {
-            return "gonzalez-art-foundation-artist";
+            return Constants.ARTIST_TABLE;
         }
     }
 }

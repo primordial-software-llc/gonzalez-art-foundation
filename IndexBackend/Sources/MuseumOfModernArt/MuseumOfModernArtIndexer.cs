@@ -13,7 +13,6 @@ namespace IndexBackend.Sources.MuseumOfModernArt
     {
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
-        public static string Source => "https://www.moma.org";
         public string ImagePath => "collections/museum-of-modern-art";
 
         public MuseumOfModernArtIndexer(HttpClient httpClient, ILogging logging)
@@ -31,7 +30,7 @@ namespace IndexBackend.Sources.MuseumOfModernArt
                 return null;
             }
 
-            var model = new ClassificationModel { Source = Source, SourceLink = sourceLink, PageId = id };
+            var model = new ClassificationModel { Source = Constants.SOURCE_MUSEUM_OF_MODERN_ART, SourceLink = sourceLink, PageId = id };
             var infoNodes = htmlDoc.DocumentNode
                 .SelectNodes("//div[@class='work__short-caption']/h1/span");
             if (infoNodes != null && infoNodes.Count > 0)

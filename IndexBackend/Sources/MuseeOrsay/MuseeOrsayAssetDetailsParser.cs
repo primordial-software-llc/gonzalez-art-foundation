@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using ArtApi.Model;
 using HtmlAgilityPack;
-using IndexBackend.Indexing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
@@ -24,7 +23,7 @@ namespace IndexBackend.Sources.MuseeOrsay
                 .SelectNodes("//h2")
                 ?.Select(x => x.InnerText).ToList().FirstOrDefault() ?? string.Empty;
             model.OriginalArtist = artistName.Trim();
-            model.Artist = Classifier.NormalizeArtist(artistName.Trim());
+            model.Artist = artistName.Trim();
             if (infoDetails.Count > 0)
             {
                 model.Name = infoDetails[0].Trim();
@@ -73,25 +72,21 @@ namespace IndexBackend.Sources.MuseeOrsay
             var highResImagePart1 = await httpClient.GetByteArrayAsync(imageLinkPart1);
             var highResImagePart2 = await httpClient.GetByteArrayAsync(imageLinkPart2);
             byte[] imageBytes;
-            using (var part1Image = Image.Load(highResImagePart1))
-            using (var part2Image = Image.Load(highResImagePart2))
-            using (var combinedImage = new Image<Rgba64>(part1Image.Width, part1Image.Height))
+            using var part1Image = Image.Load(highResImagePart1);
+            using var part2Image = Image.Load(highResImagePart2);
+            using var combinedImage = new Image<Rgba64>(part1Image.Width, part1Image.Height);
+            combinedImage.Mutate(x => x
+                    .DrawImage(part1Image, new Point(0, 0), 1f)
+                    .DrawImage(part2Image, new Point(0, 0), 1f) // Draw the second image over the first.
+            );
+            var encoder = new JpegEncoder
             {
-                combinedImage.Mutate(x => x
-                        .DrawImage(part1Image, new Point(0, 0), 1f)
-                        .DrawImage(part2Image, new Point(0, 0), 1f) // Draw the second image over the first.
-                );
-                var encoder = new JpegEncoder
-                {
-                    Quality = 100,
-                    Subsample = JpegSubsample.Ratio444
-                };
-                using (var imageStream = new MemoryStream())
-                {
-                    await combinedImage.SaveAsync(imageStream, encoder);
-                    imageBytes = imageStream.ToArray();
-                }
-            }
+                Quality = 100,
+                Subsample = JpegSubsample.Ratio444
+            };
+            await using var imageStream = new MemoryStream();
+            await combinedImage.SaveAsync(imageStream, encoder);
+            imageBytes = imageStream.ToArray();
             return imageBytes;
         }
 

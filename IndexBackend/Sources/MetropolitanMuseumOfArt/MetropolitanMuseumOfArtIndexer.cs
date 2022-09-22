@@ -12,7 +12,7 @@ namespace IndexBackend.Sources.MetropolitanMuseumOfArt
 {
     public class MetropolitanMuseumOfArtIndexer : IIndex
     {
-        public static string Source => "https://www.metmuseum.org";
+        public static string Source => Constants.SOURCE_METROPOLITAN_MUSEUM_OF_ART;
         public string ImagePath => "collections/metropolitan-museum-of-art";
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }

@@ -15,13 +15,9 @@ using ArtApi.Model;
 using AwsLambdaDeploy;
 using IndexBackend;
 using IndexBackend.Indexing;
-using IndexBackend.Sources.MetropolitanMuseumOfArt;
-using IndexBackend.Sources.MinistereDeLaCulture;
-using IndexBackend.Sources.MuseumOfModernArt;
 using IndexBackend.Sources.Rijksmuseum;
 using IndexBackend.Sources.Rijksmuseum.Model;
 using JetBrains.dotMemoryUnit;
-using JetBrains.dotMemoryUnit.Kernel;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using SixLabors.ImageSharp;
@@ -57,47 +53,7 @@ namespace SlideshowCreator.Tests
             );
         }
 
-        //[Test] - The table should probably be rebuilt maybe once per week to keep up with any data changes.
-        public void BuildArtistList()
-        {
-            var artists = new Dictionary<string, string>();
-            var request = new ScanRequest(new ClassificationModel().GetTable());
-            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            ScanResponse response = null;
-            do
-            {
-                if (response != null)
-                {
-                    request.ExclusiveStartKey = response.LastEvaluatedKey;
-                }
-                response = dynamoDbClient.ScanAsync(request).Result;
-                foreach (var item in response.Items)
-                {
-                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    if (string.IsNullOrWhiteSpace(model.Artist))
-                    {
-                        Console.WriteLine("No artist");
-                    }
-                    if (!string.IsNullOrWhiteSpace(model.Artist) &&
-                        !artists.ContainsKey(model.Artist))
-                    {
-                        artists.Add(model.Artist, model.OriginalArtist);
-                        var artistModel = new ArtistModel
-                        {
-                            Artist = model.Artist,
-                            OriginalArtist = model.OriginalArtist
-                        };
-                        var json = JsonConvert.SerializeObject(artistModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                        var result = dynamoDbClient.PutItemAsync(
-                            new ArtistModel().GetTable(),
-                            Document.FromJson(json).ToAttributeMap()
-                        ).Result;
-                    }
-                }
-            } while (response.LastEvaluatedKey.Any());
-        }
-        
-        [Test]
+        //[Test]
         public void DeployArtIndexerInEachRegion()
         {
             var environmentVariables = new Dictionary<string, string>
@@ -205,7 +161,7 @@ namespace SlideshowCreator.Tests
                 {
                     batch.Add(new ClassificationModel
                     {
-                        Source = MuseumOfModernArtIndexer.Source,
+                        Source = Constants.SOURCE_MUSEUM_OF_MODERN_ART,
                         PageId = pageId.ToString()
                     });
                 }
@@ -229,7 +185,7 @@ namespace SlideshowCreator.Tests
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = RijksmuseumIndexer.Source }}
+                    {":source", new AttributeValue {S = Constants.SOURCE_RIJKSMUSEUM }}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
@@ -241,7 +197,7 @@ namespace SlideshowCreator.Tests
             Console.WriteLine(count.Count.ToString());
         }
 
-        [Test]
+        //[Test]
         public void HarvestMinisreDeCulturePageIds()
         {
             var queryRequest = new QueryRequest(new ClassificationModel().GetTable())
@@ -249,7 +205,7 @@ namespace SlideshowCreator.Tests
                 ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":source", new AttributeValue {S = MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture}}
+                    {":source", new AttributeValue {S = Constants.SOURCE_MINISTERE_DE_LA_CULTURE }}
                 },
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
@@ -270,7 +226,7 @@ namespace SlideshowCreator.Tests
                 .Select(x =>
                     new ClassificationModel
                     {
-                        Source = MinistereDeLaCultureIndexer.SourceMinistereDeLaCulture,
+                        Source = Constants.SOURCE_MINISTERE_DE_LA_CULTURE,
                         PageId = x.Fields.Ref
                     })
                 .ToList();
@@ -327,12 +283,13 @@ namespace SlideshowCreator.Tests
                 Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
                 Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
 
-            ScanResponse queryResponse = null;
-            queryResponse = new ScanResponse();
-            queryResponse.LastEvaluatedKey = new Dictionary<string, AttributeValue>
+            var queryResponse = new ScanResponse
             {
-                { "source", new AttributeValue { S = "https://www.pop.culture.gouv.fr/notice/museo/M5031" } },
-                { "pageId", new AttributeValue { S = "50350123823" } }
+                LastEvaluatedKey = new Dictionary<string, AttributeValue>
+                {
+                    { "source", new AttributeValue { S = "https://www.pop.culture.gouv.fr/notice/museo/M5031" } },
+                    { "pageId", new AttributeValue { S = "50350123823" } }
+                }
             };
             do
             {
@@ -358,7 +315,7 @@ namespace SlideshowCreator.Tests
 
         }
 
-        [Test]
+        //[Test]
         public void HarvestRijksmuseumPageIds()
         {
             var apiKey = Environment.GetEnvironmentVariable("RIJKSMUSEUM_DATA_API_KEY");
@@ -366,7 +323,7 @@ namespace SlideshowCreator.Tests
         }
 
         [AssertTraffic(AllocatedSizeInBytes = 1024 * 1024 * 1024)]
-        [Test] //Keep for debugging until everything is crawled.
+        //[Test] //Keep for debugging until everything is crawled.
         public void IndexSingleRecord()
         {
             var indexingCore = new IndexingCore(
@@ -375,7 +332,7 @@ namespace SlideshowCreator.Tests
                 GalleryAwsCredentialsFactory.ElasticSearchClient);
             using var indexer = new RijksmuseumIndexer(new HttpClient(), new ConsoleLogging());
 
-            indexingCore.Index(indexer, new ClassificationModel { Source = RijksmuseumIndexer.Source, PageId = "SK-C-2" }).Wait();
+            indexingCore.Index(indexer, new ClassificationModel { Source = Constants.SOURCE_RIJKSMUSEUM, PageId = "SK-C-2" }).Wait();
 
             dotMemory.Check(memory =>
             {

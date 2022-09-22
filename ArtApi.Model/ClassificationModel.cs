@@ -82,7 +82,7 @@ namespace ArtApi.Model
 
         public string GetTable()
         {
-            return "gonzalez-art-foundation-image-classification";
+            return Constants.IMAGES_TABLE;
         }
 
     }

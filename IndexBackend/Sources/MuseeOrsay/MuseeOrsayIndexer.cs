@@ -11,7 +11,6 @@ namespace IndexBackend.Sources.MuseeOrsay
 {
     public class MuseeOrsayIndexer : IIndex
     {
-        public static string Source => "http://www.musee-orsay.fr";
         public string ImagePath => "collections/musee-orsay";
         private HttpClient HttpClient { get; }
         private ILogging Logging { get; }
@@ -35,7 +34,7 @@ namespace IndexBackend.Sources.MuseeOrsay
             {
                 return null;
             }
-            var model = new ClassificationModel {Source = Source, SourceLink = sourceLink, PageId = id};
+            var model = new ClassificationModel {Source = Constants.SOURCE_MUSEE_DORSAY, SourceLink = sourceLink, PageId = id};
             MuseeOrsayAssetDetailsParser.ParseHtmlToNewModel(htmlDoc, model);
             var imageLink = htmlDoc.DocumentNode
                 .SelectNodes("//div[@class='unTiers']/a")
