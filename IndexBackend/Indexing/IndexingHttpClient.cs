@@ -36,7 +36,7 @@ namespace IndexBackend.Indexing
                 var encoder = new JpegEncoder
                 {
                     Quality = 100,
-                    Subsample = JpegSubsample.Ratio444
+                    ColorType = JpegColorType.YCbCrRatio444
                 };
                 using (var imageStream = new MemoryStream())
                 {

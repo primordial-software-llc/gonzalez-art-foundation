@@ -25,29 +25,6 @@ namespace SlideshowCreator.Scripts
             rebuildArtistListTableProcess.RebuildArtistListTable(Constants.IMAGES_TABLE, Constants.ARTIST_TABLE);
         }
 
-        //[Test]
-        public void MoveClassificationsWithoutImageData()
-        {
-            var elasticSearchClient = GalleryAwsCredentialsFactory.ElasticSearchClient;
-            var dynamoDbClient = GalleryAwsCredentialsFactory.ProductionDbClient;
-            var s3Client = GalleryAwsCredentialsFactory.S3Client;
-            var request = new ScanRequest(new ClassificationModel().GetTable())
-            {
-                FilterExpression = "attribute_not_exists(orientation)"
-            };
-            var response = dynamoDbClient.ScanAsync(request).Result;
-            Parallel.ForEach(response.Items, new ParallelOptions { MaxDegreeOfParallelism = 10 }, item =>
-            {
-                var modelJson = Document.FromAttributeMap(item).ToJson();
-                var classification = JsonConvert.DeserializeObject<ClassificationModel>(modelJson);
-                var metaData = s3Client.GetObjectMetadataAsync(Constants.IMAGES_BUCKET, classification.S3Path).Result;
-                if (metaData.ContentLength == 0)
-                {
-                    new ReviewAndArchiveProcess().MoveForReview(dynamoDbClient, elasticSearchClient, s3Client, classification);
-                }
-            });
-        }
-
         //[Test] WARNING - Don't run this until the date is dynamic. It's 1924 when the date is 2019 or 95 years in the past.
         public void MoveImagesNotInPublicDomain()
         {
@@ -145,8 +122,9 @@ namespace SlideshowCreator.Scripts
             } while (response.LastEvaluatedKey.Any());
         }
 
-        // HAZARD: ONLY USE THIS IF YOU ARE ABSOLUTELY CERTAIN LIKE HAVE THE IMAGES COPIED CERTAIN
+        // HAZARD: ONLY USE THIS IF YOU ARE ABSOLUTELY CERTAIN
         // THAT YOU CAN DELETE THE IMAGES. THIS BYPASSES VERSIONING AS IT DELETES ALL VERSIONS.
+        // WHEN PROCESSES LIKE COMPLIANCE REVIEW GET MORE MATURE S3 VERSIONS WILL BE IMMUTABLE.
         //[Test]
         public void DeleteS3Versions()
         {

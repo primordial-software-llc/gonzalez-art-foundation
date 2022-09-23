@@ -25,7 +25,10 @@ namespace IndexBackend.Indexing
 
         static IndexingCore()
         {
-            Configuration.Default.MemoryAllocator = ArrayPoolMemoryAllocator.CreateWithModeratePooling(); // Used to override the default and prevent memory from purposely persisting. See here for more details https://docs.sixlabors.com/articles/imagesharp/memorymanagement.html
+            Configuration.Default.MemoryAllocator = MemoryAllocator.Create(new MemoryAllocatorOptions
+            {
+                MaximumPoolSizeMegabytes = 64 // https://docs.sixlabors.com/articles/imagesharp/memorymanagement.html
+            });
         }
 
         public IndexingCore(
@@ -100,7 +103,6 @@ namespace IndexBackend.Indexing
                     classification.Width = existing.Width;
                     classification.Orientation = existing.Orientation;
                 }
-                // All of these fields need to be trimmed. This indexing core must cleanse all data. Once that's done trimming can be removed from each individual indexer/parser.
                 classification.Name = HttpUtility.HtmlDecode(classification.Name);
                 classification.Date = HttpUtility.HtmlDecode(classification.Date);
                 classification.OriginalArtist = HttpUtility.HtmlDecode(classification.OriginalArtist);

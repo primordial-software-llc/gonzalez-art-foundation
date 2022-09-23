@@ -323,7 +323,7 @@ namespace SlideshowCreator.Tests
         }
 
         [AssertTraffic(AllocatedSizeInBytes = 1024 * 1024 * 1024)]
-        //[Test] //Keep for debugging until everything is crawled.
+        [Test] //Keep for debugging until everything is crawled.
         public void IndexSingleRecord()
         {
             var indexingCore = new IndexingCore(
@@ -336,14 +336,13 @@ namespace SlideshowCreator.Tests
 
             dotMemory.Check(memory =>
             {
-                Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
-                Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
+                Assert.LessOrEqual(memory.SizeInBytes / 1024 / 1024, 30); // MB persisting
+                Assert.LessOrEqual(memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount, 1024); // Array MB in memory
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<IndexResult>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<MemoryStream>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<TileImage>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba64>>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba32>>()).ObjectsCount));
-                dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
             });
             
         }
@@ -360,7 +359,8 @@ namespace SlideshowCreator.Tests
                 new HttpClient(),
                 indexingCore,
                 new ConsoleLogging());
-            queueIndexer.ProcessAllInQueue(99999);            dotMemory.Check(memory =>
+            queueIndexer.ProcessAllInQueue(99999);
+            dotMemory.Check(memory =>
             {
                 Console.WriteLine("bytes persisting: " + memory.SizeInBytes / 1024 / 1024 + "MB");
                 Console.WriteLine("Array MB in memory: " + memory.GetObjects(where => where.Type.Is<byte[]>()).ObjectsCount);
@@ -369,7 +369,6 @@ namespace SlideshowCreator.Tests
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<TileImage>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba64>>()).ObjectsCount));
                 dotMemory.Check(memory => Assert.AreEqual(0, memory.GetObjects(where => where.Type.Is<Image<Rgba32>>()).ObjectsCount));
-                dotMemory.Check(memory => Assert.AreEqual(1, memory.GetObjects(where => where.Type.Is<ArrayPoolMemoryAllocator>()).ObjectsCount));
                 Assert.LessOrEqual(memory.SizeInBytes, 512 * 1024 * 1024);
                 // when memory is high, uncomment to throw error and then you can use the .dmw file in the UI to investigate.
                 dotMemory.Check(memory => Assert.AreEqual(1, 2));

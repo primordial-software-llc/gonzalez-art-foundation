@@ -82,7 +82,7 @@ namespace IndexBackend.Sources.MuseeOrsay
             var encoder = new JpegEncoder
             {
                 Quality = 100,
-                Subsample = JpegSubsample.Ratio444
+                ColorType = JpegColorType.YCbCrRatio444
             };
             await using var imageStream = new MemoryStream();
             await combinedImage.SaveAsync(imageStream, encoder);
