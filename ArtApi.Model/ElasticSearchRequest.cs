@@ -51,7 +51,8 @@ namespace ArtApi.Model
             var query = new JObject { { "bool", boolSearch } };
             var sort = JToken.Parse(@"[ 
                 { ""_score"": {""order"": ""desc""}},
-                { ""_id"": { ""order"":""asc""} }
+                { ""source.keyword"": { ""order"":""asc""} },
+                { ""pageId.keyword"": { ""order"":""asc""} }
             ]");
             var request = new JObject
             {

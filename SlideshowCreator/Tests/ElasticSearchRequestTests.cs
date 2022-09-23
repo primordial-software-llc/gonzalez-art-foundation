@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Net.Http;
 using ArtApi.Model;
-using IndexBackend;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
@@ -9,35 +7,6 @@ namespace SlideshowCreator.Tests
 {
     class ElasticSearchRequestTests
     {
-        [Test]
-        public void SearchAfterTest()
-        {
-            var elasticClient = new ElasticSearchClient(
-                new HttpClient(),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_ENDPOINT_FOUNDATION"),
-                Environment.GetEnvironmentVariable("ELASTICSEARCH_API_KEY_GONZALEZ_ART_FOUNDATION_ADMIN"));
-
-            var result = elasticClient.SendToElasticSearch(
-                HttpMethod.Get,
-                "/classification/_search",
-                ElasticSearchRequest.GetSearchRequestBody(
-                    "",
-                    "Sir Lawrence Alma-Tadema",
-                    100,
-                    null)
-                ).Result;
-
-            var resultAfter = elasticClient.SendToElasticSearch(
-                HttpMethod.Get,
-                "/classification/_search",
-                ElasticSearchRequest.GetSearchRequestBody(
-                    "",
-                    "Sir Lawrence Alma-Tadema",
-                    100,
-                    JObject.Parse(result)["hits"]["hits"].Last["sort"]
-                )
-            ).Result;
-        }
 
         [Test]
         public void TestSearchJson()
@@ -80,13 +49,18 @@ namespace SlideshowCreator.Tests
       }
     },
     {
-      ""_id"": {
-        ""order"": ""asc""
-      }
+      ""source.keyword"": {
+            ""order"": ""asc""
+        }
+    },
+    {
+      ""pageId.keyword"": {
+            ""order"": ""asc""
+        }
     }
   ]
 }";
-            Assert.AreEqual(expected, json.ToString());
+            Assert.AreEqual(JObject.Parse(expected).ToString(), json.ToString());
         }
         
     }
