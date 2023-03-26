@@ -38,7 +38,7 @@ namespace ArtApi.Model
 
         public string GetTable()
         {
-            return "gonzalez-art-foundation-artist";
+            return Constants.ARTIST_TABLE;
         }
     }
 }
