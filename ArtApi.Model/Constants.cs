@@ -26,6 +26,13 @@ namespace ArtApi.Model
         public static readonly string SOURCE_MUSEUM_OF_MODERN_ART = "https://www.moma.org";
         public static readonly string SOURCE_MUSEE_DORSAY = "http://www.musee-orsay.fr";
 
+        public static readonly List<string> SOURCES_WITHOUT_COPYRIGHTS = new List<string>
+        {
+            SOURCE_THE_ATHENAEUM,
+            SOURCE_METROPOLITAN_MUSEUM_OF_ART,
+            SOURCE_RIJKSMUSEUM
+        };
+
         public static readonly List<string> ARCHIVED_SOURCES = new List<string>
         {
             SOURCE_METROPOLITAN_MUSEUM_OF_ART,
@@ -34,5 +41,6 @@ namespace ArtApi.Model
             SOURCE_MUSEUM_OF_MODERN_ART,
             SOURCE_MUSEE_DORSAY
         };
+
     }
 }

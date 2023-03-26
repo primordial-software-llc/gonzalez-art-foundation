@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ using IndexBackend.DataMaintenance;
 using IndexBackend.Sources.MuseeOrsay;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Document = Amazon.DynamoDBv2.DocumentModel.Document;
 
 namespace SlideshowCreator.Scripts
@@ -23,6 +26,42 @@ namespace SlideshowCreator.Scripts
         {
             var rebuildArtistListTableProcess = new RebuildArtistListTableProcess(GalleryAwsCredentialsFactory.ProductionDbClient);
             rebuildArtistListTableProcess.RebuildArtistListTable(Constants.IMAGES_TABLE, Constants.ARTIST_TABLE);
+        }
+
+        // Needs some work if you want it to run in parallel with other processing.
+        // Need to do patches instead of updates on all fields.
+        // No real need right now.
+        // I can go as fast as I can afford.
+        [Test]
+        public void SetImagesWithoutOrientation()
+        {
+            var request = new ScanRequest(new ClassificationModel().GetTable())
+            {
+                FilterExpression = "attribute_not_exists(orientation) or attribute_not_exists(height) or attribute_not_exists(width)"
+            };
+            var dbClient = new DatabaseClient<ClassificationModel>(GalleryAwsCredentialsFactory.ProductionDbClient);
+            var response = dbClient.ScanAll(request);
+            var s3Client = GalleryAwsCredentialsFactory.S3Client;
+            var elasticSearchClient = GalleryAwsCredentialsFactory.ElasticSearchClient;
+            foreach (var item in response)
+            {
+                using var imageStream = new MemoryStream();
+                using var objectImage = s3Client.GetObjectAsync(Constants.IMAGES_BUCKET, item.S3Path).Result;
+                using var responseStream = objectImage.ResponseStream;
+                using var reader = new StreamReader(responseStream);
+                using var memoryStream = new MemoryStream();
+                responseStream.CopyTo(memoryStream);
+                var bytes = memoryStream.ToArray();
+                var imageJpeg = Image.Load<Rgba64>(bytes);
+                item.Height = imageJpeg.Height;
+                item.Width = imageJpeg.Width;
+                item.Orientation = imageJpeg.Height >= imageJpeg.Width
+                    ? Constants.ORIENTATION_PORTRAIT
+                    : Constants.ORIENTATION_LANDSCAPE;
+                Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+                dbClient.Update(item);
+                elasticSearchClient.SendToElasticSearch(item).Wait();
+            }
         }
 
         //[Test] WARNING - Don't run this until the date is dynamic. It's 1924 when the date is 2019 or 95 years in the past.
@@ -70,6 +109,7 @@ namespace SlideshowCreator.Scripts
             } while (response.LastEvaluatedKey.Any());
         }
         
+        // Might want to purge this.
         [Test]
         public void ArchiveImageSource()
         {

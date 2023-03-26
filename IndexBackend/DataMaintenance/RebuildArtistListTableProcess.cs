@@ -2,9 +2,7 @@
 using Amazon.DynamoDBv2.Model;
 using ArtApi.Model;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -43,7 +41,7 @@ namespace IndexBackend.DataMaintenance
 
         private void BuildArtistListTable(string sourceClassificationTable, string destinationArtistTable)
         {
-            var artists = new ConcurrentDictionary<string, string>();
+            var artists = new ConcurrentDictionary<string, ArtistModel>();
             var request = new ScanRequest(sourceClassificationTable);
             ScanResponse response = null;
             do
@@ -53,30 +51,37 @@ namespace IndexBackend.DataMaintenance
                     request.ExclusiveStartKey = response.LastEvaluatedKey;
                 }
                 response = DynamoDbClient.ScanAsync(request).Result;
-                Parallel.ForEach(response.Items, item =>
+                var models = response
+                    .Items                                                                  
+                    .Select(x => JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(x).ToJson()));
+                var modelsByArtist = models
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Artist))
+                    .GroupBy(x => x.Artist);
+                foreach (var worksOfArtByArtist in modelsByArtist)
                 {
-                    var model = JsonConvert.DeserializeObject<ClassificationModel>(Document.FromAttributeMap(item).ToJson());
-                    if (string.IsNullOrWhiteSpace(model.Artist))
+                    ArtistModel artistModel;
+                    if (artists.ContainsKey(worksOfArtByArtist.Key))
                     {
-                        Console.WriteLine("No artist");
+                        artistModel = artists[worksOfArtByArtist.Key];
                     }
-                    if (!string.IsNullOrWhiteSpace(model.Artist) &&
-                        !artists.ContainsKey(model.Artist))
+                    else
                     {
-                        artists.TryAdd(model.Artist, model.OriginalArtist);
-                        var artistModel = new ArtistModel
-                        {
-                            Artist = model.Artist,
-                            OriginalArtist = model.OriginalArtist
-                        };
-                        var json = JsonConvert.SerializeObject(artistModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                        DynamoDbClient.PutItemAsync(
-                            destinationArtistTable,
-                            Document.FromJson(json).ToAttributeMap()
-                        ).Wait();
+                        artistModel = new ArtistModel { Artist = worksOfArtByArtist.Key, OriginalArtist = worksOfArtByArtist.First().OriginalArtist };
+                        artists.TryAdd(worksOfArtByArtist.Key, artistModel);
                     }
-                });
+                    artistModel.NumberOfWorks += worksOfArtByArtist.Count();
+                }
             } while (response.LastEvaluatedKey.Any());
+
+            Parallel.ForEach(artists.Keys, artist =>
+            {
+                var artistModel = artists[artist];
+                var json = JsonConvert.SerializeObject(artistModel, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                DynamoDbClient.PutItemAsync(
+                    destinationArtistTable,
+                    Document.FromJson(json).ToAttributeMap()
+                ).Wait();
+            });
         }
 
     }
