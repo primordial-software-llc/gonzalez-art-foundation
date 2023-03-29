@@ -10,7 +10,8 @@ namespace ArtApi.Model
             string source,
             string searchText,
             int maxResults,
-            JToken searchAfter)
+            JToken searchAfter,
+            bool artistExactMatch)
         {
             var filters = new List<string>();
             if (!string.IsNullOrWhiteSpace(source))
@@ -34,17 +35,19 @@ namespace ArtApi.Model
             var boolSearch = new JObject();
             if (!string.IsNullOrWhiteSpace(searchText))
             {
+                List<string> fields = artistExactMatch
+                    ? new List<string> { "\"artist.keyword\"" }
+                    : new List<string> { "\"artist^2\"", "\"name\"", "\"date\"" };
+                
                 var searchQueryText = $@"{{
-                    ""multi_match"": {{
-                      ""query"": ""{searchText}"",
-                      ""type"": ""best_fields"",
-                      ""fields"": [
-                        ""artist^2"",
-                        ""name"",
-                        ""date""
-                      ]
-                    }}
-                }}";
+                        ""multi_match"": {{
+                          ""query"": ""{searchText}"",
+                          ""type"": ""best_fields"",
+                          ""fields"": [
+                              {string.Join(",", fields)}
+                          ]
+                        }}
+                    }}";
                 boolSearch.Add("must", JObject.Parse(searchQueryText));
             }
             boolSearch.Add("filter", JObject.Parse(filter));

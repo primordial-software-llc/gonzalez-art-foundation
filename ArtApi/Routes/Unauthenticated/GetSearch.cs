@@ -18,11 +18,11 @@ namespace ArtApi.Routes.Unauthenticated
             var searchText = request.QueryStringParameters.ContainsKey("searchText")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["searchText"].Trim())
                 : string.Empty;
-            const int maxResultsLimit = 500;
+            const int MAX_RESULTS_LIMIT = 500;
             request.QueryStringParameters.TryGetValue("maxResults", out var maxResultsText);
             int.TryParse(maxResultsText, out var maxResults);
-            maxResults = maxResults <= 0 || maxResults >= maxResultsLimit
-                ? maxResultsLimit
+            maxResults = maxResults <= 0 || maxResults >= MAX_RESULTS_LIMIT
+                ? MAX_RESULTS_LIMIT
                 : maxResults;
             JArray searchAfterParsed = null;
             request.QueryStringParameters.TryGetValue("searchAfter", out var searchAfter);
@@ -33,11 +33,16 @@ namespace ArtApi.Routes.Unauthenticated
             var source = request.QueryStringParameters.ContainsKey("source")
                 ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["source"].Trim())
                 : string.Empty;
+            var artistExactMatchRaw = request.QueryStringParameters.ContainsKey("artistExactMatch")
+                ? HttpUtility.JavaScriptStringEncode(request.QueryStringParameters["artistExactMatch"].Trim())
+                : bool.FalseString;
+            bool.TryParse(artistExactMatchRaw, out var artistExactMatch);
             var getRequest = Model.ElasticSearchRequest.GetSearchRequestBody(
                 source,
                 searchText,
                 maxResults,
-                searchAfterParsed);
+                searchAfterParsed,
+                artistExactMatch);
             var elasticSearchResponse = SendToElasticSearch(
                 new HttpClient(),
                 System.Net.Http.HttpMethod.Get,

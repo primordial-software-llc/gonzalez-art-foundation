@@ -11,7 +11,7 @@ namespace SlideshowCreator.Tests
         [Test]
         public void TestSearchJson()
         {
-            var json = ElasticSearchRequest.GetSearchRequestBody(Constants.SOURCE_RIJKSMUSEUM, "lawrence", 100, null);
+            var json = ElasticSearchRequest.GetSearchRequestBody(Constants.SOURCE_RIJKSMUSEUM, "lawrence", 100, null, false);
             Console.WriteLine(json);
             var expected = @"{
   ""track_total_hits"": true,
@@ -37,6 +37,58 @@ namespace SlideshowCreator.Tests
               }
             }
           ]
+        }
+      }
+    }
+  },
+  ""size"": 100,
+  ""sort"": [
+    {
+      ""_score"": {
+        ""order"": ""desc""
+      }
+    },
+    {
+      ""source.keyword"": {
+            ""order"": ""asc""
+        }
+    },
+    {
+      ""pageId.keyword"": {
+            ""order"": ""asc""
+        }
+    }
+  ]
+}";
+            Assert.AreEqual(JObject.Parse(expected).ToString(), json.ToString());
+        }
+
+        [Test]
+        public void TestExactArtistMatch()
+        {
+            var json = ElasticSearchRequest.GetSearchRequestBody(
+                string.Empty,
+                "sir lawrence alma-tadema",
+                100,
+                null,
+                true);
+            Console.WriteLine(json);
+            var expected = @"{
+  ""track_total_hits"": true,
+  ""query"": {
+    ""bool"": {
+      ""must"": {
+        ""multi_match"": {
+          ""query"": ""sir lawrence alma-tadema"",
+          ""type"": ""best_fields"",
+          ""fields"": [
+            ""artist.keyword""
+          ]
+        }
+      },
+      ""filter"": {
+        ""bool"": {
+          ""must"": []
         }
       }
     }
